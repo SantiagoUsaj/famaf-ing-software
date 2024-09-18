@@ -1,24 +1,37 @@
 # backend
-Repositorio utilizado para desarrollar el backend del laboratorio
+Repositorio utilizado para desarrollar el backend del juego El Switcher
 
-# Descripción de cada carpeta:
+# Descripción de organización:
 
-app/: Carpeta principal que contiene la aplicación. Dentro de esta carpeta, se organiza el código en módulos lógicos.
+`src/`: Carpeta principal para el código fuente.
 
-api/: Aquí se organizan los endpoints de la API, potencialmente versionados (v1, v2, etc.). Dentro de cada versión, los endpoints están agrupados por dominio o funcionalidad.
+`src/entidad/`: Carpeta dedicada a la entidad.
 
-core/: Aquí se colocan configuraciones globales y la lógica central, como la configuración de la seguridad, gestión de tokens JWT, y las configuraciones de entorno.
+`src/core/`: Contiene configuraciones y lógica que no están específicas a una entidad en particular.
 
-models/: Contiene los modelos ORM (como los modelos de SQLAlchemy) que representan las tablas de la base de datos.
+**`main.py`**: El punto de entrada de la aplicación FastAPI, donde se inicializa la app y se registran las rutas.
 
-crud/: Contiene las operaciones básicas de CRUD (Create, Read, Update, Delete) para interactuar con los modelos de la base de datos.
+**`requirements.txt`**: Archivo para dependencias del proyecto.
 
-schemas/: Define los esquemas de entrada/salida de datos utilizando Pydantic, que ayuda a validar y serializar los datos que se envían o reciben en la API.
+**`README.md`**: Documentación del proyecto.
 
-db/: Configuración de la conexión a la base de datos, así como la inicialización de los modelos.
+## Dentro de cada entidad
 
-tests/: Aquí se colocan las pruebas del proyecto. Es recomendable escribir pruebas unitarias e integrales para cada módulo importante.
+**`entidad.models.py`**: Define el modelo ORM para la entidad.
 
-main.py: Punto de entrada de la aplicación FastAPI. Aquí se inicializa la aplicación, se registran las rutas, middlewares, etc.
+**`entidad.crud.py`**: Contiene las operaciones CRUD relacionadas con la entidad.
 
-requirements.txt: Lista de dependencias necesarias para el proyecto, puedes usar Pipfile si prefieres pipenv.
+**`schemas.py`**: Define los esquemas de Pydantic para validar y serializar datos de la entidad.
+
+**`entidad.endpoints.py`**: Define las rutas de la API relacionadas con la entidad.
+
+`tests/`: Contiene pruebas específicas para la entiadad, organizadas en archivos separados para modelos, operaciones CRUD, esquemas y endpoints.
+
+## Dentro de core
+
+**`config.py`**: Configuraciones generales del proyecto.
+
+**`security.py`**: Lógica de autenticación y autorización.
+
+**`db.py`**: Configuración de la base de datos y la inicialización.
+
