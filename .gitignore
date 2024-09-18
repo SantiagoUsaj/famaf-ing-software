@@ -1,0 +1,38 @@
+# Dependencias de Node
+node_modules/
+.pnp.js
+.pnp/
+
+# Archivos de compilación
+dist/
+build/
+
+# Archivos de configuración de Vite o Create React App
+.vite/
+.vscode/
+
+# Archivos de registro
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor de código
+.idea/
+*.swp
+
+# Archivos de producción
+out/
+coverage/
+
+package-lock.json 
