@@ -17,13 +17,13 @@ Repositorio utilizado para desarrollar el backend del juego El Switcher
 
 ## Dentro de cada entidad
 
-**`entidad.models.py`**: Define el modelo ORM para la entidad.
+**`entidad_models.py`**: Define el modelo ORM para la entidad.
 
-**`entidad.crud.py`**: Contiene las operaciones CRUD relacionadas con la entidad.
+**`entidad_crud.py`**: Contiene las operaciones CRUD relacionadas con la entidad.
 
-**`schemas.py`**: Define los esquemas de Pydantic para validar y serializar datos de la entidad.
+**`entidad_schemas.py`**: Define los esquemas de Pydantic para validar y serializar datos de la entidad.
 
-**`entidad.endpoints.py`**: Define las rutas de la API relacionadas con la entidad.
+**`entidad_endpoints.py`**: Define las rutas de la API relacionadas con la entidad.
 
 `tests/`: Contiene pruebas específicas para la entiadad, organizadas en archivos separados para modelos, operaciones CRUD, esquemas y endpoints.
 
