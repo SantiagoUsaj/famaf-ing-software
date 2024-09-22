@@ -7,7 +7,7 @@ const LoginPage = () => {
 
   const onFinish = (values) => {
     console.log("Success:", values);
-    navigate("/waitingRoom");
+    navigate("/lobby");
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -15,8 +15,11 @@ const LoginPage = () => {
 
   return (
     <div className="pt-2">
+      <h1 className="font-mono text-center mt-40 text-4xl">
+        Bienvenido a El Switcher
+      </h1>
       <Form
-        className="bg-white p-2 rounded-lg shadow-lg m-auto my-52"
+        className="bg-white p-2 rounded-lg shadow-lg m-auto"
         name="basic"
         labelCol={{
           span: 8,

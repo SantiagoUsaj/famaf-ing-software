@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import WaitingRoom from "./pages/WaitingRoom";
+import LobbyPage from "./pages/LobbyPage";
+import GamePage from "./pages/GamePage";
 
 function App() {
   return (
@@ -9,7 +11,9 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          <Route path="/lobby" element={<LobbyPage />} />
           <Route path="/waitingRoom" element={<WaitingRoom />} />
+          <Route path="/game" element={<GamePage />} />
         </Routes>
       </Router>
     </div>
