@@ -1,37 +1,125 @@
-# backend
-Repositorio utilizado para desarrollar el backend del juego El Switcher
+# frontend
+Repositorio utilizado para desarrollar el frontend del laboratorio
 
-# Descripción de organización:
+# Proyecto React con Vite
 
-`src/`: Carpeta principal para el código fuente.
+Este proyecto está creado utilizando **Vite** para el desarrollo de una aplicación en **React**.
 
-`src/entidad/`: Carpeta dedicada a la entidad.
+## Requisitos previos
 
-`src/core/`: Contiene configuraciones y lógica que no están específicas a una entidad en particular.
+Antes de comenzar, asegúrate de tener instalado lo siguiente en tu sistema:
 
-**`main.py`**: El punto de entrada de la aplicación FastAPI, donde se inicializa la app y se registran las rutas.
+- [Node.js](https://nodejs.org) (versión 14 o superior)
+- npm (que se instala junto con Node.js)
 
-**`requirements.txt`**: Archivo para dependencias del proyecto.
+Puedes verificar que tienes Node.js y npm ejecutando los siguientes comandos en tu terminal:
+```bash
+node -v
+npm -v
+```
 
-**`README.md`**: Documentación del proyecto.
+## Crear un nuevo proyecto
 
-## Dentro de cada entidad
+Sigue estos pasos para iniciar un proyecto de React con Vite:
 
-**`entidad_models.py`**: Define el modelo ORM para la entidad.
+1. **Crear el proyecto**:
 
-**`entidad_crud.py`**: Contiene las operaciones CRUD relacionadas con la entidad.
+   Ejecuta el siguiente comando en tu terminal para crear un nuevo proyecto con Vite:
+   ```bash
+   npm create vite@latest nombre-del-proyecto
+   ```
 
-**`entidad_schemas.py`**: Define los esquemas de Pydantic para validar y serializar datos de la entidad.
+2. **Selecciona React**:
 
-**`entidad_endpoints.py`**: Define las rutas de la API relacionadas con la entidad.
+   Cuando se te pida elegir un framework, selecciona **React**. También puedes optar por JavaScript o TypeScript según tus necesidades.
 
-`tests/`: Contiene pruebas específicas para la entiadad, organizadas en archivos separados para modelos, operaciones CRUD, esquemas y endpoints.
+3. **Instala las dependencias**:
 
-## Dentro de core
+   Ingresa al directorio del proyecto y ejecuta el siguiente comando para instalar todas las dependencias necesarias:
+   ```bash
+   cd nombre-del-proyecto
+   npm install
+   ```
 
-**`config.py`**: Configuraciones generales del proyecto.
+## Ejecutar el servidor de desarrollo
 
-**`security.py`**: Lógica de autenticación y autorización.
+Una vez instaladas las dependencias, puedes iniciar el servidor de desarrollo ejecutando el siguiente comando:
+```bash
+npm run dev
+```
 
-**`db.py`**: Configuración de la base de datos y la inicialización.
+Esto abrirá tu aplicación en el navegador en la URL [http://localhost:5173](http://localhost:5173). Cualquier cambio que realices en el código se reflejará automáticamente gracias a Vite.
+
+## Crear una versión de producción
+
+Cuando estés listo para crear una versión de producción optimizada, ejecuta:
+```bash
+npm run build
+```
+
+Esto generará una carpeta `dist` que contendrá todos los archivos listos para desplegar.
+
+## Scripts disponibles
+
+Además de los comandos mencionados anteriormente, aquí tienes algunos scripts adicionales disponibles en el proyecto:
+
+- **`npm run dev`**: Inicia el servidor de desarrollo.
+- **`npm run build`**: Crea una versión de producción optimizada.
+- **`npm run preview`**: Previsualiza localmente la versión de producción generada por `build`.
+
+## Estructura del proyecto
+
+- **`src/`**: Contiene todos los archivos de código fuente de React.
+- **`public/`**: Archivos públicos que no requieren procesamiento (como imágenes o `index.html`).
+- **`vite.config.js`**: Configuración de Vite.
+- **`node_modules/`**: Dependencias instaladas por npm.
+
+## Más información
+
+Para obtener más información sobre cómo usar Vite, visita la [documentación oficial de Vite](https://vitejs.dev).
+
+
+# Backend
+Repositorio utilizado para desarrollar el backend del laboratorio
+
+## Requisitos previos
+
+Antes de comenzar, asegúrate de estar en un entorno virtual.
+Puedes utilizar el siguiente.
+- [venv](https://docs.python.org/es/3/library/venv.html)
+
+Activa tu entorno virtual:
+```bash
+$ source .venv/bin/activate
+```
+una vez activado el entorno virtual puedes verificar que estan en uno con el siguiente comando
+```bash
+$ which python
+/home/user/code/awesome-project/.venv/bin/python
+```
+para salir del entorno virtual utiliza 
+```bash
+$ deactivate
+```
+## Activar el Entorno Virtual
+
+Para activar el entorno virtual, utiliza el siguiente comando:
+
+```bash
+$ pip install fastapi
+```
+
+```bash
+$ pip install uvicorn
+```
+
+y para ejecutar nuestro servidor iremos al path de nuestro archivo a corre y ejecutaremos el comando
+```bash
+$ uvicorn main:app --reload
+```
+
+en nuestro caso en ves del archivo *main.py* sera *endponint_player.py* y con esto tendremos nuestro servidor corriendo!!
+
+Ahora para ver la documentacion del mismo con ir a la pagina
+*http://127.0.0.1:8000/docs* podremos ver todos los endpoints de nuestra api.
 
