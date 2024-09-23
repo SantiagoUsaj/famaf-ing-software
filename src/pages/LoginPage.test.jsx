@@ -13,14 +13,14 @@ vi.mock("react-router-dom", async () => {
 });
 
 describe("LoginPage", () => {
-  it("should render the title 'Bienvenido a El Switcher'", () => {
+  it("should render the title 'El Switcher'", () => {
     render(
       <ReactRouterDom.BrowserRouter>
         <LoginPage />
       </ReactRouterDom.BrowserRouter>
     );
     // Verificar si el título "Bienvenido a El Switcher" está presente
-    const title = screen.getByText(/Bienvenido a El Switcher/i);
+    const title = screen.getByText(/El Switcher/i);
     expect(title).toBeInTheDocument();
   });
 
@@ -53,9 +53,7 @@ describe("LoginPage", () => {
     fireEvent.click(button);
 
     // Esperar a que aparezca el mensaje de error
-    const errorMessage = await screen.findByText(
-      /El nombre de jugador es obligatorio!/i
-    );
+    const errorMessage = await screen.findByText(/El nombre es obligatorio!/i);
     expect(errorMessage).toBeInTheDocument();
   });
 
@@ -75,7 +73,7 @@ describe("LoginPage", () => {
 
     // Esperar a que aparezca el mensaje de error
     const errorMessage = await screen.findByText(
-      /Solo se permiten caracteres alfanuméricos!/i
+      /Solo caracteres alfanuméricos!/i
     );
     expect(errorMessage).toBeInTheDocument();
   });

@@ -6,7 +6,7 @@ import GamePage from "./pages/GamePage";
 
 function App() {
   return (
-    <div className="bg-indigo-600 h-screen w-screen">
+    <div className="bg-black h-screen w-screen">
       {/* Defino mis rutas */}
       <Router>
         <Routes>
