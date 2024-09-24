@@ -1,14 +1,6 @@
 import React from "react";
-import { Form, Button, Select } from "antd";
+import { Form, Button, Select, Input } from "antd";
 import { useNavigate } from "react-router-dom";
-
-const onFinish = (values) => {
-  console.log("Success:", values);
-  navigate("/game");
-};
-const onFinishFailed = (errorInfo) => {
-  console.log("Failed:", errorInfo);
-};
 
 const CreateGame = () => {
   const navigate = useNavigate();
@@ -30,8 +22,9 @@ const CreateGame = () => {
         autoComplete="off"
       >
         <Form.Item
+          label={<span style={{ color: "white" }}>Nombre de la Partida</span>}
           name="nombre"
-          /*rules={[
+          rules={[
             {
               validator: (_, value) => {
                 if (!value) {
@@ -51,29 +44,32 @@ const CreateGame = () => {
                 return Promise.resolve();
               },
             },
-          ]}*/
+          ]}
         >
-          <label style={{ color: "white" }}>Nombre de la Partida</label>
-          <input type="text" name="gameName" />
+          <Input placeholder="Ingresar nombre de la partida" />
         </Form.Item>
 
         <Form.Item
           name="jugadores"
-          label={<span style={{ color: "white" }}>Cantidad de Jugadores</span>}
+          label={
+            <span style={{ color: "white" }}>Cantidad máxima de Jugadores</span>
+          }
           rules={[
             { required: true, message: "Por favor selecciona una opción" },
           ]}
         >
           <Select placeholder="Selecciona una opción">
-            <Option value="2">2</Option>
-            <Option value="3">3</Option>
-            <Option value="4">4</Option>
+            <Option value="2">2 jugadores</Option>
+            <Option value="3">3 jugadores</Option>
+            <Option value="4">4 jugadores</Option>
           </Select>
         </Form.Item>
 
-        <Form.Item name="password">
-          <label style={{ color: "white" }}>Contraseña</label>
-          <input type="text" name="password" />
+        <Form.Item
+          name="password"
+          label={<span style={{ color: "white" }}>Contraseña</span>}
+        >
+          <Input placeholder="Ingresar contraseña" />
         </Form.Item>
 
         <Form.Item name="boton">
