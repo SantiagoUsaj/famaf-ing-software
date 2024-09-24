@@ -15,6 +15,7 @@ const LobbySquares = () => {
       <div className="square bg-yellow-400 absolute bottom-40 right-0 size-36 rounded-lg" />
       <div className="square bg-red-400 absolute bottom-40 right-40 size-36 rounded-lg" />
       <div className="square bg-green-400 absolute bottom-80 right-40 size-36 rounded-lg" />
+      <div data-testid="lobby-squares">Lobby Squares Component</div>
     </>
   );
 };
