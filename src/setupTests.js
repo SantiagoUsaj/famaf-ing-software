@@ -14,3 +14,9 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   }),
 });
+
+beforeAll(() => {
+  window.getComputedStyle = () => ({
+    getPropertyValue: () => "", // Retorna un valor vacío o el que necesites para la propiedad CSS
+  });
+});

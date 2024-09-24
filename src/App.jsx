@@ -11,9 +11,9 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/lobby" element={<LobbyPage />} />
-          <Route path="/waitingRoom" element={<WaitingRoom />} />
-          <Route path="/game" element={<GamePage />} />
+          <Route path="/lobby/:string" element={<LobbyPage />} />
+          <Route path="/:string/waitingRoom" element={<WaitingRoom />} />
+          <Route path="/:string/game" element={<GamePage />} />
         </Routes>
       </Router>
     </div>
