@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, List } from "antd";
 
 const MovementCard = () => {
-  const data = [
+  const [data, setData] = useState([
     {
       title: "Title 1",
     },
@@ -12,9 +12,11 @@ const MovementCard = () => {
     {
       title: "Title 3",
     },
-  ];
+  ]);
+
   const handleCardClick = (title) => {
     console.log(`Card with title ${title} clicked`);
+    setData(data.filter((item) => item.title !== title));
   };
 
   return (
@@ -24,13 +26,13 @@ const MovementCard = () => {
         column: 3,
       }}
       dataSource={data}
-      bordered={true}
       renderItem={(item) => (
-        <List.Item>
+        <List.Item style={{ display: "flex", justifyContent: "center" }}>
           <Card
             title={item.title}
             onClick={() => handleCardClick(item.title)}
             hoverable
+            style={{ width: 300, height: 200 }} // Adjust the width and height as needed
           >
             Card content
           </Card>
@@ -39,4 +41,5 @@ const MovementCard = () => {
     />
   );
 };
+
 export default MovementCard;
