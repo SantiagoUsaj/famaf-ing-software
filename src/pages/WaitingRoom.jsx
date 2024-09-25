@@ -21,10 +21,10 @@ const WaitingRoom = ({
       setGameName("Partida de Prueba");
     }
     if (initialIsCreator === undefined) {
-      setIsCreator(true);
+      setIsCreator(false);
     }
     if (!initialNumberOfPlayers) {
-      setNumberOfPlayers(4);
+      setNumberOfPlayers(0);
     }
   }, [initialGameName, initialIsCreator, initialNumberOfPlayers]);
 
