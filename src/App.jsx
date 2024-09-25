@@ -14,7 +14,7 @@ function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/lobby/:string" element={<LobbyPage />} />
           <Route path="/:string/waitingRoom" element={<WaitingRoom />} />
-          <Route path="/:string/game" element={<GamePage />} />
+          <Route path="/game" element={<GamePage />} />
           <Route path="/creategame" element={<CreateGame />} />
         </Routes>
       </Router>
