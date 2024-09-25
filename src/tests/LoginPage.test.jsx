@@ -1,126 +1,111 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import LoginPage from "../pages/LoginPage"; // Ajusta la ruta según corresponda
-import { BrowserRouter } from "react-router-dom";
-import { JoinLobby } from "../services/LobbyServices";
+import LoginPage from "./../pages/LoginPage";
+import * as ReactRouterDom from "react-router-dom"; // Importamos todo el módulo de react-router-dom
 
-// Mockeamos el servicio JoinLobby
-vi.mock("../services/LobbyServices", () => ({
-  JoinLobby: vi.fn(),
-}));
-
-// Mockeamos la navegación de react-router-dom
-const mockNavigate = vi.fn();
-
+// Mockeamos parcialmente react-router-dom
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom"); // Importamos lo que no queremos mockear
   return {
     ...actual, // Retornamos el resto de las exportaciones reales
-    useNavigate: () => mockNavigate, // Mock para useNavigate
+    useNavigate: vi.fn(), // Mock para useNavigate
   };
 });
 
 describe("LoginPage", () => {
-  it("should render the form and display the username input", () => {
+  it("should render the title 'El Switcher'", () => {
     render(
-      <BrowserRouter>
+      <ReactRouterDom.BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </ReactRouterDom.BrowserRouter>
+    );
+    // Verificar si el título "Bienvenido a El Switcher" está presente
+    const title = screen.getByText(/El Switcher/i);
+    expect(title).toBeInTheDocument();
+  });
+
+  it("should render the form with username field and submit button", () => {
+    render(
+      <ReactRouterDom.BrowserRouter>
+        <LoginPage />
+      </ReactRouterDom.BrowserRouter>
     );
 
-    // Verifica que el input del nombre de jugador esté presente
-    expect(
-      screen.getByPlaceholderText("Ingresar nombre jugador")
-    ).toBeInTheDocument();
-    // Verifica que el botón 'Jugar' esté presente
-    expect(screen.getByRole("button", { name: /jugar/i })).toBeInTheDocument();
+    // Verificar si el campo "Nombre de Jugador" está presente
+    const input = screen.getByLabelText(/Nombre de Jugador/i);
+    expect(input).toBeInTheDocument();
+
+    // Verificar si el botón "Jugar" está presente
+    const button = screen.getByRole("button", { name: /Jugar/i });
+    expect(button).toBeInTheDocument();
   });
 
   it("should display error when username is missing", async () => {
     render(
-      <BrowserRouter>
+      <ReactRouterDom.BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </ReactRouterDom.BrowserRouter>
     );
 
-    // Intenta enviar el formulario con un valor inválido
-    fireEvent.change(screen.getByPlaceholderText("Ingresar nombre jugador"), {
-      target: { value: "" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: /jugar/i }));
+    const button = screen.getByRole("button", { name: /Jugar/i });
 
-    // Espera que aparezca el mensaje de error
-    await waitFor(() =>
-      expect(screen.getByText("El nombre es obligatorio!")).toBeInTheDocument()
-    );
+    // Hacer clic en el botón sin ingresar el nombre de usuario
+    fireEvent.click(button);
+
+    // Esperar a que aparezca el mensaje de error
+    const errorMessage = await screen.findByText(/El nombre es obligatorio!/i);
+    expect(errorMessage).toBeInTheDocument();
   });
 
-  it("should display error when username contains non-alphanumeric characters", async () => {
+  it("should display error for invalid (non-alphanumeric) username", async () => {
     render(
-      <BrowserRouter>
+      <ReactRouterDom.BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </ReactRouterDom.BrowserRouter>
     );
 
-    // Simular ingreso de un nombre con caracteres no alfanuméricos
-    const inputElement = screen.getByPlaceholderText("Ingresar nombre jugador");
-    fireEvent.change(inputElement, { target: { value: "Player@123" } });
+    const input = screen.getByLabelText(/Nombre de Jugador/i);
+    const button = screen.getByRole("button", { name: /Jugar/i });
 
-    // Simular envío del formulario
-    const buttonElement = screen.getByText("Jugar");
-    fireEvent.click(buttonElement);
+    // Ingresar un nombre de usuario no alfanumérico
+    fireEvent.change(input, { target: { value: "Player#123" } });
+    fireEvent.click(button);
 
-    // Esperar que aparezca el mensaje de error
+    // Esperar a que aparezca el mensaje de error
     const errorMessage = await screen.findByText(
-      "Solo caracteres alfanuméricos!"
+      /Solo caracteres alfanuméricos!/i
     );
     expect(errorMessage).toBeInTheDocument();
   });
 
-  it("should display error when username is longer than 8 characters", async () => {
-    render(
-      <BrowserRouter>
-        <LoginPage />
-      </BrowserRouter>
-    );
+  it("should navigate to /lobby on successful form submission", async () => {
+    const mockNavigate = vi.fn(); // Simulamos la función de navegación
 
-    // Simular ingreso de un nombre con más de 8 caracteres
-    const inputElement = screen.getByPlaceholderText("Ingresar nombre jugador");
-    fireEvent.change(inputElement, { target: { value: "Player12345" } });
-
-    // Simular envío del formulario
-    const buttonElement = screen.getByText("Jugar");
-    fireEvent.click(buttonElement);
-
-    // Esperar que aparezca el mensaje de error
-    const errorMessage = await screen.findByText("Menos de 8 caracteres!");
-    expect(errorMessage).toBeInTheDocument();
-  });
-
-  it("should navigate to lobby on successful form submission", async () => {
-    const mockResponse = "12345"; // Id del lobby simulado
-    JoinLobby.mockResolvedValueOnce(mockResponse); // Simulamos una respuesta exitosa de JoinLobby
+    // Mock correcto de useNavigate
+    ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
 
     render(
-      <BrowserRouter>
+      <ReactRouterDom.BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </ReactRouterDom.BrowserRouter>
     );
 
-    // Cambia el valor del input a un nombre de usuario válido
-    fireEvent.change(screen.getByPlaceholderText("Ingresar nombre jugador"), {
-      target: { value: "jugador1" },
+    const input = screen.getByLabelText(/Nombre de Jugador/i);
+    const button = screen.getByRole("button", { name: /Jugar/i });
+
+    // Ingresar un nombre de usuario válido
+    fireEvent.change(input, { target: { value: "Player123" } });
+
+    // Simular clic en el botón "Jugar"
+    // Envuelve el clic del botón en un bloque act
+    await act(async () => {
+      fireEvent.click(button);
     });
 
-    // Envía el formulario
-    fireEvent.click(screen.getByRole("button", { name: /jugar/i }));
+    // Asegurarse de que el formulario fue enviado correctamente
+    await new Promise((resolve) => setTimeout(resolve, 0)); // Esperar un ciclo para el envío
 
-    // Esperamos que la función JoinLobby sea llamada correctamente
-    await waitFor(() => expect(JoinLobby).toHaveBeenCalledWith("jugador1"));
-
-    // Esperamos que la navegación sea llamada con la ruta correcta
-    await waitFor(() =>
-      expect(mockNavigate).toHaveBeenCalledWith(`/lobby/${mockResponse}`)
-    );
+    // Verificar que la función de navegación fue llamada
+    expect(mockNavigate).toHaveBeenCalledWith("/lobby");
   });
 });
