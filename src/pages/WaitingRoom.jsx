@@ -1,20 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { Button, Flex } from "antd";
+import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
 
-const WaitingRoom = () => {
+const WaitingRoom = ({
+  initialGameName = "",
+  initialIsCreator = false,
+  initialNumberOfPlayers = 0,
+}) => {
   const navigate = useNavigate();
-  const [gameName, setGameName] = useState("");
-  const [isCreator, setIsCreator] = useState();
-  const [numberOfPlayers, setNumberOfPlayers] = useState();
+  const [gameName, setGameName] = useState(initialGameName);
+  const [isCreator, setIsCreator] = useState(initialIsCreator);
+  const [numberOfPlayers, setNumberOfPlayers] = useState(
+    initialNumberOfPlayers
+  );
 
   useEffect(() => {
-    setGameName("Partida de Prueba");
-    setIsCreator(true);
-    setNumberOfPlayers(4);
-  }, []);
+    if (!initialGameName) {
+      setGameName("Partida de Prueba");
+    }
+    if (initialIsCreator === undefined) {
+      setIsCreator(true);
+    }
+    if (!initialNumberOfPlayers) {
+      setNumberOfPlayers(4);
+    }
+  }, [initialGameName, initialIsCreator, initialNumberOfPlayers]);
 
   return (
     <div className="flex justify-center flex-col items-center">
@@ -24,7 +36,7 @@ const WaitingRoom = () => {
       </h1>
       <TablePlayers />
       <div className="flex gap-24 ">
-        {isCreator && numberOfPlayers == 4 && (
+        {isCreator && numberOfPlayers === 4 && (
           <Button
             type="primary"
             disabled={!isCreator}
@@ -33,7 +45,6 @@ const WaitingRoom = () => {
             Iniciar Partida
           </Button>
         )}
-
         {!isCreator && (
           <Button danger ghost onClick={() => navigate("/lobby")}>
             Abandonar
@@ -43,4 +54,5 @@ const WaitingRoom = () => {
     </div>
   );
 };
+
 export default WaitingRoom;
