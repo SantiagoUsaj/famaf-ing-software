@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, it, vi, expect } from "vitest";
-import WaitingRoom from "../pages/WaitingRoom";
+import WaitingRoom from "./../pages/WaitingRoom";
 
 // Mockear los componentes LobbySquares y TablePlayers
 vi.mock("../components/LobbySquares", () => ({

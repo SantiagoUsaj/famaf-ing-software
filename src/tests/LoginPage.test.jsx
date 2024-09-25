@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import LoginPage from "./LoginPage";
+import LoginPage from "./../pages/LoginPage";
 import * as ReactRouterDom from "react-router-dom"; // Importamos todo el módulo de react-router-dom
 
 // Mockeamos parcialmente react-router-dom

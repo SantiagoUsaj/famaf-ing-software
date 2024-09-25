@@ -7,15 +7,13 @@ import LobbySquares from "../components/LobbySquares";
 const WaitingRoom = () => {
   const navigate = useNavigate();
   const [gameName, setGameName] = useState("");
-  const [players, setPlayers] = useState([]);
   const [isCreator, setIsCreator] = useState();
   const [numberOfPlayers, setNumberOfPlayers] = useState();
 
   useEffect(() => {
-    setGameName("data.gameName");
-    setPlayers(["data.players"]);
+    setGameName("Partida de Prueba");
     setIsCreator(true);
-    setNumberOfPlayers(2);
+    setNumberOfPlayers(4);
   }, []);
 
   return (
