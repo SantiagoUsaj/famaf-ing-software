@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi } from "vitest";
-import LoginPage from "./LoginPage";
+import LoginPage from "./../pages/LoginPage";
 import { BrowserRouter } from "react-router-dom";
 import { JoinLobby } from "../services/LobbyServices";
 

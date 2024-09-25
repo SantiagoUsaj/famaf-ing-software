@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import WaitingRoom from "./WaitingRoom";
+import WaitingRoom from "./../pages/WaitingRoom";
 import * as ReactRouterDom from "react-router-dom";
 
 // Mock de las dependencias necesarias

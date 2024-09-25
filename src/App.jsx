@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import WaitingRoom from "./pages/WaitingRoom";
 import LobbyPage from "./pages/LobbyPage";
 import GamePage from "./pages/GamePage";
+import CreateGame from "./pages/CreateGame";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/lobby/:string" element={<LobbyPage />} />
           <Route path="/:string/waitingRoom" element={<WaitingRoom />} />
           <Route path="/:string/game" element={<GamePage />} />
+          <Route path="/creategame" element={<CreateGame />} />
         </Routes>
       </Router>
     </div>
