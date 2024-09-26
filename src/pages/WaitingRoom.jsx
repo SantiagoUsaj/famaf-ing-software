@@ -3,7 +3,11 @@ import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
-import { GameData } from "../services/WaitingRoomServices";
+import {
+  GameData,
+  LeaveGame,
+  StartGame,
+} from "../services/WaitingRoomServices";
 
 const WaitingRoom = ({
   game_id,
@@ -20,6 +24,8 @@ const WaitingRoom = ({
   );
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
+  const [socket, setSocket] = useState(null);
+  const [partidas, setPartidas] = useState([]);
 
   const getGameInfo = async (game_id) => {
     console.log("Success");
@@ -38,6 +44,42 @@ const WaitingRoom = ({
     }
   };
 
+  const quitRoom = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de LeaveGame
+      const response = await LeaveGame(playerID, game_id);
+
+      if (response) {
+        console.log("New Game Info:", response);
+
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/lobby/${playerID}`);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
+  const start = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de StartGame
+      const response = await StartGame(playerID, game_id);
+
+      if (response) {
+        console.log("Info:", response);
+
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/${playerID}/${game_id}/game`);
+      }
+    } catch (error) {
+      console.error("Error getting data", error);
+    }
+  };
+
   useEffect(() => {
     // Llamamos a la función getGameInfo
     getGameInfo(game_id).then((response) => {
@@ -49,10 +91,44 @@ const WaitingRoom = ({
         setPlayersList(response.players);
       }
     });
+
+    // Crear la conexión WebSocket al backend
+    const ws = new WebSocket(`http://127.0.0.1:8000/ws/${playerID}`);
+
+    // Manejar la apertura de la conexión
+    ws.onopen = () => {
+      console.log("Conectado al WebSocket del lobby");
+    };
+
+    // Manejar los mensajes recibidos
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      console.log("Mensaje recibido:", data);
+
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].game_id === game_id && data[i].state === "playing") {
+          navigate(`/${playerID}/${game_id}/game`);
+        }
+      }
+    };
+
+    // Manejar el cierre de la conexión
+    ws.onclose = () => {
+      console.log("Conexión WebSocket cerrada");
+    };
+
+    // Guardar el WebSocket en el estado para usarlo después
+    setSocket(ws);
+
+    // Limpiar el WebSocket al desmontar el componente
+    return () => {
+      ws.close();
+    };
   }, []);
 
   return (
-    <div className="flex justify-center flex-col items-center">
+    <div className="pt-2 flex justify-center flex-col items-center">
       <LobbySquares />
       <h1 className="text-white font-sans uppercase m-auto text-center  text-4xl">
         {gameName}
@@ -63,13 +139,13 @@ const WaitingRoom = ({
           <Button
             type="primary"
             disabled={!isCreator}
-            onClick={() => navigate(`/${playerID}/${gameID}/game`)}
+            onClick={() => start(game_id)}
           >
             Iniciar Partida
           </Button>
         )}
         {playerID !== isCreator && (
-          <Button danger ghost onClick={() => navigate(`/lobby/${playerID}`)}>
+          <Button danger ghost onClick={() => quitRoom(game_id)}>
             Abandonar
           </Button>
         )}

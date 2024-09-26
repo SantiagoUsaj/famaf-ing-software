@@ -11,3 +11,31 @@ export const GameData = async (game_id) => {
     console.error("Error al obtener datos:", error);
   }
 };
+
+export const LeaveGame = async (player_id, game_id) => {
+  try {
+    const response = await axios.put(
+      `http://127.0.0.1:8000/leave_game/${player_id}/${game_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};
+
+export const StartGame = async (player_id, game_id) => {
+  try {
+    const response = await axios.put(
+      `http://127.0.0.1:8000/start_game/${player_id}/${game_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};

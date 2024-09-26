@@ -6,7 +6,6 @@ const TablePlayers = ({ playersList, isCreator }) => {
     const colors = ["red", "blue", "green", "yellow"];
     return colors[Math.floor(Math.random() * colors.length)];
   };
-  const tags = ["Creador", "Jugador"];
 
   const columns = [
     {
@@ -35,29 +34,11 @@ const TablePlayers = ({ playersList, isCreator }) => {
     },
   ];
 
-  const data = [
-    {
-      name: "Santi Usaj",
-      playerid: "sdfdsf",
-    },
-    {
-      name: "Fede",
-      playerid: "vbnbvc",
-    },
-    {
-      name: "Afonso",
-      playerid: "ytty",
-    },
-    {
-      name: "Mateo",
-      playerid: "sghjf",
-    },
-  ];
-
-  const data1 = playersList.map((player) => ({
+  const data = playersList.map((player) => ({
     ...player,
     tags: [player.playerid === isCreator ? "Creador" : "Jugador"],
   }));
+
   return (
     <>
       <Table
@@ -65,9 +46,9 @@ const TablePlayers = ({ playersList, isCreator }) => {
         pagination={false}
         columns={columns}
         align="center"
-        dataSource={data1}
+        dataSource={data}
       />
-      <div data-testid="table-players">Table Players Component</div>
+      <div data-testid="table-players"></div>
     </>
   );
 };
