@@ -22,6 +22,14 @@ app.add_middleware(
     allow_headers=["*"],  # Permite todas las cabeceras
 )
 
+@app.get("/players_in_game/{game_id}")
+async def get_players_in_game(game_id: str):
+    if game_id not in games:
+        return {"message": "Game not found"}
+    else:
+        game = games[game_id]
+        return [{"player_name": player.name, "player_id": player.playerid} for player in game.players]
+
 @app.get("/players")
 async def get_players():
     return playersBD
@@ -57,6 +65,22 @@ async def create_game(player_id: str, game_name: str, game_size: int):
     playersBD[player_id].enter_a_game()
     global update
     update = True
+    return game
+
+@app.put("/leave_game/{player_id}/{game_id}")
+async def leave_game(player_id: str, game_id: str):
+    if game_id not in games:
+        return {"message": "Game not found"}
+
+    game = games[game_id]
+
+    if not any(player.playerid == player_id for player in game.players):
+        return {"message": "Player not in game"}
+    else:
+        game.players.remove(playersBD[player_id])
+        playersBD[player_id].leave_a_game()
+
+    update=True
     return game
 
 @app.put("/start_game/{player_id}/{game_id}")
