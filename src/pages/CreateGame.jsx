@@ -6,7 +6,7 @@ const CreateGame = () => {
   const navigate = useNavigate();
   const onFinish = (values) => {
     console.log("Success:", values);
-    navigate("/game");
+    navigate("/waitingRoom");
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -16,7 +16,20 @@ const CreateGame = () => {
     <div className="text-white text-center">
       <h1>Crear partida</h1>
       <Form
+        className="bg-black p-2 rounded-lg shadow-lg m-auto"
         name="Crear Partida"
+        labelCol={{
+          span: 52,
+        }}
+        wrapperCol={{
+          span: 16,
+        }}
+        style={{
+          maxWidth: 400,
+        }}
+        initialValues={{
+          remember: true,
+        }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
@@ -41,12 +54,19 @@ const CreateGame = () => {
                     </span>
                   );
                 }
+                if (value.length > 20) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡El nombre no puede tener más de 20 caracteres!
+                    </span>
+                  );
+                }
                 return Promise.resolve();
               },
             },
           ]}
         >
-          <Input placeholder="Ingresar nombre de la partida" />
+          <Input />
         </Form.Item>
 
         <Form.Item
@@ -65,17 +85,12 @@ const CreateGame = () => {
           </Select>
         </Form.Item>
 
-        <Form.Item
-          name="password"
-          label={<span style={{ color: "white" }}>Contraseña</span>}
-        >
-          <Input placeholder="Ingresar contraseña" />
-        </Form.Item>
-
-        <Form.Item name="boton">
-          <Button type="primary" htmlType="submit">
-            Crear
-          </Button>
+        <Form.Item name="boton" wrapperCol={{ span: 24, offset: 0 }}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Button type="primary" htmlType="submit">
+              Crear
+            </Button>
+          </div>
         </Form.Item>
       </Form>
     </div>
