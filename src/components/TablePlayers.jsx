@@ -1,7 +1,7 @@
 import React from "react";
 import { Space, Table, Tag } from "antd";
 
-const TablePlayers = () => {
+const TablePlayers = ({ playersList, isCreator }) => {
   const columns = [
     {
       title: "Name",
@@ -16,9 +16,11 @@ const TablePlayers = () => {
       render: (_, { tags }) => (
         <>
           {tags.map((tag) => {
-            let color = tag.length > 5 ? "blue" : "green";
+            let color;
             if (tag === "Creador") {
               color = "volcano";
+            } else {
+              color = "blue";
             }
             return (
               <Tag color={color} key={tag}>
@@ -58,7 +60,7 @@ const TablePlayers = () => {
         className="w-1/4  my-8"
         pagination={false}
         columns={columns}
-        dataSource={data}
+        dataSource={playersList}
       />
       <div data-testid="table-players">Table Players Component</div>
     </>

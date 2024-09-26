@@ -1,10 +1,8 @@
 import axios from "axios";
 
-export const JoinLobby = async (playerName) => {
+export const GameData = async (game_id) => {
   try {
-    const response = await axios.post(
-      `http://127.0.0.1:8000/create_player/${playerName}`
-    );
+    const response = await axios.get(`http://127.0.0.1:8000/game/${game_id}`);
 
     console.log(response.data);
 
