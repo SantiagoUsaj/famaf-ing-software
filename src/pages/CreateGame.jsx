@@ -2,11 +2,11 @@ import React from "react";
 import { Form, Button, Select, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 
-const CreateGame = () => {
+const CreateGame = ({ playerID }) => {
   const navigate = useNavigate();
   const onFinish = (values) => {
     console.log("Success:", values);
-    navigate("/waitingRoom");
+    navigate(`/${playerID}/:gameID/waitingRoom`);
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -79,9 +79,9 @@ const CreateGame = () => {
           ]}
         >
           <Select placeholder="Selecciona una opción">
-            <Option value="2">2 jugadores</Option>
-            <Option value="3">3 jugadores</Option>
-            <Option value="4">4 jugadores</Option>
+            <Select.Option value="2">2 jugadores</Select.Option>
+            <Select.Option value="3">3 jugadores</Select.Option>
+            <Select.Option value="4">4 jugadores</Select.Option>
           </Select>
         </Form.Item>
 

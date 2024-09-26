@@ -21,7 +21,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/lobby/:playerID" element={<LobbyPage />} />
+          <Route
+            path="/lobby/:playerID"
+            element={<LobbyPage playerID={playerID} />}
+          />
           <Route
             path="/:playerID/:gameID/waitingRoom"
             element={<WaitingRoom game_id={gameID} playerID={playerID} />}

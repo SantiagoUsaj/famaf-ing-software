@@ -69,7 +69,7 @@ const WaitingRoom = ({
           </Button>
         )}
         {playerID !== isCreator && (
-          <Button danger ghost onClick={() => navigate("/lobby")}>
+          <Button danger ghost onClick={() => navigate(`/lobby/${playerID}`)}>
             Abandonar
           </Button>
         )}
