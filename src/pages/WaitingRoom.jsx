@@ -43,9 +43,9 @@ const WaitingRoom = ({
     getGameInfo(game_id).then((response) => {
       if (response) {
         setGameName(response.name);
-        setIsCreator(response.creator);
+        setIsCreator(response.host);
         setNumberOfPlayers(response.players.length);
-        setMaxNumberOfPlayers(response.max_players);
+        setMaxNumberOfPlayers(response.size);
         setPlayersList(response.players);
       }
     });
@@ -57,13 +57,13 @@ const WaitingRoom = ({
       <h1 className="text-white font-sans uppercase m-auto text-center  text-4xl">
         {gameName}
       </h1>
-      <TablePlayers playersList={playersList} />
+      <TablePlayers playersList={playersList} isCreator={isCreator} />
       <div className="flex gap-24 ">
         {playerID === isCreator && numberOfPlayers === maxNumberOfPlayers && (
           <Button
             type="primary"
             disabled={!isCreator}
-            onClick={() => navigate("/game")}
+            onClick={() => navigate(`/${playerID}/${gameID}/game`)}
           >
             Iniciar Partida
           </Button>
@@ -73,21 +73,6 @@ const WaitingRoom = ({
             Abandonar
           </Button>
         )}
-
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() =>
-            setNumberOfPlayers((numberOfPlayers) => numberOfPlayers + 1)
-          }
-        >
-          count is {numberOfPlayers}
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => setIsCreator((initialIsCreator) => !initialIsCreator)}
-        >
-          Change creator {isCreator ? "true" : "false"}
-        </button>
       </div>
     </div>
   );

@@ -11,26 +11,43 @@ import LobbyPage from "./pages/LobbyPage";
 import GamePage from "./pages/GamePage";
 import CreateGame from "./pages/CreateGame";
 
-function App() {
+function LobbyWithParams() {
   const { playerID } = useParams();
-  const { gameID } = useParams();
+  return <LobbyPage playerID={playerID} />;
+}
 
+function WaitingRoomWithParams() {
+  const { playerID, gameID } = useParams();
+  return <WaitingRoom game_id={gameID} playerID={playerID} />;
+}
+
+function CreateGameWithParams() {
+  const { playerID } = useParams();
+  return <CreateGame playerID={playerID} />;
+}
+
+function GameWithParams() {
+  const { playerID, gameID } = useParams();
+  return <GamePage playerID={playerID} gameID={gameID} />;
+}
+
+function App() {
   return (
     <div className="bg-black h-screen w-screen">
       {/* Defino mis rutas */}
       <Router>
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route
-            path="/lobby/:playerID"
-            element={<LobbyPage playerID={playerID} />}
-          />
+          <Route path="/lobby/:playerID" element={<LobbyWithParams />} />
           <Route
             path="/:playerID/:gameID/waitingRoom"
-            element={<WaitingRoom game_id={gameID} playerID={playerID} />}
+            element={<WaitingRoomWithParams />}
           />
-          <Route path="/:playerID/:gameID/game" element={<GamePage />} />
-          <Route path="/:playerID/creategame" element={<CreateGame />} />
+          <Route path="/:playerID/:gameID/game" element={<GameWithParams />} />
+          <Route
+            path="/:playerID/creategame"
+            element={<CreateGameWithParams />}
+          />
         </Routes>
       </Router>
     </div>

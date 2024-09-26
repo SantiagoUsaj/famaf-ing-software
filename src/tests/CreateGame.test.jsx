@@ -92,9 +92,7 @@ describe("CreateGame", () => {
 
     fireEvent.click(button);
 
-    const errorMessage = await screen.findByText(
-      /¡El nombre no puede tener más de 20 caracteres!/i
-    );
+    const errorMessage = await screen.findByText(/¡No más de 20 caracteres!/i);
     expect(errorMessage).toBeInTheDocument();
   });
 

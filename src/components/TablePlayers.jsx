@@ -2,9 +2,15 @@ import React from "react";
 import { Space, Table, Tag } from "antd";
 
 const TablePlayers = ({ playersList, isCreator }) => {
+  const getRandomColor = () => {
+    const colors = ["red", "blue", "green", "yellow"];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+  const tags = ["Creador", "Jugador"];
+
   const columns = [
     {
-      title: "Name",
+      title: "Jugadores",
       dataIndex: "name",
       key: "name",
       render: (text) => <a>{text}</a>,
@@ -13,15 +19,11 @@ const TablePlayers = ({ playersList, isCreator }) => {
       title: "Tags",
       key: "tags",
       dataIndex: "tags",
+      align: "center",
       render: (_, { tags }) => (
         <>
           {tags.map((tag) => {
-            let color;
-            if (tag === "Creador") {
-              color = "volcano";
-            } else {
-              color = "blue";
-            }
+            const color = getRandomColor();
             return (
               <Tag color={color} key={tag}>
                 {tag.toUpperCase()}
@@ -32,35 +34,38 @@ const TablePlayers = ({ playersList, isCreator }) => {
       ),
     },
   ];
+
   const data = [
     {
-      key: "1",
       name: "Santi Usaj",
-      tags: ["Creador"],
+      playerid: "sdfdsf",
     },
     {
-      key: "2",
-      name: "Ferrari",
-      tags: ["Jugador"],
+      name: "Fede",
+      playerid: "vbnbvc",
     },
     {
-      key: "3",
-      name: "Mateo Angeli",
-      tags: ["Jugador"],
+      name: "Afonso",
+      playerid: "ytty",
     },
     {
-      key: "4",
-      name: "Fede Di Forte",
-      tags: ["Jugador"],
+      name: "Mateo",
+      playerid: "sghjf",
     },
   ];
+
+  const data1 = playersList.map((player) => ({
+    ...player,
+    tags: [player.playerid === isCreator ? "Creador" : "Jugador"],
+  }));
   return (
     <>
       <Table
         className="w-1/4  my-8"
         pagination={false}
         columns={columns}
-        dataSource={playersList}
+        align="center"
+        dataSource={data1}
       />
       <div data-testid="table-players">Table Players Component</div>
     </>
