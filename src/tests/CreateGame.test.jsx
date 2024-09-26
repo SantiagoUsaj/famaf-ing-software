@@ -35,9 +35,6 @@ describe("CreateGame", () => {
     const players = screen.getByLabelText(/Cantidad máxima de Jugadores/i);
     expect(players).toBeInTheDocument();
 
-    const password = screen.getByLabelText(/Contraseña/i);
-    expect(password).toBeInTheDocument();
-
     const button = screen.getByRole("button", { name: /Crear/i });
     expect(button).toBeInTheDocument();
   });
@@ -80,6 +77,27 @@ describe("CreateGame", () => {
     expect(errorMessage).toBeInTheDocument();
   });
 
+  it("should display error when game name is longer than 20 characters", async () => {
+    render(
+      <ReactRouterDom.BrowserRouter>
+        <CreateGame />
+      </ReactRouterDom.BrowserRouter>
+    );
+
+    const button = screen.getByRole("button", { name: /Crear/i });
+
+    fireEvent.change(screen.getByLabelText(/Nombre de la Partida/i), {
+      target: { value: "game12345678901234567890" },
+    });
+
+    fireEvent.click(button);
+
+    const errorMessage = await screen.findByText(
+      /¡El nombre no puede tener más de 20 caracteres!/i
+    );
+    expect(errorMessage).toBeInTheDocument();
+  });
+
   it("should display error when amount of players is missing", async () => {
     render(
       <ReactRouterDom.BrowserRouter>
@@ -97,7 +115,7 @@ describe("CreateGame", () => {
     expect(errorMessage).toBeInTheDocument();
   });
 
-  it("should navigate to /game when form is submitted", async () => {
+  it("should navigate to /waitingRoom when form is submitted", async () => {
     const mockNavigate = vi.fn();
     ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
 
@@ -123,6 +141,6 @@ describe("CreateGame", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/game");
+    expect(mockNavigate).toHaveBeenCalledWith("/waitingRoom");
   });
 });
