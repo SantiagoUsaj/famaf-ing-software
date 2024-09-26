@@ -115,7 +115,7 @@ describe("CreateGame", () => {
     expect(errorMessage).toBeInTheDocument();
   });
 
-  it("should navigate to /game when form is submitted", async () => {
+  it("should navigate to /waitingRoom when form is submitted", async () => {
     const mockNavigate = vi.fn();
     ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
 
