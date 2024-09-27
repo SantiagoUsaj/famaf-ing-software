@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
+import TableGames from "../components/TableGames";
 
 const LobbyPage = ({ playerID }) => {
   const navigate = useNavigate();
@@ -30,15 +31,8 @@ const LobbyPage = ({ playerID }) => {
 
       console.log("Mensaje recibido:", data);
 
-      if (data.type === "PARTIDAS_ACTUALES") {
-        // Actualizar la lista de partidas cuando se conecta
-        setPartidas(data.partidas);
-      }
-
-      if (data.type === "NUEVA_PARTIDA") {
-        // Añadir una nueva partida a la lista
-        setPartidas((prev) => [...prev, data.partida]);
-      }
+      // Actualizar la lista de partidas cuando se conecta
+      setPartidas(data);
     };
 
     // Manejar el cierre de la conexión
@@ -56,11 +50,12 @@ const LobbyPage = ({ playerID }) => {
   }, []);
 
   return (
-    <div className="pt-2">
+    <div className="pt-2 flex justify-center flex-col items-center">
       <LobbySquares />
       <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
         LobbyPage
       </h1>
+      <TableGames gamesList={partidas} />
       <Button
         className="flex m-auto my-3"
         type="primary"
