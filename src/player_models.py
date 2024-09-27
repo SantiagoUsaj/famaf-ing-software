@@ -10,3 +10,6 @@ class Player:
 
     def enter_a_game(self):
         self.state = "in game"
+        
+    def leave_a_game(self):
+        self.state = "not in game"
