@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
@@ -52,65 +52,87 @@ async def get_player(player_id: str):
 
 @app.post("/create_player/{player_name}")
 async def create_player(player_name: str):
-    player = Player(player_name)
-    playersBD[player.playerid] = player
-    return player.playerid
+    try:
+        if len(player_name) > 20 or not player_name.isalnum():
+            raise ValueError("Player name must be less than 20 characters or alphanumeric")
+        
+        player = Player(player_name)
+        playersBD[player.playerid] = player
+        return player.playerid
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/create_game/{player_id}/{game_name}/{game_size}")
 async def create_game(player_id: str, game_name: str, game_size: int):
-    game = Game(game_name, game_size)
-    games[game.game_id] = game
-    game.host = player_id
-    game.players.append(playersBD[player_id])
-    playersBD[player_id].enter_a_game()
-    global update
-    update = True
-    return game
+    try:
+        if len(game_name) > 20 or not game_name.isalnum():
+            raise ValueError("Game name must be less than 20 characters or alphanumeric")
+        elif game_size < 2 or game_size > 4:
+            raise ValueError("Game size must be between 2 and 4")
+        elif player_id not in playersBD:
+            raise HTTPException(status_code=404, detail="Player not found")
+        else:
+            game = Game(game_name, game_size)
+            games[game.game_id] = game
+            game.create_game(playersBD[player_id])
+            global updatea
+            update = True
+            return game
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.put("/leave_game/{player_id}/{game_id}")
 async def leave_game(player_id: str, game_id: str):
     if game_id not in games:
-        return {"message": "Game not found"}
-
-    game = games[game_id]
-
-    if not any(player.playerid == player_id for player in game.players):
-        return {"message": "Player not in game"}
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif player_id not in playersBD:
+        raise HTTPException(status_code=404, detail="Player not found")
     else:
-        game.players.remove(playersBD[player_id])
-        playersBD[player_id].leave_a_game()
+        game = games[game_id]
 
-    update=True
-    return game
+        if not any(player.playerid == player_id for player in game.players):
+            raise HTTPException(status_code=404, detail="Player not found in game")
+        elif get_host() == player_id:
+            raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
+        else:
+            game.remove_player(playersBD[player_id])
+            update=True
+            return game
 
 @app.put("/start_game/{player_id}/{game_id}")
 async def start_game(player_id: str, game_id: str):
     if game_id not in games:
-        return {"message": "Game not found"}
-
-    game = games[game_id]
-
-    if player_id != game.host:
-        return {"message": "Is not the owner"}
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif player_id not in playersBD:
+        raise HTTPException(status_code=404, detail="Player not found")
     else:
-        game.start_game()
-        update = True
-        return {"message": "Game started"}
+        game = games[game_id]
+
+        if player_id != game.host:
+            raise HTTPException(status_code=409, detail="Only the host can start the game")
+        else:
+            game.start_game()
+            update = True
+            return {"message": "Game started"}
 
 @app.put("/join_game/{player_id}/{game_id}")
-async def join_game(player_id: str, game_id: str):
-    if game_id not in games:
-        return {"message": "Game not found"}
+async def join_game(player_id: str, game_id: str): #chequear si el jugador ya esta en el juego
     
-    game = games[game_id]
+    if game_id not in games:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif player_id not in playersBD:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = games[game_id]
 
-    if len(game.players) == game.size:
-        return {"message": "Game is full"}
-
-    game.players.append(playersBD[player_id])
-    playersBD[player_id].enter_a_game()
-    update = True
-    return game
+        if len(game.players) == game.size:
+            raise HTTPException(status_code=409, detail="Game is full")
+        elif any(player.playerid == player_id for player in game.players):
+            raise HTTPException(status_code=409, detail="Player already in the game")
+        else:
+            game.add_player(playersBD[player_id])
+            update = True
+            return game
 
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: str):
