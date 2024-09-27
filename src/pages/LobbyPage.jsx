@@ -55,7 +55,7 @@ const LobbyPage = ({ playerID }) => {
       <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
         LobbyPage
       </h1>
-      <TableGames gamesList={partidas} />
+      <TableGames gamesList={partidas} playerID={playerID} />
       <Button
         className="flex m-auto my-3"
         type="primary"

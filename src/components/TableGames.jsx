@@ -1,35 +1,75 @@
 import React from "react";
 import { Space, Table, Tag } from "antd";
 const { Column, ColumnGroup } = Table;
+import { JoinGame } from "../services/LobbyServices";
 
-const TableGames = ({ gamesList }) => {
+const TableGames = ({ gamesList, playerID }) => {
   const data = [
     {
       key: "1",
       game_name: "Juego1",
+      game_id: "1",
+      size: "4",
+      players: ["1", "2", "3"],
     },
     {
       key: "2",
       game_name: "Juego2",
+      game_id: "2",
+      size: "2",
+      players: ["1", "2"],
     },
     {
       key: "3",
       game_name: "Juego3",
+      game_id: "3",
+      size: "4",
+      players: ["1", "2", "3"],
     },
   ];
+
+  const join = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de LeaveGame
+      const response = await JoinGame(playerID, game_id);
+
+      if (response) {
+        console.log("New Game Info:", response);
+
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/${playerID}/${game_id}/waitingRoom`);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
 
   return (
     <>
       <Table className="w-1/4" dataSource={gamesList}>
         <Column title="Nombre Partida" dataIndex="game_name" key="game_name" />
         <Column
+          title="Jugadores"
+          key="players"
+          render={(_, record) => `${record.players.length} / ${record.size}`}
+        />
+        <Column
           title="Action"
-          key="action"
+          dataIndex="game_id"
+          key="game_id"
+          align="center"
           render={(_, record) => (
             <Space size="middle">
-              <button onClick={() => alert(`Joining ${record.firstName}`)}>
-                Unirme
-              </button>
+              {record.players.length < record.size && (
+                <button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
+                  onClick={() => join(record.game_id)}
+                >
+                  Unirme
+                </button>
+              )}
             </Space>
           )}
         />

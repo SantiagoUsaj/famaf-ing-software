@@ -13,3 +13,17 @@ export const JoinLobby = async (playerName) => {
     console.error("Error al obtener datos:", error);
   }
 };
+
+export const JoinGame = async (playerName, game_id) => {
+  try {
+    const response = await axios.put(
+      `http://127.0.0.1:8000/join_game/${playerName}/${game_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};
