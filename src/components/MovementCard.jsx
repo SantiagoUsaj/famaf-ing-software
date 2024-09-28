@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import { Card, List } from "antd";
-import cambio from "../assets/images/cambiocolor.png"; // Add your image path here
-import mas2 from "../assets/images/mas2.png"; // Add your image path here
-import mas4 from "../assets/images/mas4.png"; // Add your image path here
+import mov1 from "../assets/images/mov1.svg"; // Add your image path here
+import mov2 from "../assets/images/mov2.svg"; // Add your image path here
+import mov3 from "../assets/images/mov3.svg"; // Add your image path here
+import mov4 from "../assets/images/mov4.svg"; // Add your image path here
+import mov5 from "../assets/images/mov5.svg"; // Add your image path here
+import mov6 from "../assets/images/mov6.svg"; // Add your image path here
+import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 
 const MovementCard = () => {
   const [data, setData] = useState([
@@ -25,13 +29,13 @@ const MovementCard = () => {
   const getImageForTitle = (title) => {
     switch (title) {
       case "Title 1":
-        return cambio;
+        return mov1;
       case "Title 2":
-        return mas2;
+        return mov2;
       case "Title 3":
-        return mas4;
+        return mov3;
       default:
-        return cambio;
+        return mov4;
     }
   };
   return (
