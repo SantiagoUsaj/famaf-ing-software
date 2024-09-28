@@ -2,29 +2,32 @@ import React from "react";
 import { Space, Table, Tag } from "antd";
 const { Column, ColumnGroup } = Table;
 import { JoinGame } from "../services/LobbyServices";
+import { useNavigate } from "react-router-dom";
 
 const TableGames = ({ gamesList, playerID }) => {
+  const navigate = useNavigate();
+
   const data = [
     {
       key: "1",
       game_name: "Juego1",
       game_id: "1",
-      size: "4",
-      players: ["1", "2", "3"],
+      game_size: "4",
+      players: "3",
     },
     {
       key: "2",
       game_name: "Juego2",
       game_id: "2",
-      size: "2",
-      players: ["1", "2"],
+      game_size: "2",
+      players: "3",
     },
     {
       key: "3",
       game_name: "Juego3",
       game_id: "3",
-      size: "4",
-      players: ["1", "2", "3"],
+      game_size: "4",
+      players: "3",
     },
   ];
 
@@ -53,7 +56,7 @@ const TableGames = ({ gamesList, playerID }) => {
         <Column
           title="Jugadores"
           key="players"
-          render={(_, record) => `${record.players.length} / ${record.size}`}
+          render={(_, record) => `${record.players} / ${record.game_size}`}
         />
         <Column
           title="Action"
@@ -62,7 +65,7 @@ const TableGames = ({ gamesList, playerID }) => {
           align="center"
           render={(_, record) => (
             <Space size="middle">
-              {record.players.length < record.size && (
+              {record.players < record.game_size && (
                 <button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
                   onClick={() => join(record.game_id)}
