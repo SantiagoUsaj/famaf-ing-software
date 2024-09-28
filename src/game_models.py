@@ -1,33 +1,34 @@
 import uuid
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from typing import List
-from player_models import Player
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
+engine = create_engine('sqlite:///games.db')
+Base = declarative_base()
 
-class Game:
+Session = sessionmaker(bind=engine)
+session = Session()
+
+class Game(Base):
+    __tablename__ = 'games'
+
+    gameid = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    state = Column(String, default="waiting")
+    size = Column(Integer, nullable=False)
+    host = Column(String, nullable=True)
+    turn = Column(Integer, default=1)
+
     def __init__(self, name: str, size: int):
+        self.gameid = str(uuid.uuid4())
         self.name = name
-        self.state = "waiting"
         self.size = size
-        self.players = []
-        self.game_id = str(uuid.uuid4())
-        self.host = None
 
     def start_game(self):
         self.state = "playing"
-        
-    def create_game(self, player: Player):
-        self.players.append(player)
-        self.host = player.playerid
-        player.enter_a_game()
-        
-    def add_player(self, player: Player):
-        self.players.append(player)
-        player.enter_a_game()
-        
-    def remove_player(self, player: Player):
-        self.players.remove(player)
-        player.leave_a_game()
-        
+
     def get_host(self):
         return self.host
+    
+Base.metadata.create_all(engine)

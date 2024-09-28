@@ -1,5 +1,5 @@
 import pytest
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient, HTTPException
 from unittest.mock import MagicMock, patch
 
 from .endpoints import app

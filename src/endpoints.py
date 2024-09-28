@@ -1,15 +1,14 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
+from game_models import Game, session 
+from player_models import Player, PlayerGame
 from fastapi.responses import HTMLResponse
-from game_models import Game
-from player_models import Player
 from manager_models import ConnectionManager
+
 app = FastAPI()
 
-playersBD = {}
-games = {}
 manager = ConnectionManager()
 update=False
 
@@ -22,43 +21,50 @@ app.add_middleware(
     allow_headers=["*"],  # Permite todas las cabeceras
 )
 
+
 @app.get("/players_in_game/{game_id}")
 async def get_players_in_game(game_id: str):
-    if game_id not in games:
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
         return {"message": "Game not found"}
     else:
-        game = games[game_id]
-        return [{"player_name": player.name, "player_id": player.playerid} for player in game.players]
+        player_games = session.query(PlayerGame).filter_by(gameid=game_id).all()
+        players_in_game = [session.query(Player).filter_by(playerid=pg.playerid).first() for pg in player_games]
+        return [{"player_name": player.name, "player_id": player.playerid} for player in players_in_game]
 
 @app.get("/players")
 async def get_players():
-    return playersBD
+    players = session.query(Player).all()
+    return [{"player_name": player.name, "player_id": player.playerid} for player in players]
 
 @app.get("/games")
 async def get_games():
-    return games
+    games = session.query(Game).all()
+    return [{"game_name": game.name, "game_id": game.gameid} for game in games]
 
 @app.get("/game/{game_id}")
 async def get_game(game_id: str):
-    if game_id not in games:
+    game = session.query(Game).filter_by(id=game_id).first()
+    if game is None:
         return {"message": "Game not found"}
-    return games[game_id]
+    return game
 
 @app.get("/player/{player_id}")
 async def get_player(player_id: str):
-    if player_id not in playersBD:
+    player = session.query(Player).filter_by(playerid=player_id).first()
+    if player is None:
         return {"message": "Player not found"}
-    return playersBD[player_id]
+    return player
 
 @app.post("/create_player/{player_name}")
 async def create_player(player_name: str):
     try:
         if len(player_name) > 20 or not player_name.isalnum():
-            raise ValueError("Player name must be less than 20 characters or alphanumeric")
-        
+            raise ValueError("Player name must be less than 20 character or alphanumeric")
         player = Player(player_name)
-        playersBD[player.playerid] = player
-        return player.playerid
+        session.add(player)
+        session.commit()
+        return player
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -69,13 +75,17 @@ async def create_game(player_id: str, game_name: str, game_size: int):
             raise ValueError("Game name must be less than 20 characters or alphanumeric")
         elif game_size < 2 or game_size > 4:
             raise ValueError("Game size must be between 2 and 4")
-        elif player_id not in playersBD:
+        elif (session.query(Player).filter_by(playerid=player_id).first()) is None :
             raise HTTPException(status_code=404, detail="Player not found")
         else:
             game = Game(game_name, game_size)
-            games[game.game_id] = game
-            game.create_game(playersBD[player_id])
-            global updatea
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            game.host = player.playerid
+            playergame = PlayerGame(player.playerid, game.gameid)
+            session.add(game)
+            session.add(playergame)
+            session.commit()
+            global update
             update = True
             return game
     except ValueError as e:
@@ -83,56 +93,58 @@ async def create_game(player_id: str, game_name: str, game_size: int):
 
 @app.put("/leave_game/{player_id}/{game_id}")
 async def leave_game(player_id: str, game_id: str):
-    if game_id not in games:
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
         raise HTTPException(status_code=404, detail="Game not found")
-    elif player_id not in playersBD:
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
         raise HTTPException(status_code=404, detail="Player not found")
     else:
-        game = games[game_id]
+        game = session.query(Game).filter_by(gameid=game_id).first()
 
-        if not any(player.playerid == player_id for player in game.players):
-            raise HTTPException(status_code=404, detail="Player not found in game")
-        elif get_host() == player_id:
+        if game.get_host() == player_id:
             raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
         else:
-            game.remove_player(playersBD[player_id])
+            PlayerGame.query.filter_by(playerid=player_id, gameid=game_id).delete()
+            game = session.query(Game).filter_by(gameid=game_id).first()
+            global update
             update=True
             return game
 
 @app.put("/start_game/{player_id}/{game_id}")
 async def start_game(player_id: str, game_id: str):
-    if game_id not in games:
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
         raise HTTPException(status_code=404, detail="Game not found")
-    elif player_id not in playersBD:
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
         raise HTTPException(status_code=404, detail="Player not found")
     else:
-        game = games[game_id]
-
+        game = session.query(Game).filter_by(gameid=game_id).first()
         if player_id != game.host:
             raise HTTPException(status_code=409, detail="Only the host can start the game")
         else:
             game.start_game()
+            PlayerGame.assign_random_turns(session, game_id)
+            session.commit()
             update = True
             return {"message": "Game started"}
 
 @app.put("/join_game/{player_id}/{game_id}")
-async def join_game(player_id: str, game_id: str): #chequear si el jugador ya esta en el juego
-    
-    if game_id not in games:
+async def join_game(player_id: str, game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
+    if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
-    elif player_id not in playersBD:
+    elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
+    elif game.state == "playing":
+        raise HTTPException(status_code=404, detail="Game is already playing")
+    elif session.query(PlayerGame).filter_by(gameid=game_id).count() == game.size:
+        return {"message": "Game is full"}
     else:
-        game = games[game_id]
 
-        if len(game.players) == game.size:
-            raise HTTPException(status_code=409, detail="Game is full")
-        elif any(player.playerid == player_id for player in game.players):
-            raise HTTPException(status_code=409, detail="Player already in the game")
-        else:
-            game.add_player(playersBD[player_id])
-            update = True
-            return game
+        playergame = PlayerGame(player_id, game_id)
+        session.add(playergame)
+        session.commit()
+        update = True
+        return game
 
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: str):
@@ -141,7 +153,10 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
         while True:
             data = await websocket.receive_text()
             if update:
+                games = session.query(Game).all()
+                playergame = session.query(PlayerGame).all()
                 await manager.broadcast(games)
+                await manager.broadcast(playergame)
                 update = False
     except WebSocketDisconnect:
         manager.disconnect(websocket)
