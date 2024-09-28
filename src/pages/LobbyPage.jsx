@@ -31,8 +31,14 @@ const LobbyPage = ({ playerID }) => {
 
       console.log("Mensaje recibido:", data);
 
-      // Actualizar la lista de partidas cuando se conecta
-      setPartidas(data);
+      // Agregar la clave 'key' a cada objeto en data
+      const dataWithKeys = data.map((item, index) => ({
+        ...item,
+        key: index,
+      }));
+
+      // Actualizar la lista de partidas con los datos modificados
+      setPartidas(dataWithKeys);
     };
 
     // Manejar el cierre de la conexión
