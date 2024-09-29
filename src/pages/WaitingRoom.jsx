@@ -91,7 +91,7 @@ const WaitingRoom = ({
     });
 
     // Crear la conexión WebSocket al backend
-    const ws = new WebSocket(`http://127.0.0.1:8000/ws/${playerID}`);
+    const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
     // Manejar la apertura de la conexión
     ws.onopen = () => {
@@ -104,14 +104,12 @@ const WaitingRoom = ({
 
       console.log("Mensaje recibido:", data);
 
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].game_id === game_id) {
-          setNumberOfPlayers(data[i].players);
-          setPlayersList(data[i].player_details);
-        }
-        if (data[i].game_id === game_id && data[i].state === "playing") {
-          navigate(`/${playerID}/${game_id}/game`);
-        }
+      if (data.game_id === game_id) {
+        setNumberOfPlayers(data.players);
+        setPlayersList(data.player_details);
+      }
+      if (data.game_id === game_id && data.state === "playing") {
+        navigate(`/${playerID}/${game_id}/game`);
       }
     };
 
