@@ -11,19 +11,24 @@ import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 const MovementCard = () => {
   const [data, setData] = useState([
     {
-      title: "Title 1",
+      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
     },
     {
-      title: "Title 2",
+      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
     },
     {
-      title: "Title 3",
+      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
     },
   ]);
 
   const handleCardClick = (title) => {
     console.log(`Card with title ${title} clicked`);
-    setData(data.filter((item) => item.title !== title));
+    const index = data.findIndex((item) => item.title === title);
+    if (index !== -1) {
+      const newData = [...data];
+      newData.splice(index, 1);
+      setData(newData);
+    }
   };
 
   const getImageForTitle = (title) => {
@@ -34,8 +39,16 @@ const MovementCard = () => {
         return mov2;
       case "Title 3":
         return mov3;
-      default:
+      case "Title 4":
         return mov4;
+      case "Title 5":
+        return mov5;
+      case "Title 6":
+        return mov6;
+      case "Title 7":
+        return mov7;
+      default:
+        return mov1;
     }
   };
   return (

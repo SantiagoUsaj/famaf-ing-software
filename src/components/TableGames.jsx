@@ -51,7 +51,11 @@ const TableGames = ({ gamesList, playerID }) => {
 
   return (
     <>
-      <Table className="w-1/4" dataSource={gamesList}>
+      <Table
+        className="w-1/4"
+        dataSource={gamesList}
+        pagination={{ pageSize: 5 }}
+      >
         <Column title="Nombre Partida" dataIndex="game_name" key="game_name" />
         <Column
           title="Jugadores"
@@ -65,13 +69,15 @@ const TableGames = ({ gamesList, playerID }) => {
           align="center"
           render={(_, record) => (
             <Space size="middle">
-              {record.players < record.game_size && (
+              {record.players < record.game_size ? (
                 <button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
                   onClick={() => join(record.game_id)}
                 >
                   Unirme
                 </button>
+              ) : (
+                <span className="text-red-500 font-bold">Sala llena</span>
               )}
             </Space>
           )}

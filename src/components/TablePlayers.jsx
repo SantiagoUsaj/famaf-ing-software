@@ -10,8 +10,8 @@ const TablePlayers = ({ playersList, isCreator }) => {
   const columns = [
     {
       title: "Jugadores",
-      dataIndex: "name",
-      key: "name",
+      dataIndex: "player_name",
+      key: "player_name",
       render: (text) => <a>{text}</a>,
     },
     {
@@ -36,7 +36,7 @@ const TablePlayers = ({ playersList, isCreator }) => {
 
   const data = playersList.map((player) => ({
     ...player,
-    tags: [player.playerid === isCreator ? "Creador" : "Jugador"],
+    tags: [player.player_id === isCreator ? "Creador" : "Jugador"],
   }));
 
   return (

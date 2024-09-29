@@ -15,7 +15,7 @@ export const GameData = async (game_id) => {
 export const LeaveGame = async (player_id, game_id) => {
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/start_game/${player_id}/${game_id}`
+      `http://127.0.0.1:8000/leave_game/${player_id}/${game_id}`
     );
 
     console.log(response.data);

@@ -18,7 +18,7 @@ const LoginPage = () => {
         console.log("Lobby response:", response);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${response}`);
+        navigate(`/lobby/${response.player_id}`);
       }
     } catch (error) {
       console.error("Error joining lobby:", error);

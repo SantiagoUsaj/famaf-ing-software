@@ -18,6 +18,7 @@ const WaitingRoom = ({
 }) => {
   const navigate = useNavigate();
   const [gameName, setGameName] = useState(initialGameName);
+  const [gamestate, setGamestate] = useState();
   const [isCreator, setIsCreator] = useState(initialIsCreator);
   const [numberOfPlayers, setNumberOfPlayers] = useState(
     initialNumberOfPlayers
@@ -84,11 +85,12 @@ const WaitingRoom = ({
     // Llamamos a la función getGameInfo
     getGameInfo(game_id).then((response) => {
       if (response) {
-        setGameName(response.name);
-        setIsCreator(response.host);
-        setNumberOfPlayers(response.players.length);
-        setMaxNumberOfPlayers(response.size);
-        setPlayersList(response.players);
+        setGameName(response.game_name);
+        setGamestate(response.state);
+        setIsCreator(response.host_id);
+        setNumberOfPlayers(response.players);
+        setMaxNumberOfPlayers(response.game_size);
+        setPlayersList(response.player_details);
       }
     });
 
@@ -107,6 +109,10 @@ const WaitingRoom = ({
       console.log("Mensaje recibido:", data);
 
       for (let i = 0; i < data.length; i++) {
+        if (data[i].game_id === game_id) {
+          setNumberOfPlayers(data[i].players);
+          setPlayersList(data[i].player_details);
+        }
         if (data[i].game_id === game_id && data[i].state === "playing") {
           navigate(`/${playerID}/${game_id}/game`);
         }
