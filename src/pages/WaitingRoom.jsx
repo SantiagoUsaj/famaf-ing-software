@@ -3,11 +3,7 @@ import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
-import {
-  GameData,
-  LeaveGame,
-  StartGame,
-} from "../services/WaitingRoomServices";
+import { GameData, LeaveGame, StartGame } from "../services/GameServices";
 
 const WaitingRoom = ({
   game_id,
