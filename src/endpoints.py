@@ -29,7 +29,7 @@ async def get_players():
 @app.get("/games")
 async def get_games():
     games = session.query(Game).all()
-    return [{"game_name": game.name, "game_id": game.gameid, "host_id": game.host, "state": game.state} for game in games]
+    return [{"game_name": game.name, "game_id": game.gameid, "host_id": game.host, "state": game.state,"size":game.size,"current player":PlayerGame.get_count_of_players_in_game(session,game.gameid)} for game in games]
 
 @app.get("/game/{game_id}")
 async def get_game(game_id: str):
@@ -128,7 +128,6 @@ async def leave_game(player_id: str, game_id: str):
         else:
             session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).delete()
             player = session.query(Player).filter_by(playerid=player_id).first()
-            game.remove_player()
             global update
             update = True
             return {"message": player.name + " left the game " + game.name}
@@ -157,13 +156,10 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
     await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            if update:
-                games = session.query(Game).all()
-                playergame = session.query(PlayerGame).all()
-                await manager.broadcast(games)
-                await manager.broadcast(playergame)
-                update = False
+            games = session.query(Game).all()
+            game_list = [{"game_name": game.name, "game_id": game.gameid,
+                          "state": game.state, "game_size": game.size, "players": PlayerGame.get_count_of_players_in_game(session, game.gameid)} for game in games]
+            await websocket.send_json(game_list)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{player_id} left the chat")
