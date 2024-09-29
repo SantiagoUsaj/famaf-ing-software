@@ -34,6 +34,10 @@ pip install fastapi
 pip install uvicorn
 ```
 
+```bash
+pip install SQLalchemy
+```
+
 y para ejecutar nuestro servidor iremos al path de nuestro archivo a corre y ejecutaremos el comando
 ```bash
 uvicorn main:app --reload
