@@ -150,6 +150,36 @@ async def start_game(player_id: str, game_id: str):
             session.commit()
             update = True
             return {"message": "Game started"}
+        
+@app.delete("/delete_player/{player_id}")
+async def delete_player(player_id: str):
+    player = session.query(Player).filter_by(playerid=player_id).first()
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        session.query(PlayerGame).filter_by(playerid=player_id).delete()
+        session.query(Player).filter_by(playerid=player_id).delete()
+        session.commit()
+        return {"message": "Player deleted"}
+
+@app.delete("/delete_game/{game_id}")
+async def delete_game(game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    else:
+        session.query(PlayerGame).filter_by(gameid=game_id).delete()
+        session.query(Game).filter_by(gameid=game_id).delete()
+        session.commit()
+        return {"message": "Game deleted"}
+
+@app.delete("/delete_all")
+async def delete_all():
+    session.query(PlayerGame).delete()
+    session.query(Game).delete()
+    session.query(Player).delete()
+    session.commit()
+    return {"message": "All players and games deleted"}
 
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: str):
