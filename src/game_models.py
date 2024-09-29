@@ -31,4 +31,7 @@ class Game(Base):
     def get_host(self):
         return self.host
     
+    def get_game_size(self):
+        return self.size
+    
 Base.metadata.create_all(engine)

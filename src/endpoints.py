@@ -21,17 +21,6 @@ app.add_middleware(
     allow_headers=["*"],  # Permite todas las cabeceras
 )
 
-
-@app.get("/players_in_game/{game_id}")
-async def get_players_in_game(game_id: str):
-    game = session.query(Game).filter_by(gameid=game_id).first()
-    if game is None:
-        return {"message": "Game not found"}
-    else:
-        player_games = session.query(PlayerGame).filter_by(gameid=game_id).all()
-        players_in_game = [session.query(Player).filter_by(playerid=pg.playerid).first() for pg in player_games]
-        return [{"player_name": player.name, "player_id": player.playerid} for player in players_in_game]
-
 @app.get("/players")
 async def get_players():
     players = session.query(Player).all()
@@ -40,11 +29,11 @@ async def get_players():
 @app.get("/games")
 async def get_games():
     games = session.query(Game).all()
-    return [{"game_name": game.name, "game_id": game.gameid} for game in games]
+    return [{"game_name": game.name, "game_id": game.gameid, "host_id": game.host, "state": game.state} for game in games]
 
 @app.get("/game/{game_id}")
 async def get_game(game_id: str):
-    game = session.query(Game).filter_by(id=game_id).first()
+    game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
         return {"message": "Game not found"}
     return game
@@ -56,6 +45,16 @@ async def get_player(player_id: str):
         return {"message": "Player not found"}
     return player
 
+@app.get("/players_in_game/{game_id}")
+async def get_players_in_game(game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
+        return {"message": "Game not found"}
+    else:
+        player_games = session.query(PlayerGame).filter_by(gameid=game_id).all()
+        players_in_game = [session.query(Player).filter_by(playerid=pg.playerid).first() for pg in player_games]
+        return [{"player_name": player.name, "player_id": player.playerid} for player in players_in_game]
+
 @app.post("/create_player/{player_name}")
 async def create_player(player_name: str):
     try:
@@ -64,7 +63,7 @@ async def create_player(player_name: str):
         player = Player(player_name)
         session.add(player)
         session.commit()
-        return player
+        return {"player_id": player.playerid}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -87,44 +86,9 @@ async def create_game(player_id: str, game_name: str, game_size: int):
             session.commit()
             global update
             update = True
-            return game
+            return {"game_id": game.gameid}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-@app.put("/leave_game/{player_id}/{game_id}")
-async def leave_game(player_id: str, game_id: str):
-    if session.query(Game).filter_by(gameid=game_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Player not found")
-    else:
-        game = session.query(Game).filter_by(gameid=game_id).first()
-
-        if game.get_host() == player_id:
-            raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
-        else:
-            PlayerGame.query.filter_by(playerid=player_id, gameid=game_id).delete()
-            game = session.query(Game).filter_by(gameid=game_id).first()
-            global update
-            update=True
-            return game
-
-@app.put("/start_game/{player_id}/{game_id}")
-async def start_game(player_id: str, game_id: str):
-    if session.query(Game).filter_by(gameid=game_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Player not found")
-    else:
-        game = session.query(Game).filter_by(gameid=game_id).first()
-        if player_id != game.host:
-            raise HTTPException(status_code=409, detail="Only the host can start the game")
-        else:
-            game.start_game()
-            PlayerGame.assign_random_turns(session, game_id)
-            session.commit()
-            update = True
-            return {"message": "Game started"}
 
 @app.put("/join_game/{player_id}/{game_id}")
 async def join_game(player_id: str, game_id: str):
@@ -136,15 +100,59 @@ async def join_game(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Player not found")
     elif game.state == "playing":
         raise HTTPException(status_code=404, detail="Game is already playing")
+    elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() > 0:
+        raise HTTPException(status_code=409, detail="Player is already in the game")
+    elif session.query(PlayerGame).filter_by(playerid=player_id).count() > 0:
+        raise HTTPException(status_code=409, detail="Player is already in another game")
     elif session.query(PlayerGame).filter_by(gameid=game_id).count() == game.size:
-        return {"message": "Game is full"}
+        raise HTTPException(status_code=409, detail="Game is full")
+    elif game.state == "playing":
+        raise HTTPException(status_code=409, detail="Game is already playing")
     else:
-
+        game.add_player()
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
         session.commit()
         update = True
-        return game
+        return {"message": player.name + " joined the game" + game.name}
+    
+@app.put("/leave_game/{player_id}/{game_id}")
+async def leave_game(player_id: str, game_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+
+        if game.host == player_id:
+            raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
+        else:
+            session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).delete()
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            game.remove_player()
+            global update
+            update = True
+            return {"message": player.name + " left the game " + game.name}
+    
+@app.put("/start_game/{player_id}/{game_id}")
+async def start_game(player_id: str, game_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+        if player_id != game.host:
+            raise HTTPException(status_code=409, detail="Only the host can start the game")
+        #elif game.get_player_count() < game.get_game_size():
+        #    raise HTTPException(status_code=409, detail="The game is not full")
+        else:
+            game.start_game()
+            PlayerGame.assign_random_turns(session, game_id)
+            session.commit()
+            update = True
+            return {"message": "Game started"}
 
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: str):
