@@ -58,9 +58,9 @@ const GamePage = ({ playerID, game_id }) => {
   })();
 
   return (
-    <div className="text-white text-center m-auto">
+    <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
       <div
-        className="container m-auto"
+        className="container"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(6, 50px)",
@@ -72,8 +72,9 @@ const GamePage = ({ playerID, game_id }) => {
       </div>
       <div className="Cards">
         <MovementCard />
+        <FigureCard />
       </div>
-      <div className="turn text-white absolute bottom-5">
+      <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
         <h1>{turn}</h1>
       </div>
