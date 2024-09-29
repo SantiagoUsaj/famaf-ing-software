@@ -35,21 +35,33 @@ async def get_games():
 async def get_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
-        return {"message": "Game not found"}
-    return game
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
+    player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
+
+    return {
+        "game_name": game.name,
+        "game_id": game.gameid,
+        "state": game.state,
+        "game_size": game.size,
+        "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
+        "player_details": player_details,
+        "host_id": game.host
+    }
 
 @app.get("/player/{player_id}")
 async def get_player(player_id: str):
     player = session.query(Player).filter_by(playerid=player_id).first()
     if player is None:
-        return {"message": "Player not found"}
+        raise HTTPException(status_code=404, detail="Player not found")
     return player
 
 @app.get("/players_in_game/{game_id}")
 async def get_players_in_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
-        return {"message": "Game not found"}
+        raise HTTPException(status_code=404, detail="Game not found")
     else:
         player_games = session.query(PlayerGame).filter_by(gameid=game_id).all()
         players_in_game = [session.query(Player).filter_by(playerid=pg.playerid).first() for pg in player_games]
@@ -98,15 +110,13 @@ async def join_game(player_id: str, game_id: str):
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
     elif game.state == "playing":
-        raise HTTPException(status_code=404, detail="Game is already playing")
+        raise HTTPException(status_code=409, detail="Game is already playing")
     elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() > 0:
         raise HTTPException(status_code=409, detail="Player is already in the game")
     elif session.query(PlayerGame).filter_by(playerid=player_id).count() > 0:
         raise HTTPException(status_code=409, detail="Player is already in another game")
     elif session.query(PlayerGame).filter_by(gameid=game_id).count() == game.size:
         raise HTTPException(status_code=409, detail="Game is full")
-    elif game.state == "playing":
-        raise HTTPException(status_code=409, detail="Game is already playing")
     else:
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)

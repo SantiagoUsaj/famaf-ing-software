@@ -48,6 +48,14 @@ en nuestro caso en ves del archivo *main.py* sera *endponint_player.py* y con es
 Ahora para ver la documentacion del mismo con ir a la pagina
 *http://127.0.0.1:8000/docs* podremos ver todos los endpoints de nuestra api.
 
+## Runear los test
+
+Hay que estar en la dirección `/backend/src` y ahí se ejecuta el comando:
+
+```bash
+python3 -m pytest tests_endpoints.py -v
+```
+
 ## Organizacion de archivos
 
 **`src/`**: Carpeta principal para el código fuente.
