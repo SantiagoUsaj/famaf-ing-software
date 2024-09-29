@@ -51,7 +51,7 @@ const LobbyPage = ({playerID}) => {
         Crear Partida
       </Button>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
-        <GamesTable gamesList={gamesList} />
+        <GamesTable gamesList={partidas} />
       </div>
     </div>
 
