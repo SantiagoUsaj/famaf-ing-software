@@ -115,7 +115,7 @@ async def join_game(player_id: str, game_id: str):
         session.commit()
         update = True
         return {"message": player.name + " joined the game" + game.name}
-    
+     
 @app.put("/leave_game/{player_id}/{game_id}")
 async def leave_game(player_id: str, game_id: str):
     if session.query(Game).filter_by(gameid=game_id).count() == 0:
@@ -169,3 +169,4 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{player_id} left the chat")
+        
