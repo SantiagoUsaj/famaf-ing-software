@@ -22,6 +22,7 @@ class Player(Base):
     @staticmethod
     def get_all_players():
         return session.query(Player).all()
+
     
 class PlayerGame(Base):
     __tablename__ = 'playergames'

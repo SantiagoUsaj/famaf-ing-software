@@ -1,180 +1,130 @@
 import pytest
-from fastapi.testclient import TestClient, HTTPException
 from unittest.mock import MagicMock, patch
+from fastapi.testclient import TestClient
 
-from .endpoints import app
+from app import app
 
 client = TestClient(app)
 
-@pytest.fixture
-def player_1():
-    return {
-      "1234": {
-      "name": "Fede",
-      "playerid": "1234",
-      "state": "not in game"
-    }
-}
-    
-@pytest.fixture
-def player_2():
-    return {
-      "2222": {
-      "name": "Ronnie",
-      "playerid": "2222",
-      "state": "not in game"
-    }
-}
-    
-@pytest.fixture
-def player_3():
-    return {
-      "3456547": {
-      "name": "Santi",
-      "playerid": "3456547",
-      "state": "not in game"
-    }
-}
-    
-@pytest.fixture
-def game_1():
-    return {
-      "name": "game1",
-      "state": "waiting",
-      "size": 3,
-      "players": [
-          {
-          "name": "Fede",
-          "playerid": "1234",
-          "state": "in game"
-          }
-      ],
-      "game_id": "0000",
-      "host": "1234"
-}
-    
-@pytest.fixture
-def game_2():
-    return {
-        "name": "game2",
-        "state": "waiting",
-        "size": 3,
-        "players": [
-            {
-            "name": "Fede",
-            "playerid": "1234",
-            "state": "in game"
-            }
-        ],
-        "game_id": "1111",
-        "host": "1234"
-}
-    
-    
-# Test create_player
+# @patch('app.create_player')
+# def test_create_player(mock_create_player, player_1):
+#   mock_player = MagicMock()
+#   mock_player.create_player.json.return_value = player_1
+#   mock_create_player.json.return_value = mock_player
+  
+#   response = client.post("/create_player/Fede")
+#   assert response.status_code == 200
+#   assert response.json() == player_1
 
-# Test create_player correct player
-@patch('app.create_player')
-def test_create_player(mock_create_player, player_1):
-  mock_player = MagicMock()
-  mock_player.create_player.return_value = player_1
-  mock_create_player.return_value = player_1
-  
-  response = client.post("/create_player/Fede")
-  assert response.status_code == 200
-  assert response.json() == player_1
-  
-# Test create_player incorrect player
-@patch('app.create_player')
-def test_create_player(mock_create_player):
-  mock_player = MagicMock()
-  mock_player.create_player.return_value = ValueError("Player name must be less than 20 characters or alphanumeric")
-  mock_create_player.return_value = mock_player
-  
-  response = client.post("/create_player/Fede#&#123456789000000///&")
+# Test de crear player
+
+def test_create_player_invalid_name():
+  player_name = "Santi Afonso!"  
+  response = client.post(f"/create_player/{player_name}")
+
   assert response.status_code == 400
-  assert response.json() == {"detail": "Player name must be less than 20 characters or alphanumeric"}
-  
-  
-# Test create_game 
-  
-# Test create_game correct game
-@patch('app.create_game')
-def test_create_game(mock_create_game, player_1, game_1):
-  mock_game = MagicMock()
-  mock_game.create_game.return_value = game_1
-  mock_create_game.return_value = game_1
-  
-  response = client.post("/create_game/1234/game1/3")
-  assert response.status_code == 200
-  assert response.json() == game_1
-  
-# Test create_game not found player
-def test_create_game_not_found_player(mock_create_game, game_1):
-  mock_game = MagicMock()
-  mock_game.create_game.return_value = HTTPException(status_code=404, detail="Player not found")
-  mock_create_game.return_value = mock_game
-  
-  response = client.post("/create_game/0000/game1/3")
-  assert response.status_code == 404
-  assert response.json() == {"detail": "Player not found"}
-  
-# Test create_game incorrect game name
-def test_create_game_inc_game_name(mock_create_game):
-  mock_game = MagicMock()
-  mock_game.create_game.return_value = ValueError("Game name must be less than 20 characters or alphanumeric")
-  mock_create_game.return_value = mock_game
-  
-  response = client.post("/create_game/1234/game1#&#1234563240&////&/3")
+  assert response.json() == {"detail": "Player name must be less than 20 character or alphanumeric"}
+
+def test_create_player_name_too_long():
+  player_name = "a" * 21
+  response = client.post(f"/create_player/{player_name}")
+
+  assert response.status_code == 400
+  assert response.json() == {"detail": "Player name must be less than 20 character or alphanumeric"}
+
+
+# Test de crear game
+
+def test_create_game_invalid_name():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  game_name = "In val!d G@me"
+  game_size = 3
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+
+  assert response.status_code == 400
+  assert response.json() == {"detail": "Game name must be less than 20 characters or alphanumeric"}
+
+def test_create_game_name_too_long():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  game_name = "a" * 21
+  game_size = 3
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+
   assert response.status_code == 400
   assert response.json() == {"detail": "Game name must be less than 20 characters or alphanumeric"}
   
-# Test create_game incorrect game size
-def test_create_game_inc_game_size(mock_create_game):
-  mock_game = MagicMock()
-  mock_game.create_game.return_value = ValueError("Game size must be between 2 and 4")
-  mock_create_game.return_value = mock_game
+def test_create_game_invalid_size():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
   
-  response = client.post("/create_game/1234/game1/1")
+  game_name = "ValidGame"
+  game_size = 1
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+
   assert response.status_code == 400
   assert response.json() == {"detail": "Game size must be between 2 and 4"}
   
+def test_create_game_size_too_big():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  game_name = "ValidGame"
+  game_size = 10
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
 
-# Test leave_game
+  assert response.status_code == 400
+  assert response.json() == {"detail": "Game size must be between 2 and 4"}
+  
+def test_create_game_player_not_found():
+  player_name = "ValidPlayer"
+  player_id = "1234"
+  
+  game_name = "ValidGame"
+  game_size = 3
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
 
-# Test leave_game correct game
-@patch('app.leave_game')
-def test_leave_game(mock_leave_game, player_2, game_2):
-  mock_game = MagicMock()
-  mock_game.leave_game.return_value = game_2
-  mock_leave_game.return_value = game_2
-  
-  client.put("/create_game/1234/game2/3")
-  client.put("/join_game/2222/1111")
-  response = client.put("/leave_game/2222/1111")
-  assert response.status_code == 200
-  assert response.json() == game_2
-  
-# Test leave_game not found player
-def test_leave_game_not_found_player(mock_leave_game, game_2):
-  mock_game = MagicMock()
-  mock_game.leave_game.return_value = HTTPException(status_code=404, detail="Player not found")
-  mock_leave_game.return_value = mock_game
-  
-  response = client.put("/leave_game/294673/1111")
   assert response.status_code == 404
   assert response.json() == {"detail": "Player not found"}
   
-# Test leave_game not found game
-def test_leave_game_not_found_game(mock_leave_game, player_2):
-  mock_game = MagicMock()
-  mock_game.leave_game.return_value = {"message": "Game not found"}
-  mock_leave_game.return_value = mock_game
   
-  response = client.put("/leave_game/2222/93495")
-  assert response.status_code == 404
-  assert response.json() == {"message": "Game not found"}
+# Test de get players
 
-
-
+def test_get_players():
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
   
+  response = client.get("/players")
+  assert response.status_code == 200
+  assert response.json() == [{"player_name": player_name, "player_id": player_id}]
+
+
+# Test de get games
+
+def test_get_games():
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  game_state = "waiting"
+  current_player = 1
+  
+  response = client.get("/games")
+  assert response.status_code == 200
+  assert response.json() == [{"game_name": game_name, "game_id": game_id, "host_id": player_id, "state": game_state, "size": game_size, "current player": current_player}]
+  
+
+# Test de get game
