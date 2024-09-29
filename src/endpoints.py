@@ -77,9 +77,8 @@ async def create_game(player_id: str, game_name: str, game_size: int):
         elif (session.query(Player).filter_by(playerid=player_id).first()) is None :
             raise HTTPException(status_code=404, detail="Player not found")
         else:
-            game = Game(game_name, game_size)
             player = session.query(Player).filter_by(playerid=player_id).first()
-            game.host = player.playerid
+            game = Game(game_name, game_size, player.playerid)
             playergame = PlayerGame(player.playerid, game.gameid)
             session.add(game)
             session.add(playergame)
@@ -109,12 +108,11 @@ async def join_game(player_id: str, game_id: str):
     elif game.state == "playing":
         raise HTTPException(status_code=409, detail="Game is already playing")
     else:
-        game.add_player()
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
         session.commit()
         update = True
-        return {"message": player.name + " joined the game" + game.name}
+        return {"message": player.name + " joined the game " + game.name}
      
 @app.put("/leave_game/{player_id}/{game_id}")
 async def leave_game(player_id: str, game_id: str):
@@ -145,8 +143,8 @@ async def start_game(player_id: str, game_id: str):
         game = session.query(Game).filter_by(gameid=game_id).first()
         if player_id != game.host:
             raise HTTPException(status_code=409, detail="Only the host can start the game")
-        #elif game.get_player_count() < game.get_game_size():
-        #    raise HTTPException(status_code=409, detail="The game is not full")
+        elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
+            raise HTTPException(status_code=409, detail="The game is not full")
         else:
             game.start_game()
             PlayerGame.assign_random_turns(session, game_id)

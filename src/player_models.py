@@ -44,6 +44,9 @@ class PlayerGame(Base):
         
         for player_game, turn in zip(players_in_game, turns):
             player_game.turn = turn
+    
+    def get_count_of_players_in_game(session, gameid: int):
+        return session.query(PlayerGame).filter_by(gameid=gameid).count()
         
 
 # Create the table
