@@ -60,7 +60,11 @@ const TableGames = ({ gamesList, playerID }) => {
         <Column
           title="Jugadores"
           key="players"
-          render={(_, record) => `${record.players} / ${record.game_size}`}
+          render={(_, record) =>
+            record.state === "playing"
+              ? `${record.game_size} / ${record.game_size}`
+              : `${record.players} / ${record.game_size}`
+          }
         />
         <Column
           title="Action"
@@ -69,13 +73,16 @@ const TableGames = ({ gamesList, playerID }) => {
           align="center"
           render={(_, record) => (
             <Space size="middle">
-              {record.players < record.game_size ? (
+              {record.state === "waiting" &&
+              record.players < record.game_size ? (
                 <button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
                   onClick={() => join(record.game_id)}
                 >
                   Unirme
                 </button>
+              ) : record.state === "playing" ? (
+                <span className="text-green-500 font-bold">Jugando</span>
               ) : (
                 <span className="text-red-500 font-bold">Sala llena</span>
               )}

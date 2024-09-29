@@ -61,14 +61,11 @@ const MovementCard = () => {
       renderItem={(item) => (
         <List.Item style={{ display: "flex", justifyContent: "center" }}>
           <Card
-            title={item.title}
             onClick={() => handleCardClick(item.title)}
             hoverable
-            style={{ width: 300, height: 200 }} // Adjust the width and height as needed
+            style={{ width: 150, height: 100 }} // Adjust the width and height as needed
             cover={<img alt={item.title} src={getImageForTitle(item.title)} />} // Add your image path here
-          >
-            Card content
-          </Card>
+          />
         </List.Item>
       )}
     />

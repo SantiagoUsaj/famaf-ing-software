@@ -28,7 +28,7 @@ function CreateGameWithParams() {
 
 function GameWithParams() {
   const { playerID, gameID } = useParams();
-  return <GamePage playerID={playerID} gameID={gameID} />;
+  return <GamePage playerID={playerID} game_id={gameID} />;
 }
 
 function App() {
