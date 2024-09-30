@@ -103,7 +103,25 @@ async def leave_game(player_id: str, game_id: str):
             global update
             update = True
             return {"message": player.name + " left the game " + game.name}
-    
+
+@router.put("/start_game/{player_id}/{game_id}")
+async def start_game(player_id: str, game_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+        if player_id != game.host:
+            raise HTTPException(status_code=409, detail="Only the host can start the game")
+        elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
+            raise HTTPException(status_code=409, detail="The game is not full")
+        else:
+            game.start_game()
+            game.turn = ",".join([str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()])
+            session.commit()
+            update = True
+            return {"message": "Game started"}
 
 @router.put("/next_turn/{player_id}/{game_id}")
 async def next_turn(player_id: str, game_id: str):
