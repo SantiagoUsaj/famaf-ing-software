@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models.manager_models import ConnectionManager
 from routes.player import router as player_router
