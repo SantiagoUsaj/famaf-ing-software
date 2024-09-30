@@ -1,10 +1,14 @@
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, String, Integer
-from sqlalchemy import ForeignKey
+from sqlalchemy.orm import sessionmaker, relationship
 import uuid
+import os
+# Crear la carpeta "base de datos" si no existe
+if not os.path.exists('database'):
+    os.makedirs('database')
 
-engine = create_engine('sqlite:///games.db')
+# Configurar el motor de la base de datos para usar un archivo SQLite en la carpeta "base de datos"
+engine = create_engine('sqlite:///database/games.db')
 Base = declarative_base()
 
 Session = sessionmaker(bind=engine)
@@ -35,14 +39,14 @@ class Game(Base):
     def get_game_size(self):
         return self.size   
     
-class Table(Base):
-    __tablename__ = 'table'
+# class Table(Base):
+#     __tablename__ = 'table'
 
-    gameid = Column(String, ForeignKey('games.gameid'), primary_key=True)
+#     gameid = Column(String, ForeignKey('games.gameid'), primary_key=True)
     
 
-    def __init__(self, gameid: str):
-        self.gameid = gameid
+#     def __init__(self, gameid: str):
+#         self.gameid = gameid
 
 
 # class Tile(Base):

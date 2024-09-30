@@ -1,0 +1,127 @@
+from fastapi import APIRouter, HTTPException
+from models.game_models import Game, session
+from models.player_models import Player, PlayerGame
+    
+router = APIRouter()
+
+@router.get("/games")
+async def get_games():
+    games = session.query(Game).all()
+    return [{"game_name": game.name, "game_id": game.gameid, "host_id": game.host,
+            "state": game.state, "size": game.size, "current_player": PlayerGame.get_count_of_players_in_game(session, game.gameid), 
+            "turn": game.turn} for game in games]
+
+@router.get("/game/{game_id}")
+async def get_game(game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
+    player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
+
+    return {
+        "game_name": game.name,
+        "game_id": game.gameid,
+        "state": game.state,
+        "game_size": game.size,
+        "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
+        "player_details": player_details,
+        "host_id": game.host,
+        "turn": game.turn
+    }
+
+@router.post("/create_game/{player_id}/{game_name}/{game_size}")
+async def create_game(player_id: str, game_name: str, game_size: int):
+    try:
+        if len(game_name) > 20 or not game_name.isalnum():
+            raise ValueError("Game name must be less than 20 characters or alphanumeric")
+        elif game_size < 2 or game_size > 4:
+            raise ValueError("Game size must be between 2 and 4")
+        elif (session.query(Player).filter_by(playerid=player_id).first()) is None :
+            raise HTTPException(status_code=404, detail="Player not found")
+        else:
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            game = Game(game_name, game_size, player.playerid)
+            playergame = PlayerGame(player.playerid, game.gameid)
+            session.add(game)
+            session.add(playergame)
+            session.commit()
+            global update
+            update = True
+            return {"game_id": game.gameid}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/join_game/{player_id}/{game_id}")
+async def join_game(player_id: str, game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    elif game.state == "playing":
+        raise HTTPException(status_code=404, detail="Game is already playing")
+    elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() > 0:
+        raise HTTPException(status_code=409, detail="Player is already in the game")
+    elif session.query(PlayerGame).filter_by(playerid=player_id).count() > 0:
+        raise HTTPException(status_code=409, detail="Player is already in another game")
+    elif session.query(PlayerGame).filter_by(gameid=game_id).count() == game.size:
+        raise HTTPException(status_code=409, detail="Game is full")
+    else:
+        playergame = PlayerGame(player_id, game_id)
+        session.add(playergame)
+        session.commit()
+        update = True
+        return {"message": player.name + " joined the game " + game.name}
+     
+
+@router.put("/leave_game/{player_id}/{game_id}")
+async def leave_game(player_id: str, game_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+
+        if game.host == player_id and game.state == "waiting":
+            raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
+        elif session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).count() == 0:
+            raise HTTPException(status_code=409, detail="Player is not in the game")
+        else:
+            session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).delete()
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            global update
+            update = True
+            return {"message": player.name + " left the game " + game.name}
+    
+
+@router.put("/next_turn/{player_id}/{game_id}")
+async def next_turn(player_id: str, game_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+        if player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
+        else:
+            game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
+            session.commit()
+            update = True
+            return {"message": "Next turn"}
+
+
+@router.delete("/delete_game/{game_id}")
+async def delete_game(game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    else:
+        session.query(PlayerGame).filter_by(gameid=game_id).delete()
+        session.query(Game).filter_by(gameid=game_id).delete()
+        session.commit()
+        return {"message": "Game deleted"}

@@ -4,9 +4,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app import app
-from game_models import Base, Game, engine, session
+from models.game_models import Base, Game, engine, session
+from models.player_models import Player, PlayerGame
 
-# Crea todas las tablas
+# Crea todas las tabl as
 Base.metadata.create_all(engine)
 
 client = TestClient(app)
