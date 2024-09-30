@@ -81,6 +81,11 @@ const GamePage = ({ playerID, game_id }) => {
     try {
       console.log("Player ID:", playerID);
       console.log("Game ID:", game_id);
+
+      if (playerID === turn) {
+        await passTurn(game_id);
+      }
+
       // Esperamos la resolución de la promesa de LeaveGame
       const response = await LeaveGame(playerID, game_id);
 
