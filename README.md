@@ -36,6 +36,7 @@ pip install fastapi==0.108.0
 
 ```bash
 pip install uvicorn
+pip install 'uvicorn[standard]'
 ```
 
 ```bash
