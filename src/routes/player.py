@@ -39,28 +39,6 @@ async def create_player(player_name: str):
         return {"player_id": player.playerid}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
-@router.put("/start_game/{player_id}/{game_id}")
-async def start_game(player_id: str, game_id: str):
-    if session.query(Game).filter_by(gameid=game_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Player not found")
-    else:
-        game = session.query(Game).filter_by(gameid=game_id).first()
-        if player_id != game.host:
-            raise HTTPException(status_code=409, detail="Only the host can start the game")
-        elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
-            raise HTTPException(status_code=409, detail="The game is not full")
-        else:
-            game.start_game()
-            #game.turn = ",".join([str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()])
-            turn_order = [pg.playerid for pg in session.query(PlayerGame).filter_by(gameid=game_id).all()]
-            random.shuffle(turn_order)
-            game.turn = ",".join(map(str, turn_order))
-            session.commit()
-            update = True
-            return {"message": "Game started"}
         
 @router.delete("/delete_player/{player_id}")
 async def delete_player(player_id: str):
