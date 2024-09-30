@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
+import "../styles/GamePage.css";
 
 const GamePage = ({ playerID, game_id }) => {
   const colorSquares = (() => {
@@ -34,8 +35,17 @@ const GamePage = ({ playerID, game_id }) => {
 
   return (
     <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
-      {colorSquares}
-
+      <div
+        className="container"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(6, 50px)",
+          gap: "10px",
+          justifyContent: "center",
+        }}
+      >
+        {colorSquares}
+      </div>
       <div className="Cards">
         <MovementCard />
         <FigureCard />
