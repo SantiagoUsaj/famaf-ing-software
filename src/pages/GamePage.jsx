@@ -96,7 +96,6 @@ const GamePage = ({ playerID, game_id }) => {
 
       if (response) {
         console.log("New Game Info:", response);
-        winner();
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -210,7 +209,7 @@ const GamePage = ({ playerID, game_id }) => {
       >
         {playerID === turn && (
           <Button type="primary" onClick={() => passTurn(game_id)}>
-            Pasar Turno
+            Terminar Turno
           </Button>
         )}
         <Button

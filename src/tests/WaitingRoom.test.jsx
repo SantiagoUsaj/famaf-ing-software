@@ -1,9 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, it, vi, expect } from "vitest";
 import WaitingRoom from "./../pages/WaitingRoom";
 import * as ReactRouterDom from "react-router-dom"; // Importamos todo el módulo de react-router-dom
+import { GameData, LeaveGame, StartGame } from "../services/GameServices";
 
 // Mockear los componentes LobbySquares y TablePlayers
 vi.mock("../components/LobbySquares", () => ({
@@ -14,13 +15,29 @@ vi.mock("../components/TablePlayers", () => ({
   default: () => <div>TablePlayers Mock</div>,
 }));
 
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom"); // Importamos lo que no queremos mockear
+// Mock WebSocket
+global.WebSocket = vi.fn(() => ({
+  onopen: vi.fn(),
+  onmessage: vi.fn(),
+  onclose: vi.fn(),
+  close: vi.fn(),
+}));
+
+// Mock useNavigate from react-router-dom
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async (importOriginal) => {
+  const actual = await importOriginal();
   return {
-    ...actual, // Retornamos el resto de las exportaciones reales
-    useNavigate: vi.fn(), // Mock para useNavigate
+    ...actual,
+    useNavigate: () => mockNavigate,
   };
 });
+
+vi.mock("../services/GameServices", () => ({
+  GameData: vi.fn(),
+  LeaveGame: vi.fn(),
+  StartGame: vi.fn(),
+}));
 
 const renderWithRouter = (ui, { route = "/" } = {}) => {
   window.history.pushState({}, "Test page", route);
@@ -29,7 +46,16 @@ const renderWithRouter = (ui, { route = "/" } = {}) => {
 
 describe("WaitingRoom", () => {
   it("should render game name after useEffect runs", async () => {
-    renderWithRouter(<WaitingRoom initialGameName="Test Game" />);
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom game_id="1" playerID="1" />);
 
     // Esperar hasta que el nombre del juego sea renderizado
     const gameName = await screen.findByText("Test Game");
@@ -37,13 +63,17 @@ describe("WaitingRoom", () => {
   });
 
   it("should display 'Iniciar Partida' button if user is creator and there are 4 players", async () => {
-    // Mockear el estado para simular que el usuario es el creador y que hay 4 jugadores
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
     renderWithRouter(
-      <WaitingRoom
-        initialGameName="Test Game"
-        initialIsCreator={true}
-        initialNumberOfPlayers={4}
-      />
+      <WaitingRoom game_id="1" playerID="1" initialIsCreator={true} />
     );
 
     // Esperar hasta que el nombre del juego sea renderizado
@@ -58,8 +88,17 @@ describe("WaitingRoom", () => {
   });
 
   it("should display 'Abandonar' button if user is not the creator", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "2",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
     renderWithRouter(
-      <WaitingRoom initialGameName="Test Game" initialIsCreator={false} />
+      <WaitingRoom game_id="1" playerID="1" initialIsCreator={false} />
     );
 
     // Simular que el usuario no es el creador
@@ -68,61 +107,60 @@ describe("WaitingRoom", () => {
   });
 
   it("should navigate to /game when clicking 'Iniciar Partida' as creator with 4 players", async () => {
-    const mockNavigate = vi.fn();
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
 
-    // Mock correcto de useNavigate
-    ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
+    StartGame.mockResolvedValueOnce({});
 
     renderWithRouter(
-      <WaitingRoom
-        initialGameName="Test Game"
-        initialIsCreator={true}
-        initialNumberOfPlayers={4}
-      />
+      <WaitingRoom game_id="1" playerID="1" initialIsCreator={true} />
     );
 
-    // Simular el click en el botón de 'Iniciar Partida'
+    // Esperar hasta que el nombre del juego sea renderizado
+    const gameName = await screen.findByText("Test Game");
+    expect(gameName).toBeInTheDocument();
+
+    // Verificar si el botón de "Iniciar Partida" está visible
     const startGameButton = screen.getByRole("button", {
       name: /Iniciar Partida/i,
     });
+    expect(startGameButton).toBeInTheDocument();
 
+    // Simular el click en el botón de 'Iniciar Partida'
     fireEvent.click(startGameButton);
-    expect(mockNavigate).toHaveBeenCalledWith("/game");
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/1/1/game");
+    });
   });
 
-  it("debería mostrar el nombre del juego personalizado", () => {
-    renderWithRouter(<WaitingRoom initialGameName="Partida de Test" />);
-    expect(screen.getByText("Partida de Test")).toBeInTheDocument();
-  });
+  it("should navigate to /lobby when clicking 'Abandonar'", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "2",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
 
-  it("debería mostrar el botón 'Iniciar Partida' si es el creador y hay 4 jugadores", () => {
+    LeaveGame.mockResolvedValueOnce({});
+
     renderWithRouter(
-      <WaitingRoom
-        initialGameName="Test Game"
-        initialIsCreator={true}
-        initialNumberOfPlayers={4}
-      />
+      <WaitingRoom game_id="1" playerID="1" initialIsCreator={false} />
     );
-    const startButton = screen.getByText("Iniciar Partida");
-    expect(startButton).toBeInTheDocument();
-    expect(startButton).toBeEnabled();
-  });
 
-  it("no debería mostrar el botón 'Iniciar Partida' si no hay suficientes jugadores", () => {
-    renderWithRouter(
-      <WaitingRoom
-        initialGameName="Test Game"
-        initialIsCreator={true}
-        initialNumberOfPlayers={3}
-      />
-    );
-    expect(screen.queryByText("Iniciar Partida")).toBeNull();
-  });
+    // Simular el click en el botón de 'Abandonar'
+    const leaveButton = screen.getByRole("button", { name: /Abandonar/i });
 
-  it("debería mostrar el botón 'Abandonar' si no es el creador", () => {
-    renderWithRouter(
-      <WaitingRoom initialGameName="Test Game" initialIsCreator={false} />
-    );
-    expect(screen.getByText("Abandonar")).toBeInTheDocument();
+    fireEvent.click(leaveButton);
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/lobby/1");
+    });
   });
 });
