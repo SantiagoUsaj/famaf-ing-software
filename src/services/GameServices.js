@@ -57,3 +57,17 @@ export const ChangeTurn = async (player_id, game_id) => {
     console.error("Error al obtener datos:", error);
   }
 };
+
+export const DeleteGame = async (game_id) => {
+  try {
+    const response = await axios.delete(
+      `http://127.0.0.1:8000/delete_game/${game_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};

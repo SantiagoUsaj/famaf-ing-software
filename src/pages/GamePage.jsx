@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
-import { ChangeTurn, LeaveGame, GameData } from "../services/GameServices";
+import {
+  ChangeTurn,
+  LeaveGame,
+  GameData,
+  DeleteGame,
+} from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 
@@ -19,23 +24,28 @@ const GamePage = ({ playerID, game_id }) => {
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
 
   const winner = () => {
-    // do this for 10 seconds
-    var duration = 10 * 1000;
+    // do this for 5 seconds
+    var duration = 5 * 1000;
     var end = Date.now() + duration;
 
     (function frame() {
       // launch a few confetti from the left edge
       confetti({
-        particleCount: 7,
+        particleCount: 4,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
       });
       // and launch a few from the right edge
       confetti({
-        particleCount: 7,
+        particleCount: 4,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
@@ -71,6 +81,11 @@ const GamePage = ({ playerID, game_id }) => {
     try {
       console.log("Player ID:", playerID);
       console.log("Game ID:", game_id);
+
+      if (playerID === turn) {
+        await passTurn(game_id);
+      }
+
       // Esperamos la resolución de la promesa de LeaveGame
       const response = await LeaveGame(playerID, game_id);
 
@@ -96,7 +111,24 @@ const GamePage = ({ playerID, game_id }) => {
 
       if (response) {
         console.log("New Game Info:", response);
-        winner();
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
+  const finishGame = async (game_id) => {
+    console.log("Success");
+
+    try {
+      console.log("Game ID:", game_id);
+      // Esperamos la resolución de la promesa de LeaveGame
+      const response = await DeleteGame(game_id);
+
+      if (response) {
+        console.log("New Game Info:", response);
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/lobby/${playerID}`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -157,6 +189,10 @@ const GamePage = ({ playerID, game_id }) => {
       console.log("Mensaje recibido:", data);
 
       setTurn(data.turn);
+
+      if (data.players === 1) {
+        showModal();
+      }
     };
 
     // Manejar el cierre de la conexión
@@ -192,8 +228,6 @@ const GamePage = ({ playerID, game_id }) => {
       </div>
       <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
-        {console.log("Turno:", turn)}
-        {console.log("Players:", playersList)}
         {playersList.map((player) => (
           <div key={player.player_id}>
             {player.player_id === turn && <h2>{player.player_name}</h2>}
@@ -210,7 +244,7 @@ const GamePage = ({ playerID, game_id }) => {
       >
         {playerID === turn && (
           <Button type="primary" onClick={() => passTurn(game_id)}>
-            Pasar Turno
+            Terminar Turno
           </Button>
         )}
         <Button
@@ -221,6 +255,25 @@ const GamePage = ({ playerID, game_id }) => {
         >
           Abandonar
         </Button>
+      </div>
+      <div>
+        <Modal
+          title="¡Felicidades!"
+          open={isModalOpen}
+          footer={null}
+          className="text-center"
+          closable={false}
+        >
+          <p className="text-black text-lg ">Has ganado la partida.</p>
+          <Button
+            className="mt-5"
+            type="primary"
+            onClick={() => finishGame(game_id)}
+          >
+            Volver al Lobby
+          </Button>
+        </Modal>
+        {isModalOpen && winner()}
       </div>
     </div>
   );
