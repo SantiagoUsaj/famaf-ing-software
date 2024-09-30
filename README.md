@@ -27,7 +27,7 @@ deactivate
 Para activar el entorno virtual, utiliza el siguiente comando:
 
 ```bash
-pip install fastapi
+pip install fastapi==0.108.0
 ```
 
 ```bash
