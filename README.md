@@ -8,7 +8,10 @@ Repositorio utilizado para desarrollar el backend del laboratorio
 Antes de comenzar, asegúrate de estar en un entorno virtual.
 Puedes utilizar el siguiente.
 - [venv](https://docs.python.org/es/3/library/venv.html)
-
+Crear entorno virtual:
+```bash
+python3 -m venv .venv
+```
 Activa tu entorno virtual:
 ```bash
 source .venv/bin/activate
@@ -27,7 +30,7 @@ deactivate
 Para activar el entorno virtual, utiliza el siguiente comando:
 
 ```bash
-pip install fastapi
+pip install fastapi==0.108.0
 ```
 
 ```bash
