@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
-import React, { useEffect, useState } from "react";
-import { Button } from "antd";
-import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
