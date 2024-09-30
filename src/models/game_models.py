@@ -8,7 +8,7 @@ if not os.path.exists('database'):
     os.makedirs('database')
 
 # Configurar el motor de la base de datos para usar un archivo SQLite en la carpeta "base de datos"
-engine = create_engine('sqlite:///database/games.db')
+engine = create_engine('sqlite:///database/games.db', connect_args={'check_same_thread': False})
 Base = declarative_base()
 
 Session = sessionmaker(bind=engine)
