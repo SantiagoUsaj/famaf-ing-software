@@ -1,13 +1,12 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy import ForeignKey
 import uuid
 
 engine = create_engine('sqlite:///games.db')
 Base = declarative_base()
 
-# Configura tu motor de base de datos con check_same_thread=False
-engine = create_engine('sqlite:///games.db', connect_args={'check_same_thread': False})
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -36,4 +35,38 @@ class Game(Base):
     def get_game_size(self):
         return self.size   
     
+class Table(Base):
+    __tablename__ = 'table'
+
+    gameid = Column(String, ForeignKey('games.gameid'), primary_key=True)
+    
+
+    def __init__(self, gameid: str):
+        self.gameid = gameid
+
+
+# class Tile(Base):
+#     __tablename__ = 'tiles'
+#     id = Column(Integer, primary_key=True)
+#     table_id = Column(Integer, ForeignKey('table.gameid'), nullable=False)
+#     x = Column(Integer, nullable=False)
+#     y = Column(Integer, nullable=False)
+    
+#     def __init__(self, table_id: str, x: int, y: int):
+#         self.table_id = table_id
+#         self.x = x
+#         self.y = y
+#         self.color = "white"
+
+#     @staticmethod
+#     def create_tiles_for_table(table_id: str):
+#         tiles = []
+#         for i in range(6):
+#             for j in range(6):
+#                 tiles.append(Tile(table_id=table_id, x=i, y=j))
+#         session.add_all(tiles)
+#         session.commit()
+#         session.commit()
+
+
 Base.metadata.create_all(engine)

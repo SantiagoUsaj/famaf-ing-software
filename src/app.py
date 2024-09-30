@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
-from game_models import Game, session 
+from game_models import Game, session, Base, engine, Table
 from player_models import Player, PlayerGame
 from fastapi.responses import HTMLResponse
 from manager_models import ConnectionManager
@@ -97,6 +97,10 @@ async def create_game(player_id: str, game_name: str, game_size: int):
             player = session.query(Player).filter_by(playerid=player_id).first()
             game = Game(game_name, game_size, player.playerid)
             playergame = PlayerGame(player.playerid, game.gameid)
+            table=Table(game.gameid)
+            session.add(table)
+            # title=Tile(game.gameid, 0, 0)
+            # session.add(title)      
             session.add(game)
             session.add(playergame)
             session.commit()
