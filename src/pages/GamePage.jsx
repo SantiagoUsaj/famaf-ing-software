@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
-import { ChangeTurn, LeaveGame, GameData } from "../services/GameServices";
+import {
+  ChangeTurn,
+  LeaveGame,
+  GameData,
+  DeleteGame,
+} from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 
@@ -19,23 +24,28 @@ const GamePage = ({ playerID, game_id }) => {
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
 
   const winner = () => {
-    // do this for 10 seconds
-    var duration = 10 * 1000;
+    // do this for 5 seconds
+    var duration = 5 * 1000;
     var end = Date.now() + duration;
 
     (function frame() {
       // launch a few confetti from the left edge
       confetti({
-        particleCount: 7,
+        particleCount: 4,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
       });
       // and launch a few from the right edge
       confetti({
-        particleCount: 7,
+        particleCount: 4,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
@@ -102,6 +112,24 @@ const GamePage = ({ playerID, game_id }) => {
     }
   };
 
+  const finishGame = async (game_id) => {
+    console.log("Success");
+
+    try {
+      console.log("Game ID:", game_id);
+      // Esperamos la resolución de la promesa de LeaveGame
+      const response = await DeleteGame(game_id);
+
+      if (response) {
+        console.log("New Game Info:", response);
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/lobby/${playerID}`);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
   const colorSquares = (() => {
     const colorCount = { red: 9, yellow: 9, green: 9, blue: 9 };
     const squares = [];
@@ -156,6 +184,10 @@ const GamePage = ({ playerID, game_id }) => {
       console.log("Mensaje recibido:", data);
 
       setTurn(data.turn);
+
+      if (data.players === 1) {
+        showModal();
+      }
     };
 
     // Manejar el cierre de la conexión
@@ -220,6 +252,15 @@ const GamePage = ({ playerID, game_id }) => {
         >
           Abandonar
         </Button>
+      </div>
+      <div>
+        <Modal title="Ganaste" open={isModalOpen} footer={null}>
+          <p>¡Felicidades! Has ganado la partida.</p>
+          <Button type="primary" onClick={() => finishGame(game_id)}>
+            Volver al Lobby
+          </Button>
+        </Modal>
+        {isModalOpen && winner()}
       </div>
     </div>
   );
