@@ -51,7 +51,7 @@ export PYTHONPATH=$PYTHONPATH:/home/santiafonso/Documents/sql/backend/src
 
 y para ejecutar nuestro servidor iremos al path de nuestro archivo a corre y ejecutaremos el comando
 ```bash
-uvicorn main:app --reload
+uvicorn app:app --reload
 ```
 
 en nuestro caso en ves del archivo *main.py* sera *endponint_player.py* y con esto tendremos nuestro servidor corriendo!!
