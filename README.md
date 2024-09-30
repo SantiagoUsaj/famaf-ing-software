@@ -43,6 +43,12 @@ pip install 'uvicorn[standard]'
 pip install SQLalchemy
 ```
 
+Si queremos probar los tests, tendremos que ejecutar los siguientes comandos por consola
+```bash
+pip install httpx
+pip install pytest
+```
+
 Asegúrate de que el directorio src esté en el PYTHONPATH para que los módulos puedan ser encontrados correctamente. Puedes hacerlo temporalmente en tu terminal antes de ejecutar pytest:
 
 ```bash
