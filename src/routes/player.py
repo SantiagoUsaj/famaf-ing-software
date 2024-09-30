@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from models.player_models import Player, PlayerGame
 from models.game_models import session
 from models.game_models import Game
+import random
 
 router = APIRouter()
 
@@ -53,7 +54,10 @@ async def start_game(player_id: str, game_id: str):
             raise HTTPException(status_code=409, detail="The game is not full")
         else:
             game.start_game()
-            game.turn = ",".join([str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()])
+            #game.turn = ",".join([str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()])
+            turn_order = [pg.playerid for pg in session.query(PlayerGame).filter_by(gameid=game_id).all()]
+            random.shuffle(turn_order)
+            game.turn = ",".join(map(str, turn_order))
             session.commit()
             update = True
             return {"message": "Game started"}

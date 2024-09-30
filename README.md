@@ -38,6 +38,13 @@ pip install uvicorn
 pip install SQLalchemy
 ```
 
+Asegúrate de que el directorio src esté en el PYTHONPATH para que los módulos puedan ser encontrados correctamente. Puedes hacerlo temporalmente en tu terminal antes de ejecutar pytest:
+
+```bash
+export PYTHONPATH=$PYTHONPATH:/home/santiafonso/Documents/sql/backend/src
+```
+
+
 y para ejecutar nuestro servidor iremos al path de nuestro archivo a corre y ejecutaremos el comando
 ```bash
 uvicorn main:app --reload

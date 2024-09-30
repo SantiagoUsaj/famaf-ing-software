@@ -92,6 +92,11 @@ async def leave_game(player_id: str, game_id: str):
             raise HTTPException(status_code=409, detail="Player is not in the game")
         else:
             session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).delete()
+            # Remove the player from the turn order if they are in it
+            turn_order = game.turn.split(",")
+            turn_order = [pid for pid in turn_order if pid != player_id]
+            game.turn = ",".join(turn_order)
+            session.commit()
             player = session.query(Player).filter_by(playerid=player_id).first()
             global update
             update = True
