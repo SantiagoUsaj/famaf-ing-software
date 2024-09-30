@@ -1,10 +1,23 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
-
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from app import app
+from game_models import Base, Game, engine, session
+
+# Crea todas las tablas
+Base.metadata.create_all(engine)
 
 client = TestClient(app)
+
+@pytest.fixture(scope="function", autouse=True)
+def setup_and_teardown():
+    # Configuración antes de cada prueba
+    yield
+    # Limpieza después de cada prueba
+    session.rollback()
+    session.close()
 
 # Test de get players
 
@@ -30,12 +43,13 @@ def test_get_games():
   game_size = 3
   response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
   game_id = response_game.json()["game_id"]
+  turn = None
   game_state = "waiting"
   current_player = 1
   
   response = client.get("/games")
   assert response.status_code == 200
-  assert response.json() == [{"game_name": game_name, "game_id": game_id, "host_id": player_id, "state": game_state, "size": game_size, "current player": current_player}]
+  assert response.json() == [{"game_name": game_name, "game_id": game_id, "host_id": player_id, "state": game_state, "size": game_size, "current_player": current_player, "turn": turn}]
   
   
 # Test de get game for id
@@ -54,7 +68,7 @@ def test_get_game_for_id():
   
   response = client.get(f"/game/{game_id}")
   assert response.status_code == 200
-  assert response.json() == {"game_name": game_name, "game_id": game_id, "state": game_state, "game_size": game_size, "players": current_player ,"player_details": [{"player_id": player_id, "player_name": player_name}], "host_id": player_id}
+  assert response.json() == {"game_name": game_name, "game_id": game_id, "state": game_state, "game_size": game_size, "players": current_player ,"player_details": [{"player_id": player_id, "player_name": player_name}], "host_id": player_id, "turn": None}
   
 def test_get_game_for_id_not_found():
   client.delete("/delete_all")
@@ -103,8 +117,7 @@ def test_get_players_in_game():
   assert response.json() == [{"player_name": player_name, "player_id": player_id}]
   
 def test_get_players_in_game_not_found():
-  client.delete("/delete_all")
-  game_id = "1234"
+  game_id = "12323523546"
   
   response = client.get(f"/players_in_game/{game_id}")
   assert response.status_code == 404
@@ -295,7 +308,7 @@ def test_join_game_game_is_already_playing():
   assert response_leave.json() == {"message": player_name2 + " left the game " + game_name}
   
   response = client.put(f"/join_game/{player_id3}/{game_id}")
-  assert response.status_code == 409
+  assert response.status_code == 404
   assert response.json() == {"detail": "Game is already playing"}
   
 def test_join_game_player_is_in_game():
@@ -542,6 +555,80 @@ def test_start_game_is_not_full():
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.status_code == 409
   assert response.json() == {"detail": "The game is not full"}
+  
+# Test para next turn 
+
+def test_next_turn():
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+  
+  game_name = "ValidGame"
+  game_size = 2
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  client.put(f"/join_game/{player_id2}/{game_id}")
+  client.put(f"/start_game/{player_id}/{game_id}")
+  
+  response = client.put(f"/next_turn/{player_id}/{game_id}")
+  assert response.status_code == 200
+  assert response.json() == {"message": "Next turn"}
+
+def test_next_turn_game_not_found():
+  client.delete("/delete_all")
+  player_id = "1234"
+  game_id = "5678"
+  
+  response = client.put(f"/next_turn/{player_id}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Game not found"}
+
+def test_next_turn_player_not_found():
+  client.delete("/delete_all")
+  player_id2 = "1234"
+  
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  game_name = "ValidGame"
+  game_size = 2
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  
+  response = client.put(f"/next_turn/{player_id2}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Player not found"}
+  
+def test_next_turn_not_your_turn():
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+  
+  game_name = "ValidGame"
+  game_size = 2
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  client.put(f"/join_game/{player_id2}/{game_id}")
+  client.put(f"/start_game/{player_id}/{game_id}")
+  
+  response = client.put(f"/next_turn/{player_id2}/{game_id}")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "It's not your turn"}
+  
   
 # Test delete player
 

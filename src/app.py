@@ -39,7 +39,7 @@ async def get_games():
 async def get_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
-        return {"message": "Game not found"}
+        raise HTTPException(status_code=404, detail="Game not found")
 
     players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
     player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
@@ -59,14 +59,14 @@ async def get_game(game_id: str):
 async def get_player(player_id: str):
     player = session.query(Player).filter_by(playerid=player_id).first()
     if player is None:
-        return {"message": "Player not found"}
+        raise HTTPException(status_code=404, detail="Player not found")
     return player
 
 @app.get("/players_in_game/{game_id}")
 async def get_players_in_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
-        return {"message": "Game not found"}
+        raise HTTPException(status_code=404, detail="Game not found")
     else:
         player_games = session.query(PlayerGame).filter_by(gameid=game_id).all()
         players_in_game = [session.query(Player).filter_by(playerid=pg.playerid).first() for pg in player_games]
@@ -140,6 +140,8 @@ async def leave_game(player_id: str, game_id: str):
 
         if game.host == player_id:
             raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
+        elif session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).count() == 0:
+            raise HTTPException(status_code=409, detail="Player is not in the game")
         else:
             session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).delete()
             player = session.query(Player).filter_by(playerid=player_id).first()

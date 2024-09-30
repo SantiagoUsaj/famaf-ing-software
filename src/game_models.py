@@ -6,6 +6,8 @@ import uuid
 engine = create_engine('sqlite:///games.db')
 Base = declarative_base()
 
+# Configura tu motor de base de datos con check_same_thread=False
+engine = create_engine('sqlite:///games.db', connect_args={'check_same_thread': False})
 Session = sessionmaker(bind=engine)
 session = Session()
 
