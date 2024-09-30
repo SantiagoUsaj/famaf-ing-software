@@ -6,6 +6,7 @@ import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
 import { ChangeTurn, LeaveGame, GameData } from "../services/GameServices";
 import "../styles/GamePage.css";
+import confetti from "canvas-confetti";
 
 const GamePage = ({ playerID, game_id }) => {
   const navigate = useNavigate();
@@ -18,6 +19,34 @@ const GamePage = ({ playerID, game_id }) => {
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
+
+  const winner = () => {
+    // do this for 10 seconds
+    var duration = 10 * 1000;
+    var end = Date.now() + duration;
+
+    (function frame() {
+      // launch a few confetti from the left edge
+      confetti({
+        particleCount: 7,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+      });
+      // and launch a few from the right edge
+      confetti({
+        particleCount: 7,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+      });
+
+      // keep going until we are out of time
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+  };
 
   const getGameInfo = async (game_id) => {
     console.log("Success");
@@ -67,6 +96,7 @@ const GamePage = ({ playerID, game_id }) => {
 
       if (response) {
         console.log("New Game Info:", response);
+        winner();
       }
     } catch (error) {
       console.error("Error getting new game data", error);
