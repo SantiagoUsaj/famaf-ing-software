@@ -41,3 +41,19 @@ export const StartGame = async (player_id, game_id) => {
     console.error("Error al obtener datos:", error);
   }
 };
+
+export const ChangeTurn = async (player_id, game_id) => {
+  try {
+    console.log("Player ID:", player_id);
+    console.log("Game ID:", game_id);
+    const response = await axios.put(
+      `http://127.0.0.1:8000/next_turn/${player_id}/${game_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};

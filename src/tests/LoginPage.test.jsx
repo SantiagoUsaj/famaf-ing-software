@@ -1,36 +1,48 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import LoginPage from "./../pages/LoginPage";
-import * as ReactRouterDom from "react-router-dom"; // Importamos todo el módulo de react-router-dom
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import LoginPage from "../pages/LoginPage";
+import { JoinLobby } from "../services/LobbyServices";
 
-// Mockeamos parcialmente react-router-dom
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom"); // Importamos lo que no queremos mockear
+// Mock del servicio JoinLobby
+vi.mock("../services/LobbyServices", () => ({
+  JoinLobby: vi.fn(),
+}));
+
+// Mock de useNavigate de react-router-dom
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async (importOriginal) => {
+  const actual = await importOriginal();
   return {
-    ...actual, // Retornamos el resto de las exportaciones reales
-    useNavigate: vi.fn(), // Mock para useNavigate
+    ...actual,
+    useNavigate: () => mockNavigate,
   };
 });
 
 describe("LoginPage", () => {
-  it("should render the title 'El Switcher'", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
     render(
-      <ReactRouterDom.BrowserRouter>
+      <BrowserRouter>
         <LoginPage />
-      </ReactRouterDom.BrowserRouter>
+      </BrowserRouter>
     );
+  });
+
+  it("should render the title 'El Switcher'", () => {
     // Verificar si el título "Bienvenido a El Switcher" está presente
     const title = screen.getByText(/El Switcher/i);
     expect(title).toBeInTheDocument();
   });
 
   it("should render the form with username field and submit button", () => {
-    render(
-      <ReactRouterDom.BrowserRouter>
-        <LoginPage />
-      </ReactRouterDom.BrowserRouter>
-    );
-
     // Verificar si el campo "Nombre de Jugador" está presente
     const input = screen.getByLabelText(/Nombre de Jugador/i);
     expect(input).toBeInTheDocument();
@@ -41,12 +53,6 @@ describe("LoginPage", () => {
   });
 
   it("should display error when username is missing", async () => {
-    render(
-      <ReactRouterDom.BrowserRouter>
-        <LoginPage />
-      </ReactRouterDom.BrowserRouter>
-    );
-
     const button = screen.getByRole("button", { name: /Jugar/i });
 
     // Hacer clic en el botón sin ingresar el nombre de usuario
@@ -58,12 +64,6 @@ describe("LoginPage", () => {
   });
 
   it("should display error for invalid (non-alphanumeric) username", async () => {
-    render(
-      <ReactRouterDom.BrowserRouter>
-        <LoginPage />
-      </ReactRouterDom.BrowserRouter>
-    );
-
     const input = screen.getByLabelText(/Nombre de Jugador/i);
     const button = screen.getByRole("button", { name: /Jugar/i });
 
@@ -78,34 +78,55 @@ describe("LoginPage", () => {
     expect(errorMessage).toBeInTheDocument();
   });
 
-  it("should navigate to /lobby on successful form submission", async () => {
-    const mockNavigate = vi.fn(); // Simulamos la función de navegación
-
-    // Mock correcto de useNavigate
-    ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
-
-    render(
-      <ReactRouterDom.BrowserRouter>
-        <LoginPage />
-      </ReactRouterDom.BrowserRouter>
-    );
-
+  it("should display error for username longer than 8 characters", async () => {
     const input = screen.getByLabelText(/Nombre de Jugador/i);
     const button = screen.getByRole("button", { name: /Jugar/i });
 
-    // Ingresar un nombre de usuario válido
-    fireEvent.change(input, { target: { value: "Player123" } });
+    // Ingresar un nombre de usuario con más de 8 caracteres
+    fireEvent.change(input, { target: { value: "Player1234" } });
+    fireEvent.click(button);
 
-    // Simular clic en el botón "Jugar"
-    // Envuelve el clic del botón en un bloque act
-    await act(async () => {
-      fireEvent.click(button);
+    // Esperar a que aparezca el mensaje de error
+    const errorMessage = await screen.findByText(/Menos de 8 caracteres!/i);
+    expect(errorMessage).toBeInTheDocument();
+  });
+
+  it("renderiza LoginPage y envía el formulario correctamente", async () => {
+    JoinLobby.mockResolvedValue({ player_id: "12345" });
+
+    // Simular entrada del usuario
+    fireEvent.change(screen.getByPlaceholderText(/Ingresar nombre jugador/i), {
+      target: { value: "testuser" },
     });
+    fireEvent.click(screen.getByRole("button", { name: /jugar/i }));
 
-    // Asegurarse de que el formulario fue enviado correctamente
-    await new Promise((resolve) => setTimeout(resolve, 0)); // Esperar un ciclo para el envío
+    // Esperar a que la función asíncrona se resuelva
+    await waitFor(() => expect(JoinLobby).toHaveBeenCalledWith("testuser"));
 
-    // Verificar que la función de navegación fue llamada
-    expect(mockNavigate).toHaveBeenCalledWith("/lobby");
+    // Verificar si navigate fue llamado con la ruta correcta
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith("/lobby/12345")
+    );
+  });
+
+  describe("LoginPage", () => {
+    it("maneja el fallo en el envío del formulario", async () => {
+      JoinLobby.mockRejectedValue(new Error("Failed to join lobby"));
+
+      // Simular entrada del usuario
+      fireEvent.change(
+        screen.getByPlaceholderText(/Ingresar nombre jugador/i),
+        {
+          target: { value: "testuser" },
+        }
+      );
+      fireEvent.click(screen.getByRole("button", { name: /jugar/i }));
+
+      // Esperar a que la función asíncrona se resuelva
+      await waitFor(() => expect(JoinLobby).toHaveBeenCalledWith("testuser"));
+
+      // Verificar si navigate no fue llamado
+      await waitFor(() => expect(mockNavigate).not.toHaveBeenCalled());
+    });
   });
 });

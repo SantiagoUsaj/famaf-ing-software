@@ -104,11 +104,10 @@ const WaitingRoom = ({
 
       console.log("Mensaje recibido:", data);
 
-      if (data.game_id === game_id) {
-        setNumberOfPlayers(data.players);
-        setPlayersList(data.player_details);
-      }
-      if (data.game_id === game_id && data.state === "playing") {
+      setNumberOfPlayers(data.players);
+      setPlayersList(data.player_details);
+
+      if (data.state === "playing") {
         navigate(`/${playerID}/${game_id}/game`);
       }
     };

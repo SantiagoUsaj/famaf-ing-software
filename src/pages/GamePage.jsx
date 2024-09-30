@@ -4,12 +4,22 @@ import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
-import { LeaveGame } from "../services/GameServices";
+import { ChangeTurn, LeaveGame } from "../services/GameServices";
 import "../styles/GamePage.css";
 
 const GamePage = ({ playerID, game_id }) => {
   const navigate = useNavigate();
-  const [turn, setTurn] = useState("santiago");
+  const [turn, setTurn] = useState();
+  const [socket, setSocket] = useState(null);
+  const [gameName, setGameName] = useState(initialGameName);
+  const [gamestate, setGamestate] = useState();
+  const [isCreator, setIsCreator] = useState(initialIsCreator);
+  const [numberOfPlayers, setNumberOfPlayers] = useState(
+    initialNumberOfPlayers
+  );
+  const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
+  const [playersList, setPlayersList] = useState([]);
+  const [partidas, setPartidas] = useState([]);
 
   const quitRoom = async (game_id) => {
     console.log("Success");
@@ -25,6 +35,23 @@ const GamePage = ({ playerID, game_id }) => {
 
         // Navegamos solo cuando la respuesta está lista
         navigate(`/lobby/${playerID}`);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
+  const passTurn = async (game_id) => {
+    console.log("Success");
+
+    try {
+      console.log("Player ID:", playerID);
+      console.log("Game ID:", game_id);
+      // Esperamos la resolución de la promesa de LeaveGame
+      const response = await ChangeTurn(playerID, game_id);
+
+      if (response) {
+        console.log("New Game Info:", response);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -57,6 +84,38 @@ const GamePage = ({ playerID, game_id }) => {
     return squares;
   })();
 
+  useEffect(() => {
+    // Crear la conexión WebSocket al backend
+    const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
+
+    // Manejar la apertura de la conexión
+    ws.onopen = () => {
+      console.log("Conectado al WebSocket del lobby");
+    };
+
+    // Manejar los mensajes recibidos
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      console.log("Mensaje recibido:", data);
+
+      setTurn(data.turn);
+    };
+
+    // Manejar el cierre de la conexión
+    ws.onclose = () => {
+      console.log("Conexión WebSocket cerrada");
+    };
+
+    // Guardar el WebSocket en el estado para usarlo después
+    setSocket(ws);
+
+    // Limpiar el WebSocket al desmontar el componente
+    return () => {
+      ws.close();
+    };
+  }, []);
+
   return (
     <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
       <div
@@ -86,6 +145,11 @@ const GamePage = ({ playerID, game_id }) => {
           transform: "translateX(-50%)",
         }}
       >
+        {playerID === turn && (
+          <Button type="primary" onClick={() => passTurn(game_id)}>
+            Pasar Turno
+          </Button>
+        )}
         <Button
           className="bottom-0"
           danger
