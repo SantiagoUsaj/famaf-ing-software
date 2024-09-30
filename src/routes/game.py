@@ -63,7 +63,7 @@ async def join_game(player_id: str, game_id: str):
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
     elif game.state == "playing":
-        raise HTTPException(status_code=404, detail="Game is already playing")
+        raise HTTPException(status_code=409, detail="Game is already playing")
     elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() > 0:
         raise HTTPException(status_code=409, detail="Player is already in the game")
     elif session.query(PlayerGame).filter_by(playerid=player_id).count() > 0:
