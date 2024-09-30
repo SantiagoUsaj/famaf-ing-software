@@ -138,7 +138,7 @@ async def leave_game(player_id: str, game_id: str):
     else:
         game = session.query(Game).filter_by(gameid=game_id).first()
 
-        if game.host == player_id:
+        if game.host == player_id and game.state == "waiting":
             raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
         elif session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).count() == 0:
             raise HTTPException(status_code=409, detail="Player is not in the game")
