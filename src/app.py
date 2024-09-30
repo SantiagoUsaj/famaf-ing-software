@@ -6,10 +6,12 @@ from game_models import Game, session
 from player_models import Player, PlayerGame
 from fastapi.responses import HTMLResponse
 from manager_models import ConnectionManager
+import asyncio
 
 app = FastAPI()
 
 manager = ConnectionManager()
+game_managers: Dict[str, ConnectionManager] = {}
 update=False
 
 # Configurar el middleware de CORS
@@ -29,13 +31,15 @@ async def get_players():
 @app.get("/games")
 async def get_games():
     games = session.query(Game).all()
-    return [{"game_name": game.name, "game_id": game.gameid, "host_id": game.host, "state": game.state,"size":game.size,"current player":PlayerGame.get_count_of_players_in_game(session,game.gameid)} for game in games]
+    return [{"game_name": game.name, "game_id": game.gameid, "host_id": game.host,
+            "state": game.state, "size": game.size, "current_player": PlayerGame.get_count_of_players_in_game(session, game.gameid), 
+            "turn": game.turn} for game in games]
 
 @app.get("/game/{game_id}")
 async def get_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
+        return {"message": "Game not found"}
 
     players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
     player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
@@ -47,21 +51,22 @@ async def get_game(game_id: str):
         "game_size": game.size,
         "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
         "player_details": player_details,
-        "host_id": game.host
+        "host_id": game.host,
+        "turn": game.turn
     }
 
 @app.get("/player/{player_id}")
 async def get_player(player_id: str):
     player = session.query(Player).filter_by(playerid=player_id).first()
     if player is None:
-        raise HTTPException(status_code=404, detail="Player not found")
+        return {"message": "Player not found"}
     return player
 
 @app.get("/players_in_game/{game_id}")
 async def get_players_in_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
+        return {"message": "Game not found"}
     else:
         player_games = session.query(PlayerGame).filter_by(gameid=game_id).all()
         players_in_game = [session.query(Player).filter_by(playerid=pg.playerid).first() for pg in player_games]
@@ -110,7 +115,7 @@ async def join_game(player_id: str, game_id: str):
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
     elif game.state == "playing":
-        raise HTTPException(status_code=409, detail="Game is already playing")
+        raise HTTPException(status_code=404, detail="Game is already playing")
     elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() > 0:
         raise HTTPException(status_code=409, detail="Player is already in the game")
     elif session.query(PlayerGame).filter_by(playerid=player_id).count() > 0:
@@ -135,8 +140,6 @@ async def leave_game(player_id: str, game_id: str):
 
         if game.host == player_id:
             raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
-        elif session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).count() == 0:
-            raise HTTPException(status_code=409, detail="Player is not in the game")
         else:
             session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).delete()
             player = session.query(Player).filter_by(playerid=player_id).first()
@@ -158,11 +161,27 @@ async def start_game(player_id: str, game_id: str):
             raise HTTPException(status_code=409, detail="The game is not full")
         else:
             game.start_game()
-            PlayerGame.assign_random_turns(session, game_id)
+            game.turn = ",".join([str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()])
             session.commit()
             update = True
             return {"message": "Game started"}
         
+@app.put("/next_turn/{player_id}/{game_id}")
+async def next_turn(player_id: str, game_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+        if player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
+        else:
+            game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
+            session.commit()
+            update = True
+            return {"message": "Next turn"}
+
 @app.delete("/delete_player/{player_id}")
 async def delete_player(player_id: str):
     player = session.query(Player).filter_by(playerid=player_id).first()
@@ -199,10 +218,59 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
     try:
         while True:
             games = session.query(Game).all()
-            game_list = [{"game_name": game.name, "game_id": game.gameid,
-                          "state": game.state, "game_size": game.size, "players": PlayerGame.get_count_of_players_in_game(session, game.gameid)} for game in games]
-            await websocket.send_json(game_list)
+            gamelist = []
+            for game in games:
+                players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
+                player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
+                gamelist.append({
+                    "game_name": game.name,
+                    "game_id": game.gameid,
+                    "state": game.state,
+                    "game_size": game.size,
+                    "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
+                    "player_details": player_details
+                })
+            await websocket.send_json(gamelist)
+            await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{player_id} left the chat")
+
+@app.websocket("/ws/game/{game_id}")
+async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
+    await manager.connect(websocket)
+    try:
+        while True:
+            game = session.query(Game).filter_by(gameid=game_id).first()
+            if game is None:
+                await websocket.send_json({"error": "Game not found"})
+                break
+
+            players_in_game = session.query(PlayerGame).filter_by(gameid=game_id).all()
+            player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
+            turnos=game.turn
+            if(turnos!=None):
+                turnos=turnos.split(",")
+                turnos=turnos[0]
+
+            game_details = {
+                "game_name": game.name,
+                "game_id": game.gameid,
+                "state": game.state,
+                "game_size": game.size,
+                "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
+                "player_details": player_details,
+                "turn": turnos
+            }
+        
+           
+
+            await websocket.send_json(game_details)
+            await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
+
+
+    except WebSocketDisconnect:
+        await game_managers[game_id].disconnect(websocket)
+        await game_managers[game_id].broadcast(f"Client #{game_id} left the chat")
         

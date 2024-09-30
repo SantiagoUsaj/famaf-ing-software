@@ -1,10 +1,9 @@
-import uuid
-from typing import List
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, String, Integer
+import uuid
 
-engine = create_engine('sqlite:///games.db', connect_args={'check_same_thread': False})
+engine = create_engine('sqlite:///games.db')
 Base = declarative_base()
 
 Session = sessionmaker(bind=engine)
@@ -18,7 +17,7 @@ class Game(Base):
     state = Column(String, default="waiting")
     size = Column(Integer, nullable=False)
     host = Column(String, nullable=True)
-    turn = Column(Integer, default=1)
+    turn = Column(String, nullable=True)
 
     def __init__(self, name: str, size: int, host: str):
         self.gameid = str(uuid.uuid4())
