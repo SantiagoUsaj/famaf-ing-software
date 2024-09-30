@@ -4,22 +4,37 @@ import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
 import ColorSquare from "../components/ColorSquare";
-import { ChangeTurn, LeaveGame } from "../services/GameServices";
+import { ChangeTurn, LeaveGame, GameData } from "../services/GameServices";
 import "../styles/GamePage.css";
 
 const GamePage = ({ playerID, game_id }) => {
   const navigate = useNavigate();
   const [turn, setTurn] = useState();
   const [socket, setSocket] = useState(null);
-  const [gameName, setGameName] = useState(initialGameName);
+  const [gameName, setGameName] = useState();
   const [gamestate, setGamestate] = useState();
-  const [isCreator, setIsCreator] = useState(initialIsCreator);
-  const [numberOfPlayers, setNumberOfPlayers] = useState(
-    initialNumberOfPlayers
-  );
+  const [isCreator, setIsCreator] = useState();
+  const [numberOfPlayers, setNumberOfPlayers] = useState();
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
+
+  const getGameInfo = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de GameData
+      const response = await GameData(game_id);
+
+      if (response) {
+        console.log("Game Info:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
 
   const quitRoom = async (game_id) => {
     console.log("Success");
@@ -85,6 +100,18 @@ const GamePage = ({ playerID, game_id }) => {
   })();
 
   useEffect(() => {
+    // Llamamos a la función getGameInfo
+    getGameInfo(game_id).then((response) => {
+      if (response) {
+        setGameName(response.game_name);
+        setGamestate(response.state);
+        setIsCreator(response.host_id);
+        setNumberOfPlayers(response.players);
+        setMaxNumberOfPlayers(response.game_size);
+        setPlayersList(response.player_details);
+      }
+    });
+
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
@@ -135,7 +162,13 @@ const GamePage = ({ playerID, game_id }) => {
       </div>
       <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
-        <h1>{turn}</h1>
+        {console.log("Turno:", turn)}
+        {console.log("Players:", playersList)}
+        {playersList.map((player) => (
+          <div key={player.player_id}>
+            {player.player_id === turn && <h2>{player.player_name}</h2>}
+          </div>
+        ))}
       </div>
       <div
         style={{
