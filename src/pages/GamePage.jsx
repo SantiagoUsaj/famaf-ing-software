@@ -24,7 +24,7 @@ const GamePage = ({ playerID, game_id }) => {
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -228,8 +228,6 @@ const GamePage = ({ playerID, game_id }) => {
       </div>
       <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
-        {console.log("Turno:", turn)}
-        {console.log("Players:", playersList)}
         {playersList.map((player) => (
           <div key={player.player_id}>
             {player.player_id === turn && <h2>{player.player_name}</h2>}
@@ -259,9 +257,19 @@ const GamePage = ({ playerID, game_id }) => {
         </Button>
       </div>
       <div>
-        <Modal title="Ganaste" open={isModalOpen} footer={null}>
-          <p>¡Felicidades! Has ganado la partida.</p>
-          <Button type="primary" onClick={() => finishGame(game_id)}>
+        <Modal
+          title="¡Felicidades!"
+          open={isModalOpen}
+          footer={null}
+          className="text-center"
+          closable={false}
+        >
+          <p className="text-black text-lg ">Has ganado la partida.</p>
+          <Button
+            className="mt-5"
+            type="primary"
+            onClick={() => finishGame(game_id)}
+          >
             Volver al Lobby
           </Button>
         </Modal>
