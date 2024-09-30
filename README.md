@@ -1,37 +1,75 @@
-# backend
-Repositorio utilizado para desarrollar el backend del juego El Switcher
 
-# Descripción de organización:
 
-`src/`: Carpeta principal para el código fuente.
+# Backend
+Repositorio utilizado para desarrollar el backend del laboratorio
 
-`src/entidad/`: Carpeta dedicada a la entidad.
+## Requisitos previos
 
-`src/core/`: Contiene configuraciones y lógica que no están específicas a una entidad en particular.
+Antes de comenzar, asegúrate de estar en un entorno virtual.
+Puedes utilizar el siguiente.
+- [venv](https://docs.python.org/es/3/library/venv.html)
 
-**`main.py`**: El punto de entrada de la aplicación FastAPI, donde se inicializa la app y se registran las rutas.
+Activa tu entorno virtual:
+```bash
+source .venv/bin/activate
+```
+una vez activado el entorno virtual puedes verificar que estan en uno con el siguiente comando
+```bash
+which python
+/home/user/code/awesome-project/.venv/bin/python
+```
+para salir del entorno virtual utiliza 
+```bash
+deactivate
+```
+## Activar el Entorno Virtual
 
-**`requirements.txt`**: Archivo para dependencias del proyecto.
+Para activar el entorno virtual, utiliza el siguiente comando:
 
-**`README.md`**: Documentación del proyecto.
+```bash
+pip install fastapi
+```
 
-## Dentro de cada entidad
+```bash
+pip install uvicorn
+```
 
-**`entidad_models.py`**: Define el modelo ORM para la entidad.
+```bash
+pip install SQLalchemy
+```
 
-**`entidad_crud.py`**: Contiene las operaciones CRUD relacionadas con la entidad.
+Asegúrate de que el directorio src esté en el PYTHONPATH para que los módulos puedan ser encontrados correctamente. Puedes hacerlo temporalmente en tu terminal antes de ejecutar pytest:
 
-**`entidad_schemas.py`**: Define los esquemas de Pydantic para validar y serializar datos de la entidad.
+```bash
+export PYTHONPATH=$PYTHONPATH:/home/santiafonso/Documents/sql/backend/src
+```
 
-**`entidad_endpoints.py`**: Define las rutas de la API relacionadas con la entidad.
 
-`tests/`: Contiene pruebas específicas para la entiadad, organizadas en archivos separados para modelos, operaciones CRUD, esquemas y endpoints.
+y para ejecutar nuestro servidor iremos al path de nuestro archivo a corre y ejecutaremos el comando
+```bash
+uvicorn main:app --reload
+```
 
-## Dentro de core
+en nuestro caso en ves del archivo *main.py* sera *endponint_player.py* y con esto tendremos nuestro servidor corriendo!!
 
-**`config.py`**: Configuraciones generales del proyecto.
+Ahora para ver la documentacion del mismo con ir a la pagina
+*http://127.0.0.1:8000/docs* podremos ver todos los endpoints de nuestra api.
 
-**`security.py`**: Lógica de autenticación y autorización.
+## Runear los test
 
-**`db.py`**: Configuración de la base de datos y la inicialización.
+Hay que estar en la dirección `/backend/src` y ahí se ejecuta el comando:
+
+```bash
+python3 -m pytest tests_endpoints.py -v
+```
+
+## Organizacion de archivos
+
+**`src/`**: Carpeta principal para el código fuente.
+
+**`endpoints.py`**: Contiene todos los endpoints de la API.
+
+**`manager_models.py`**: Contiene el manejo de Webscket.
+
+**`"entidad"_models.py`**: Contiene la clase entidad y sus metodos.
 

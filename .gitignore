@@ -1,3 +1,67 @@
-
 # Archivos de entorno
 .env
+
+# Entornos virtuales
+/venv/
+/venc/
+/env/
+/env.bak/
+/venv.bak/
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
+
+# Archivos de compilación
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de logs
+*.log
+
+# Archivos de base de datos
+*.sqlite3
+
+# Archivos de paquetes
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.wsgi
+
+# Archivos de cobertura de pruebas
+.coverage
+.tox/
+.nox/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Archivos de documentación
+docs/_build/
+
+# Archivos de distribución
+*.manifest
+*.spec
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
