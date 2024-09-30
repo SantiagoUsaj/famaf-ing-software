@@ -14,8 +14,9 @@
 
 # Archivos de compilación
 __pycache__/
-*.py[cod]
-*.so
+*.pyc
+*.pyo
+*.pyd
 
 # Archivos de logs
 *.log
