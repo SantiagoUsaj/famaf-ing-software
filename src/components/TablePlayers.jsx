@@ -1,25 +1,28 @@
 import React from "react";
 import { Space, Table, Tag } from "antd";
 
-const TablePlayers = () => {
+const TablePlayers = ({ playersList, isCreator }) => {
+  const getRandomColor = () => {
+    const colors = ["red", "blue", "green", "yellow"];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   const columns = [
     {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
+      title: "Jugadores",
+      dataIndex: "player_name",
+      key: "player_name",
       render: (text) => <a>{text}</a>,
     },
     {
       title: "Tags",
       key: "tags",
       dataIndex: "tags",
+      align: "center",
       render: (_, { tags }) => (
         <>
           {tags.map((tag) => {
-            let color = tag.length > 5 ? "blue" : "green";
-            if (tag === "Creador") {
-              color = "volcano";
-            }
+            const color = getRandomColor();
             return (
               <Tag color={color} key={tag}>
                 {tag.toUpperCase()}
@@ -30,37 +33,22 @@ const TablePlayers = () => {
       ),
     },
   ];
-  const data = [
-    {
-      key: "1",
-      name: "Santi Usaj",
-      tags: ["Creador"],
-    },
-    {
-      key: "2",
-      name: "Ferrari",
-      tags: ["Jugador"],
-    },
-    {
-      key: "3",
-      name: "Mateo Angeli",
-      tags: ["Jugador"],
-    },
-    {
-      key: "4",
-      name: "Fede Di Forte",
-      tags: ["Jugador"],
-    },
-  ];
+
+  const data = playersList.map((player) => ({
+    ...player,
+    tags: [player.player_id === isCreator ? "Creador" : "Jugador"],
+  }));
+
   return (
     <>
       <Table
         className="w-1/4  my-8"
         pagination={false}
         columns={columns}
+        align="center"
         dataSource={data}
       />
-      <div data-testid="table-players">Table Players Component</div>
+      <div data-testid="table-players"></div>
     </>
   );
 };

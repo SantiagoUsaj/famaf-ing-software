@@ -51,7 +51,7 @@ const LobbySquares = () => {
         className="square bg-green-400 absolute bottom-80 right-40 size-36 rounded-lg"
         data-testid="square"
       />
-      <div data-testid="lobby-squares">Lobby Squares Component</div>
+      <div data-testid="lobby-squares"></div>
     </>
   );
 };

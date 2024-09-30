@@ -2,14 +2,29 @@ import React from "react";
 import { Button, Checkbox, Form, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
+import { JoinLobby } from "../services/LobbyServices";
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     console.log("Success:", values);
-    navigate("/lobby");
+
+    try {
+      // Esperamos la resolución de la promesa de JoinLobby
+      const response = await JoinLobby(values.username);
+
+      if (response) {
+        console.log("Lobby response:", response);
+
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/lobby/${response.player_id}`);
+      }
+    } catch (error) {
+      console.error("Error joining lobby:", error);
+    }
   };
+
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
@@ -57,6 +72,11 @@ const LoginPage = () => {
                     <span style={{ fontSize: 13 }}>
                       Solo caracteres alfanuméricos!
                     </span>
+                  );
+                }
+                if (value.length > 8) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>Menos de 8 caracteres!</span>
                   );
                 }
                 return Promise.resolve();

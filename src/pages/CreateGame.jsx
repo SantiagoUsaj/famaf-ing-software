@@ -1,25 +1,51 @@
 import React from "react";
 import { Form, Button, Select, Input } from "antd";
 import { useNavigate } from "react-router-dom";
+import LobbySquares from "../components/LobbySquares";
+import { CreateAGame } from "../services/CreateGameServices";
 
-const CreateGame = () => {
+const CreateGame = ({ playerID }) => {
   const navigate = useNavigate();
-  const onFinish = (values) => {
+
+  const onFinish = async (values) => {
     console.log("Success:", values);
-    navigate("/waitingRoom");
+
+    try {
+      // Esperamos la resolución de la promesa de JoinLobby
+      const response = await CreateAGame(
+        playerID,
+        values.nombre,
+        values.jugadores
+      );
+
+      if (response) {
+        console.log("Lobby response:", response);
+
+        // Navegamos solo cuando la respuesta está lista
+        navigate(`/lobby/${response}`);
+
+        navigate(`/${playerID}/${response.game_id}/waitingRoom`);
+      }
+    } catch (error) {
+      console.error("Error joining lobby:", error);
+    }
   };
+
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
   return (
-    <div className="text-white text-center">
-      <h1>Crear partida</h1>
+    <div className="pt-2">
+      <LobbySquares />
+      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
+        Crear partida
+      </h1>
       <Form
         className="bg-black p-2 rounded-lg shadow-lg m-auto"
         name="Crear Partida"
         labelCol={{
-          span: 52,
+          span: 4,
         }}
         wrapperCol={{
           span: 16,
@@ -35,7 +61,7 @@ const CreateGame = () => {
         autoComplete="off"
       >
         <Form.Item
-          label={<span style={{ color: "white" }}>Nombre de la Partida</span>}
+          label={<span style={{ color: "black" }}>Nombre de la Partida</span>}
           name="nombre"
           rules={[
             {
@@ -57,7 +83,7 @@ const CreateGame = () => {
                 if (value.length > 20) {
                   return Promise.reject(
                     <span style={{ fontSize: 13 }}>
-                      ¡El nombre no puede tener más de 20 caracteres!
+                      ¡No más de 20 caracteres!
                     </span>
                   );
                 }
@@ -66,22 +92,22 @@ const CreateGame = () => {
             },
           ]}
         >
-          <Input />
+          <Input placeholder="Ingresar nombre partida" />
         </Form.Item>
 
         <Form.Item
           name="jugadores"
           label={
-            <span style={{ color: "white" }}>Cantidad máxima de Jugadores</span>
+            <span style={{ color: "black" }}>Cantidad máxima de Jugadores</span>
           }
           rules={[
             { required: true, message: "Por favor selecciona una opción" },
           ]}
         >
-          <Select placeholder="Selecciona una opción">
-            <Option value="2">2 jugadores</Option>
-            <Option value="3">3 jugadores</Option>
-            <Option value="4">4 jugadores</Option>
+          <Select placeholder="Selecciona cantidad jugadores">
+            <Select.Option value="2">2 jugadores</Select.Option>
+            <Select.Option value="3">3 jugadores</Select.Option>
+            <Select.Option value="4">4 jugadores</Select.Option>
           </Select>
         </Form.Item>
 
