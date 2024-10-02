@@ -1,3 +1,12 @@
+# Ignorar todos los directorios __pycache__ en cualquier lugar del proyecto
+**/__pycache__/
+
+# Ignorar todos los archivos .pyc en cualquier lugar del proyecto
+**/*.pyc
+
+# Ignorar la base de datos en el directorio database
+database/*.db
+
 # Archivos de entorno
 .env
 
@@ -13,8 +22,6 @@
 .idea/
 
 # Archivos de compilación
-__pycache__/
-*.pyc
 *.pyo
 *.pyd
 
@@ -37,31 +44,29 @@ develop-eggs/
 .installed.cfg
 lib/
 lib64/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
 .Python
 *.wsgi
 
-# Archivos de cobertura de pruebas
-.coverage
-.tox/
-.nox/
-.cache/
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+# Ignorar archivos específicos en src/
+src/__pycache__/
+src/**/*.pyc
 
-# Archivos de documentación
-docs/_build/
-
-# Archivos de distribución
-*.manifest
-*.spec
-
-# Archivos de sistema operativo
-.DS_Store
-Thumbs.db
+# Ignorar archivos específicos en la raíz del proyecto
+__pycache__/
+models/__pycache__/
+routes/__pycache__/
+# Archivos de paquetes
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.Python
+*.wsgi
