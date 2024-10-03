@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session
+from models.game_models import Game, session,Table, Tile
 from models.player_models import Player, PlayerGame
 import random
     
@@ -123,7 +123,12 @@ async def start_game(player_id: str, game_id: str):
             random.shuffle(player_ids)
             game.turn = ",".join(player_ids)
             session.commit()
-            update = True
+
+            table = Table(game_id)
+            session.add(table)
+            session.commit()
+            Tile.create_tiles_for_table(table.id)
+            
             return {"message": "Game started"}
 
 @router.put("/next_turn/{player_id}/{game_id}")
@@ -142,7 +147,6 @@ async def next_turn(player_id: str, game_id: str):
             update = True
             return {"message": "Next turn"}
 
-
 @router.delete("/delete_game/{game_id}")
 async def delete_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
@@ -151,5 +155,7 @@ async def delete_game(game_id: str):
     else:
         session.query(PlayerGame).filter_by(gameid=game_id).delete()
         session.query(Game).filter_by(gameid=game_id).delete()
+        session.query(Tile).filter(Tile.table_id == Table.id).filter(Table.gameid == game_id).delete(synchronize_session=False)
+        session.query(Table).filter_by(gameid=game_id).delete(synchronize_session=False)
         session.commit()
         return {"message": "Game deleted"}

@@ -39,38 +39,38 @@ class Game(Base):
     def get_game_size(self):
         return self.size   
     
-# class Table(Base):
-#     __tablename__ = 'table'
+class Table(Base):
+    __tablename__ = 'table'
 
-#     gameid = Column(String, ForeignKey('games.gameid'), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    gameid = Column(String, ForeignKey('games.gameid'), nullable=False)
+    tiles = relationship("Tile", backref="table")
     
 
-#     def __init__(self, gameid: str):
-#         self.gameid = gameid
+    def __init__(self, gameid: str):
+        self.gameid = gameid
 
+class Tile(Base):
+    __tablename__ = 'tiles'
+    id = Column(Integer, primary_key=True)
+    table_id = Column(Integer, ForeignKey('table.id'), nullable=False)
+    x = Column(Integer, nullable=False)
+    y = Column(Integer, nullable=False)
+    color = Column(String, default="white")
 
-# class Tile(Base):
-#     __tablename__ = 'tiles'
-#     id = Column(Integer, primary_key=True)
-#     table_id = Column(Integer, ForeignKey('table.gameid'), nullable=False)
-#     x = Column(Integer, nullable=False)
-#     y = Column(Integer, nullable=False)
-    
-#     def __init__(self, table_id: str, x: int, y: int):
-#         self.table_id = table_id
-#         self.x = x
-#         self.y = y
-#         self.color = "white"
+    def __init__(self, table_id: int, x: int, y: int):
+        self.table_id = table_id
+        self.x = x
+        self.y = y
 
-#     @staticmethod
-#     def create_tiles_for_table(table_id: str):
-#         tiles = []
-#         for i in range(6):
-#             for j in range(6):
-#                 tiles.append(Tile(table_id=table_id, x=i, y=j))
-#         session.add_all(tiles)
-#         session.commit()
-#         session.commit()
+    @staticmethod
+    def create_tiles_for_table(table_id: int):
+        tiles = []
+        for i in range(6):
+            for j in range(6):
+                tiles.append(Tile(table_id=table_id, x=i, y=j))
+        session.add_all(tiles)
+        session.commit()
 
 
 Base.metadata.create_all(engine)
