@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session,Table, Tile
+from models.game_models import Game, session,Table, Tile, TableGame
 from models.player_models import Player, PlayerGame
 import random
     
@@ -124,12 +124,14 @@ async def start_game(player_id: str, game_id: str):
             game.turn = ",".join(player_ids)
             session.commit()
 
-            table = Table(game_id)
-            session.add(table)
+            # Crear una tabla para el juego y las fichas asociadas
+            TableGame.create_table_for_game(game_id)
+            table = session.query(Table).filter_by(gameid=game_id).first()
+            tablegame = TableGame(game_id=game_id, table_id=table.id)
+            session.add(tablegame)
             session.commit()
-            Tile.create_tiles_for_table(table.id)
-            
             return {"message": "Game started"}
+
 
 @router.put("/next_turn/{player_id}/{game_id}")
 async def next_turn(player_id: str, game_id: str):
@@ -152,10 +154,21 @@ async def delete_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
-    else:
-        session.query(PlayerGame).filter_by(gameid=game_id).delete()
-        session.query(Game).filter_by(gameid=game_id).delete()
-        session.query(Tile).filter(Tile.table_id == Table.id).filter(Table.gameid == game_id).delete(synchronize_session=False)
-        session.query(Table).filter_by(gameid=game_id).delete(synchronize_session=False)
-        session.commit()
-        return {"message": "Game deleted"}
+    
+    # Eliminar todas las fichas asociadas a las tablas del juego
+    tables = session.query(Table).filter_by(gameid=game_id).all()
+    for table in tables:
+        session.query(Tile).filter_by(table_id=table.id).delete()
+    
+    # Eliminar todas las tablas asociadas al juego
+    session.query(Table).filter_by(gameid=game_id).delete()
+    
+    # Eliminar todas las relaciones de jugadores con el juego
+    session.query(PlayerGame).filter_by(gameid=game_id).delete()
+    
+    # Eliminar el juego
+    session.query(Game).filter_by(gameid=game_id).delete()
+    
+    session.commit()
+    return {"message": "Game and all associated data deleted"}
+

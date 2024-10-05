@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+import random
 import uuid
 import os
 # Crear la carpeta "base de datos" si no existe
@@ -58,19 +59,41 @@ class Tile(Base):
     y = Column(Integer, nullable=False)
     color = Column(String, default="white")
 
-    def __init__(self, table_id: int, x: int, y: int):
+    def __init__(self, table_id: int, x: int, y: int, color: str):
         self.table_id = table_id
         self.x = x
         self.y = y
+        self.color = color
 
     @staticmethod
     def create_tiles_for_table(table_id: int):
+        colors = ['red', 'green', 'yellow', 'blue']
         tiles = []
+        color_distribution = colors * 9  # 36 tiles, 9 of each color
+        random.shuffle(color_distribution)
+        
         for i in range(6):
             for j in range(6):
-                tiles.append(Tile(table_id=table_id, x=i, y=j))
+                color = color_distribution.pop()
+                tiles.append(Tile(table_id=table_id, x=i, y=j, color=color))
         session.add_all(tiles)
         session.commit()
 
+class TableGame(Base):
+    __tablename__ = 'tablegames'
+
+    tableid = Column(Integer, ForeignKey('table.id'), primary_key=True)
+    gameid = Column(String, ForeignKey('games.gameid'), primary_key=True)
+
+    def __init__(self, tableid: int, gameid: str):
+        self.tableid = tableid
+        self.gameid = gameid
+
+    @staticmethod
+    def create_table_for_game(gameid: str):
+        table = Table(gameid)
+        session.add(table)
+        session.commit()
+        Tile.create_tiles_for_table(table.id)
 
 Base.metadata.create_all(engine)

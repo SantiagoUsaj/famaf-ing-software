@@ -1,10 +1,10 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect,HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models.manager_models import ConnectionManager
 from routes.player import router as player_router
 from routes.game import router as game_router
 import asyncio
-from models.game_models import Game, session
+from models.game_models import Game, session, Table, Tile
 from models.player_models import PlayerGame, Player
 
 app = FastAPI()
@@ -20,16 +20,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(player_router,tags=["player"])
-app.include_router(game_router,tags=["game"])
+app.include_router(player_router, tags=["player"])
+app.include_router(game_router, tags=["game"])
 
 @app.delete("/delete_all")
 async def delete_all():
     session.query(PlayerGame).delete()
     session.query(Game).delete()
     session.query(Player).delete()
+    session.query(Tile).delete()  # Eliminar todas las fichas
+    session.query(Table).delete()  # Eliminar todas las tablas
     session.commit()
-    return {"message": "All players and games deleted"}
+    return {"message": "All players, games, tables, and tiles deleted"}
 
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: str):
@@ -50,7 +52,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
                     "player_details": player_details
                 })
             await websocket.send_json(gamelist)
-            await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
+            await asyncio.sleep(1)  # Delay to avoid flooding the client with messages  
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
