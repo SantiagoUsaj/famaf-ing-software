@@ -107,6 +107,7 @@ const WaitingRoom = ({
       const data = JSON.parse(event.data);
 
       console.log("Mensaje recibido:", data);
+      console.log("Player_id:", playerID);
 
       setNumberOfPlayers(data.players);
       setPlayersList(data.player_details);
