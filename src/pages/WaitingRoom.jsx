@@ -132,15 +132,16 @@ const WaitingRoom = ({
   }, []);
 
   return (
-    <div className="pt-2 flex justify-center flex-col items-center">
+    <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
+      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
         {gameName}
       </h1>
       <TablePlayers playersList={playersList} isCreator={isCreator} />
       <div className="flex gap-24 ">
         {playerID === isCreator && numberOfPlayers === maxNumberOfPlayers && (
           <Button
+            className="flex m-auto my-3"
             type="primary"
             disabled={!isCreator}
             onClick={() => start(game_id)}
@@ -149,7 +150,12 @@ const WaitingRoom = ({
           </Button>
         )}
         {playerID !== isCreator && (
-          <Button danger ghost onClick={() => quitRoom(game_id)}>
+          <Button
+            className="flex m-auto my-3"
+            danger
+            ghost
+            onClick={() => quitRoom(game_id)}
+          >
             Abandonar
           </Button>
         )}

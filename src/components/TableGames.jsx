@@ -11,30 +11,6 @@ const TableGames = ({ gamesList }) => {
   const { playerID } = usePlayerContext();
   const { setGameID } = useGameContext();
 
-  const data = [
-    {
-      key: "1",
-      game_name: "Juego1",
-      game_id: "1",
-      game_size: "4",
-      players: "3",
-    },
-    {
-      key: "2",
-      game_name: "Juego2",
-      game_id: "2",
-      game_size: "2",
-      players: "3",
-    },
-    {
-      key: "3",
-      game_name: "Juego3",
-      game_id: "3",
-      game_size: "4",
-      players: "3",
-    },
-  ];
-
   const join = async (game_id) => {
     console.log("Success");
 
@@ -59,14 +35,19 @@ const TableGames = ({ gamesList }) => {
   return (
     <>
       <Table
-        className="w-1/4"
+        className="w-1/4 m-auto my-2 rounded-lg"
         dataSource={gamesList}
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 5, size: "small" }} // Set pagination size to small
         style={{ backgroundColor: "#fafafa" }} // Set background color for pagination
       >
-        <Column title="Nombre Partida" dataIndex="game_name" key="game_name" />
         <Column
-          title="Jugadores"
+          title={<div style={{ textAlign: "center" }}>Nombre Partida</div>}
+          dataIndex="game_name"
+          key="game_name"
+        />
+        <Column
+          className="text-center"
+          title={<div style={{ textAlign: "center" }}>Jugadores</div>}
           key="players"
           render={(_, record) =>
             record.state === "playing"
@@ -75,7 +56,7 @@ const TableGames = ({ gamesList }) => {
           }
         />
         <Column
-          title="Action"
+          title={<div style={{ textAlign: "center" }}>Estado</div>}
           dataIndex="game_id"
           key="game_id"
           align="center"

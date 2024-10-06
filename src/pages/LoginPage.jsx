@@ -36,35 +36,29 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="pt-2">
+    <div>
       {/* <MovingBG /> */}
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
+      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
         El Switcher
       </h1>
       <Form
-        className="bg-black p-2 rounded-lg shadow-lg m-auto"
-        name="basic"
-        labelCol={{
-          span: 4,
-        }}
-        wrapperCol={{
-          span: 16,
-        }}
+        className="bg-black p-2"
+        name="Login"
         style={{
-          maxWidth: 350,
-        }}
-        initialValues={{
-          remember: true,
+          maxWidth: 235,
+          margin: "0 auto", // Center the form horizontally
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center", // Center the form items horizontally
         }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
         <Form.Item
-          datadata-testid="forum-item"
-          label={<span> </span>}
           name="username"
+          style={{ width: "100%" }}
           rules={[
             {
               validator: (_, value) => {
@@ -95,7 +89,7 @@ const LoginPage = () => {
           <Input placeholder="Ingresar nombre jugador" />
         </Form.Item>
 
-        <Form.Item className="ml-32">
+        <Form.Item>
           <Button type="primary" htmlType="submit">
             Jugar
           </Button>
