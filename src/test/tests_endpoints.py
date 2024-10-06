@@ -232,6 +232,23 @@ def test_create_game_player_not_found():
   assert response.status_code == 404
   assert response.json() == {"detail": "Player not found"}
 
+def test_create_game_player_already_in_game():
+  client.delete("/delete_all")
+  
+  player_name = "Player1"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+ 
+  game_name1 = "Game1"
+  game_size1 = 3
+  client.post(f"/create_game/{player_id}/{game_name1}/{game_size1}")
+  
+  game_name = "Game2"
+  game_size = 3
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "Player is already in a game"}
+
 # Test join game
 
 def test_join_game():
@@ -560,57 +577,57 @@ def test_start_game_is_not_full():
 # Test para next turn 
 
 def test_next_turn():
-    client.delete("/delete_all")
-    player_name = "ValidPlayer"
-    response_player = client.post(f"/create_player/{player_name}")
-    player_id = response_player.json()["player_id"]
-    
-    player_name2 = "ValidPlayer2"
-    response_player2 = client.post(f"/create_player/{player_name2}")
-    player_id2 = response_player2.json()["player_id"]
-    
-    game_name = "ValidGame"
-    game_size = 2
-    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-    game_id = response_game.json()["game_id"]
-    
-    response_join = client.put(f"/join_game/{player_id2}/{game_id}")
-    assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
-    
-    response_start = client.put(f"/start_game/{player_id}/{game_id}")
-    assert response_start.json() == {"message": "Game started"}
-    
-    response_next_turn = client.put(f"/next_turn/{player_id2}/{game_id}")
-    assert response_next_turn.status_code == 200
-    assert response_next_turn.json() == {"message": "Next turn"}
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 2
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+
+  response_start = client.put(f"/start_game/{player_id}/{game_id}")
+  assert response_start.json() == {"message": "Game started"}
+
+  response_next_turn = client.put(f"/next_turn/{player_id2}/{game_id}")
+  assert response_next_turn.status_code == 200
+  assert response_next_turn.json() == {"message": "Next turn"}
 
 def test_next_turn_game_not_found():
-    client.delete("/delete_all")
-    player_name = "ValidPlayer"
-    response_player = client.post(f"/create_player/{player_name}")
-    player_id = response_player.json()["player_id"]
-    game_id = "1234"
-    
-    response = client.put(f"/next_turn/{player_id}/{game_id}")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Game not found"}
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  game_id = "1234"
+  
+  response = client.put(f"/next_turn/{player_id}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Game not found"}
 
 def test_next_turn_player_not_found():
-    client.delete("/delete_all")
-    player_name = "ValidPlayer"
-    response_player = client.post(f"/create_player/{player_name}")
-    player_id = response_player.json()["player_id"]
-    
-    player_name2 = "ValidPlayer2"
-    player_id2 = "1234"
-    game_name = "ValidGame"
-    game_size = 2
-    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-    game_id = response_game.json()["game_id"]
-    
-    response = client.put(f"/next_turn/{player_id2}/{game_id}")
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found"}
+  client.delete("/delete_all")
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  player_name2 = "ValidPlayer2"
+  player_id2 = "1234"
+  game_name = "ValidGame"
+  game_size = 2
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  response = client.put(f"/next_turn/{player_id2}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Player not found"}
 
 def test_next_turn_not_your_turn():
   client.delete("/delete_all")
@@ -691,5 +708,3 @@ def test_delete_all():
   response = client.delete("/delete_all")
   assert response.status_code == 200
   assert response.json() == {"message": "All players and games deleted"}
-  
-  
