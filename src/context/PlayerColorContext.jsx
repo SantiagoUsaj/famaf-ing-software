@@ -6,8 +6,8 @@ const PlayerColorContext = createContext();
 // Proveedor del contexto
 export const PlayerColorProvider = ({ children }) => {
   const [playerColors, setPlayerColors] = useState(() => {
-    // Recuperar los colores de localStorage cuando se cargue la página
-    const savedColors = localStorage.getItem("playerColors");
+    // Recuperar los colores de sessionStorage cuando se cargue la página
+    const savedColors = sessionStorage.getItem("playerColors");
     return savedColors ? JSON.parse(savedColors) : {};
   });
 
@@ -25,8 +25,8 @@ export const PlayerColorProvider = ({ children }) => {
 
       const newColors = { ...prevColors, [playerId]: getRandomColor() };
 
-      // Guardar los colores actualizados en localStorage
-      localStorage.setItem("playerColors", JSON.stringify(newColors));
+      // Guardar los colores actualizados en sessionStorage
+      sessionStorage.setItem("playerColors", JSON.stringify(newColors));
 
       return newColors;
     });

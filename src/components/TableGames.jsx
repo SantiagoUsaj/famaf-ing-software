@@ -62,6 +62,7 @@ const TableGames = ({ gamesList }) => {
         className="w-1/4"
         dataSource={gamesList}
         pagination={{ pageSize: 5 }}
+        style={{ backgroundColor: "#fafafa" }} // Set background color for pagination
       >
         <Column title="Nombre Partida" dataIndex="game_name" key="game_name" />
         <Column

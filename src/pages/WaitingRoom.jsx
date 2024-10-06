@@ -107,6 +107,7 @@ const WaitingRoom = ({
       const data = JSON.parse(event.data);
 
       console.log("Mensaje recibido:", data);
+      console.log("Player_id:", playerID);
 
       setNumberOfPlayers(data.players);
       setPlayersList(data.player_details);
@@ -133,7 +134,7 @@ const WaitingRoom = ({
   return (
     <div className="pt-2 flex justify-center flex-col items-center">
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto text-center  text-4xl">
+      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
         {gameName}
       </h1>
       <TablePlayers playersList={playersList} isCreator={isCreator} />

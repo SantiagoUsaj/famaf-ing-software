@@ -1,20 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Crear el contexto
-const PlayerContext = createContext();
+// Create the context
+export const PlayerContext = createContext();
 
-// Proveedor del contexto
+// Provider component
 export const PlayerProvider = ({ children }) => {
   const [playerID, setPlayerID] = useState(() => {
-    // Al cargar la página, intento obtener el playerID del localStorage
-    const storedPlayerID = localStorage.getItem("playerID");
-    return storedPlayerID ? JSON.parse(storedPlayerID) : null;
+    // Retrieve the player ID from session storage if it exists
+    const savedPlayerID = sessionStorage.getItem("playerID");
+    try {
+      return savedPlayerID ? JSON.parse(savedPlayerID) : null;
+    } catch (error) {
+      console.error("Error parsing playerID from sessionStorage:", error);
+      return null;
+    }
   });
 
-  // Efecto para guardar el playerID en localStorage cuando cambie
   useEffect(() => {
-    if (playerID) {
-      localStorage.setItem("playerID", JSON.stringify(playerID));
+    // Save the player ID to session storage whenever it changes
+    if (playerID !== null) {
+      sessionStorage.setItem("playerID", JSON.stringify(playerID));
     }
   }, [playerID]);
 
@@ -25,7 +30,7 @@ export const PlayerProvider = ({ children }) => {
   );
 };
 
-// Hook para usar el contexto
+// Custom hook to use the PlayerContext
 export const usePlayerContext = () => {
   return useContext(PlayerContext);
 };
