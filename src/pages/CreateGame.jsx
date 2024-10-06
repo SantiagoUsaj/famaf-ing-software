@@ -3,9 +3,15 @@ import { Form, Button, Select, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import { CreateAGame } from "../services/CreateGameServices";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
-const CreateGame = ({ playerID }) => {
+const CreateGame = () => {
   const navigate = useNavigate();
+  // Obtener playerID desde el contexto
+  const { playerID } = usePlayerContext();
+  // Obtener game_id desde el contexto
+  const { setGameID } = useGameContext();
 
   const onFinish = async (values) => {
     console.log("Success:", values);
@@ -21,10 +27,10 @@ const CreateGame = ({ playerID }) => {
       if (response) {
         console.log("Lobby response:", response);
 
-        // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${response}`);
+        // Actualizar el gameID en el contexto
+        setGameID(response.game_id);
 
-        navigate(`/${playerID}/${response.game_id}/waitingRoom`);
+        navigate(`/waitingRoom`);
       }
     } catch (error) {
       console.error("Error joining lobby:", error);

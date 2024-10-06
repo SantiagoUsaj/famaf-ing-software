@@ -4,16 +4,19 @@ import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
 
-const LobbyPage = ({ playerID }) => {
+const LobbyPage = () => {
   const navigate = useNavigate();
   const [socket, setSocket] = useState(null);
   const [partidas, setPartidas] = useState([]);
+  // Obtener playerID desde el contexto
+  const { playerID } = usePlayerContext();
 
   console.log("playerID", playerID);
 
   const handleClick = () => {
-    navigate(`/${playerID}/creategame`);
+    navigate(`/creategame`);
   };
 
   useEffect(() => {
@@ -61,7 +64,7 @@ const LobbyPage = ({ playerID }) => {
       <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
         LobbyPage
       </h1>
-      <TableGames gamesList={partidas} playerID={playerID} />
+      <TableGames gamesList={partidas} />
       <Button
         className="flex m-auto my-3"
         type="primary"

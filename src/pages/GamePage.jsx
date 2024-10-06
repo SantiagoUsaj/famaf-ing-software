@@ -12,8 +12,10 @@ import {
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
-const GamePage = ({ playerID, game_id }) => {
+const GamePage = () => {
   const navigate = useNavigate();
   const [turn, setTurn] = useState();
   const [socket, setSocket] = useState(null);
@@ -25,6 +27,10 @@ const GamePage = ({ playerID, game_id }) => {
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Obtener playerID desde el contexto
+  const { playerID } = usePlayerContext();
+  // Obtener game_id desde el contexto
+  const { game_id } = useGameContext();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -93,7 +99,7 @@ const GamePage = ({ playerID, game_id }) => {
         console.log("New Game Info:", response);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${playerID}`);
+        navigate(`/lobby`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -128,7 +134,7 @@ const GamePage = ({ playerID, game_id }) => {
       if (response) {
         console.log("New Game Info:", response);
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${playerID}`);
+        navigate(`/lobby`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);

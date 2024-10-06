@@ -3,9 +3,13 @@ import { Space, Table, Tag } from "antd";
 const { Column, ColumnGroup } = Table;
 import { JoinGame } from "../services/LobbyServices";
 import { useNavigate } from "react-router-dom";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
-const TableGames = ({ gamesList, playerID }) => {
+const TableGames = ({ gamesList }) => {
   const navigate = useNavigate();
+  const { playerID } = usePlayerContext();
+  const { setGameID } = useGameContext();
 
   const data = [
     {
@@ -41,8 +45,11 @@ const TableGames = ({ gamesList, playerID }) => {
       if (response) {
         console.log("New Game Info:", response);
 
+        // Actualizar el gameID en el contexto
+        setGameID(game_id);
+
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/${playerID}/${game_id}/waitingRoom`);
+        navigate(`/waitingRoom`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);

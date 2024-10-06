@@ -3,9 +3,12 @@ import { Button, Checkbox, Form, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import { JoinLobby } from "../services/LobbyServices";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  // Obtener setPlayerID desde el contexto
+  const { setPlayerID } = usePlayerContext();
 
   const onFinish = async (values) => {
     console.log("Success:", values);
@@ -16,9 +19,11 @@ const LoginPage = () => {
 
       if (response) {
         console.log("Lobby response:", response);
+        // Actualizar el playerID en el contexto
+        setPlayerID(response.player_id);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${response.player_id}`);
+        navigate("/lobby");
       }
     } catch (error) {
       console.error("Error joining lobby:", error);

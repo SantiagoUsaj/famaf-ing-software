@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
 import { GameData, LeaveGame, StartGame } from "../services/GameServices";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
 const WaitingRoom = ({
-  game_id,
-  playerID,
   initialGameName = "",
   initialIsCreator = false,
   initialNumberOfPlayers = 0,
@@ -23,6 +23,10 @@ const WaitingRoom = ({
   const [playersList, setPlayersList] = useState([]);
   const [socket, setSocket] = useState(null);
   const [partidas, setPartidas] = useState([]);
+  // Obtener playerID desde el contexto
+  const { playerID } = usePlayerContext();
+  // Obtener game_id desde el contexto
+  const { game_id } = useGameContext();
 
   const getGameInfo = async (game_id) => {
     console.log("Success");
@@ -52,7 +56,7 @@ const WaitingRoom = ({
         console.log("New Game Info:", response);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${playerID}`);
+        navigate(`/lobby`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -70,7 +74,7 @@ const WaitingRoom = ({
         console.log("Info:", response);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/${playerID}/${game_id}/game`);
+        navigate(`/game`);
       }
     } catch (error) {
       console.error("Error getting data", error);
@@ -103,12 +107,13 @@ const WaitingRoom = ({
       const data = JSON.parse(event.data);
 
       console.log("Mensaje recibido:", data);
+      console.log("Player_id:", playerID);
 
       setNumberOfPlayers(data.players);
       setPlayersList(data.player_details);
 
       if (data.state === "playing") {
-        navigate(`/${playerID}/${game_id}/game`);
+        navigate(`/game`);
       }
     };
 
