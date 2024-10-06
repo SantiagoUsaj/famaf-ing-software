@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import { JoinLobby } from "../services/LobbyServices";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
+import MovingBG from "../components/MovingBG.jsx";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const LoginPage = () => {
 
   return (
     <div className="pt-2">
+      {/* <MovingBG /> */}
       <LobbySquares />
       <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
         El Switcher
@@ -60,7 +62,8 @@ const LoginPage = () => {
         autoComplete="off"
       >
         <Form.Item
-          label={<span style={{ color: "black" }}>Nombre de Jugador</span>}
+          datadata-testid="forum-item"
+          label={<span> </span>}
           name="username"
           rules={[
             {
