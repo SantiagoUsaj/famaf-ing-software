@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import random
@@ -58,12 +58,14 @@ class Tile(Base):
     x = Column(Integer, nullable=False)
     y = Column(Integer, nullable=False)
     color = Column(String, default="white")
+    highlight = Column(Boolean, default=False)
 
-    def __init__(self, table_id: int, x: int, y: int, color: str):
+    def __init__(self, table_id: int, x: int, y: int, color: str, highlight: bool):
         self.table_id = table_id
         self.x = x
         self.y = y
         self.color = color
+        self.highlight = False
 
     @staticmethod
     def create_tiles_for_table(table_id: int):
@@ -75,7 +77,7 @@ class Tile(Base):
         for i in range(6):
             for j in range(6):
                 color = color_distribution.pop()
-                tiles.append(Tile(table_id=table_id, x=i, y=j, color=color))
+                tiles.append(Tile(table_id=table_id, x=i, y=j, color=color, highlight=False))
         session.add_all(tiles)
         session.commit()
 

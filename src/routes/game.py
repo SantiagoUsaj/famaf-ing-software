@@ -135,7 +135,7 @@ async def start_game(player_id: str, game_id: str):
             # Crear una tabla para el juego y las fichas asociadas
             TableGame.create_table_for_game(game_id)
             table = session.query(Table).filter_by(gameid=game_id).first()
-            tablegame = TableGame(game_id=game_id, table_id=table.id)
+            tablegame = TableGame(table.id,game_id)
             session.add(tablegame)
             session.commit()
             return {"message": "Game started"}

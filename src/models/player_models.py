@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey,Boolean
 from sqlalchemy.orm import relationship
 from models.game_models import Game, engine, Base, session
 import uuid
