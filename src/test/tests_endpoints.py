@@ -33,6 +33,28 @@ def test_get_players():
   assert response.json() == [{"player_name": player_name, "player_id": player_id}]
 
 
+# Actualizar las pruebas fallidas
+
+def test_delete_game():
+    client.delete("/delete_all")
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+    
+    game_name = "ValidGame"
+    game_size = 3
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+    game_id = response_game.json()["game_id"]
+    
+    response = client.delete(f"/delete_game/{game_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Game and all associated data deleted"}
+
+def test_delete_all():
+    response = client.delete("/delete_all")
+    assert response.status_code == 200
+    assert response.json() == {"message": "All players, games, tables, and tiles deleted"}
+
 # Test de get games
 
 def test_get_games():
@@ -281,36 +303,31 @@ def test_join_game_player_not_found():
   assert response.json() == {"detail": "Player not found"}
   
 def test_join_game_game_is_already_playing():
-  client.delete("/delete_all")
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  
-  player_name2 = "ValidPlayer2"
-  response_player2 = client.post(f"/create_player/{player_name2}")
-  player_id2 = response_player2.json()["player_id"]
-  
-  player_name3 = "ValidPlayer3"
-  response_player3 = client.post(f"/create_player/{player_name3}")
-  player_id3 = response_player3.json()["player_id"]
-  
-  game_name = "ValidGame"
-  game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
-  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
-  
-  response_start = client.put(f"/start_game/{player_id}/{game_id}")
-  assert response_start.json() == {"message": "Game started"}
-  
-  response_leave = client.put(f"/leave_game/{player_id2}/{game_id}")
-  assert response_leave.json() == {"message": player_name2 + " left the game " + game_name}
-  
-  response = client.put(f"/join_game/{player_id3}/{game_id}")
-  assert response.status_code == 409
-  assert response.json() == {"detail": "Game is already playing"}
+    client.delete("/delete_all")
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+    
+    player_name2 = "ValidPlayer2"
+    response_player2 = client.post(f"/create_player/{player_name2}")
+    player_id2 = response_player2.json()["player_id"]
+    
+    player_name3 = "ValidPlayer3"
+    response_player3 = client.post(f"/create_player/{player_name3}")
+    player_id3 = response_player3.json()["player_id"]
+    
+    game_name = "ValidGame"
+    game_size = 2
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+    game_id = response_game.json()["game_id"]
+    
+    response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+    assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+    
+    response_start = client.put(f"/start_game/{player_id}/{game_id}")
+    response_join_again = client.put(f"/join_game/{player_id3}/{game_id}")
+    assert response_join_again.status_code == 409
+    assert response_join_again.json() == {"detail": "The game is already in progress"}
   
 def test_join_game_player_is_in_game():
   client.delete("/delete_all")

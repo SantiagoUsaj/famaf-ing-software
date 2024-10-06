@@ -79,6 +79,14 @@ class Tile(Base):
         session.add_all(tiles)
         session.commit()
 
+    @staticmethod
+    def swap_tiles_color(tile_id1: int, tile_id2: int):
+        tile1 = session.query(Tile).filter_by(id=tile_id1).first()
+        tile2 = session.query(Tile).filter_by(id=tile_id2).first()
+        if tile1 and tile2:
+            tile1.color, tile2.color = tile2.color, tile1.color
+            session.commit()
+
 class TableGame(Base):
     __tablename__ = 'tablegames'
 

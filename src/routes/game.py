@@ -12,6 +12,14 @@ async def get_games():
             "state": game.state, "size": game.size, "current_player": PlayerGame.get_count_of_players_in_game(session, game.gameid), 
             "turn": game.turn} for game in games]
 
+@router.get("/tiles/{game_id}")
+async def get_tiles(game_id: str):
+    table = session.query(Table).filter_by(gameid=game_id).first()
+    if table is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    tiles = session.query(Tile).filter_by(table_id=table.id).all()
+    return [{"x": tile.x, "y": tile.y, "color": tile.color} for tile in tiles]
+
 @router.get("/game/{game_id}")
 async def get_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
@@ -148,6 +156,21 @@ async def next_turn(player_id: str, game_id: str):
             session.commit()
             update = True
             return {"message": "Next turn"}
+
+@router.put("/swap_tiles/{player_id}/{game_id}/{tile_id1}/{tile_id2}")
+async def swap_tiles(player_id: str, game_id: str, tile_id1: int, tile_id2: int):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    else:
+        game = session.query(Game).filter_by(gameid=game_id).first()
+        if player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
+        else:
+            Tile.swap_tiles_color(tile_id1, tile_id2)
+            session.commit()
+            return {"message": "Tiles swapped"}
 
 @router.delete("/delete_game/{game_id}")
 async def delete_game(game_id: str):
