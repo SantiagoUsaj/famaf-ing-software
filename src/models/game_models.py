@@ -106,4 +106,46 @@ class TableGame(Base):
         session.commit()
         Tile.create_tiles_for_table(table.id)
 
-Base.metadata.create_all(engine)
+class Figures(Base):
+    __tablename__ = 'figures'
+
+    id = Column(Integer, primary_key=True)
+    points = Column(String, nullable=False)
+
+    @staticmethod
+    def detect_figures(table_id: int):
+        table = session.query(Table).filter_by(id=table_id).first()
+        tiles = session.query(Tile).filter_by(table_id=table_id).all()
+        points = 0
+        for tile in tiles:
+            points += 1
+            tile.highlight = True
+            session.commit()
+        return points
+    
+def find_connected_components(tiles):
+    def dfs(tile, visited, component):
+        stack = [tile]
+        while stack:
+            current_tile = stack.pop()
+            if current_tile not in visited:
+                visited.add(current_tile)
+                component.append(current_tile)
+                neighbors = [
+                    t for t in tiles if (
+                        t.color == current_tile.color and (
+                            (t.x == current_tile.x and abs(t.y - current_tile.y) == 1) or
+                            (t.y == current_tile.y and abs(t.x - current_tile.x) == 1)
+                        )
+                    )
+                ]
+                stack.extend(neighbors)
+    visited = set()
+    components = []
+    for tile in tiles:
+        if tile not in visited:
+            component = []
+            dfs(tile, visited, component)
+            components.append(component)
+    return components
+    

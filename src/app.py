@@ -4,13 +4,24 @@ from models.manager_models import ConnectionManager
 from routes.player import router as player_router
 from routes.game import router as game_router
 import asyncio
-from models.game_models import Game, session, Table, Tile
+from models.game_models import Game, session, Table, Tile, Figures,find_connected_components
 from models.player_models import PlayerGame, Player
 
 app = FastAPI()
 
 manager = ConnectionManager()
 game_managers = {}
+
+
+@app.get("/figures/{game_id}")
+async def get_figures(game_id: str):
+
+    tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+    connected_components = find_connected_components(tiles)
+    #matching_figures = match_figures(connected_components, session.query(Figures).all())
+    
+    return connected_components
+    
 
 app.add_middleware(
     CORSMiddleware,
