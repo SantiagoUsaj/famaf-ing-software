@@ -1,9 +1,8 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import WaitingRoom from "./../pages/WaitingRoom";
-import * as ReactRouterDom from "react-router-dom"; // Importamos todo el módulo de react-router-dom
 import { GameData, LeaveGame, StartGame } from "../services/GameServices";
 
 // Mockear los componentes LobbySquares y TablePlayers
@@ -39,12 +38,34 @@ vi.mock("../services/GameServices", () => ({
   StartGame: vi.fn(),
 }));
 
+// Mock usePlayerContext
+const mockSetPlayerID = vi.fn();
+vi.mock("../context/PlayerContext", () => ({
+  usePlayerContext: () => ({
+    setPlayerID: mockSetPlayerID,
+    playerID: "1",
+  }),
+}));
+
+// Mock useGameContext
+const mockSetGameID = vi.fn();
+vi.mock("../context/GameContext", () => ({
+  useGameContext: () => ({
+    setGameID: mockSetGameID,
+    game_id: "1",
+  }),
+}));
+
 const renderWithRouter = (ui, { route = "/" } = {}) => {
   window.history.pushState({}, "Test page", route);
   return render(ui, { wrapper: BrowserRouter });
 };
 
 describe("WaitingRoom", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should render game name after useEffect runs", async () => {
     GameData.mockResolvedValueOnce({
       game_name: "Test Game",
@@ -55,7 +76,7 @@ describe("WaitingRoom", () => {
       player_details: [],
     });
 
-    renderWithRouter(<WaitingRoom game_id="1" playerID="1" />);
+    renderWithRouter(<WaitingRoom />);
 
     // Esperar hasta que el nombre del juego sea renderizado
     const gameName = await screen.findByText("Test Game");
@@ -72,9 +93,7 @@ describe("WaitingRoom", () => {
       player_details: [],
     });
 
-    renderWithRouter(
-      <WaitingRoom game_id="1" playerID="1" initialIsCreator={true} />
-    );
+    renderWithRouter(<WaitingRoom initialIsCreator={true} />);
 
     // Esperar hasta que el nombre del juego sea renderizado
     const gameName = await screen.findByText("Test Game");
@@ -97,9 +116,7 @@ describe("WaitingRoom", () => {
       player_details: [],
     });
 
-    renderWithRouter(
-      <WaitingRoom game_id="1" playerID="1" initialIsCreator={false} />
-    );
+    renderWithRouter(<WaitingRoom initialIsCreator={false} />);
 
     // Simular que el usuario no es el creador
     const leaveButton = screen.getByRole("button", { name: /Abandonar/i });
@@ -118,9 +135,7 @@ describe("WaitingRoom", () => {
 
     StartGame.mockResolvedValueOnce({});
 
-    renderWithRouter(
-      <WaitingRoom game_id="1" playerID="1" initialIsCreator={true} />
-    );
+    renderWithRouter(<WaitingRoom initialIsCreator={true} />);
 
     // Esperar hasta que el nombre del juego sea renderizado
     const gameName = await screen.findByText("Test Game");
@@ -135,7 +150,7 @@ describe("WaitingRoom", () => {
     // Simular el click en el botón de 'Iniciar Partida'
     fireEvent.click(startGameButton);
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/1/1/game");
+      expect(mockNavigate).toHaveBeenCalledWith("/game");
     });
   });
 
@@ -151,16 +166,14 @@ describe("WaitingRoom", () => {
 
     LeaveGame.mockResolvedValueOnce({});
 
-    renderWithRouter(
-      <WaitingRoom game_id="1" playerID="1" initialIsCreator={false} />
-    );
+    renderWithRouter(<WaitingRoom initialIsCreator={false} />);
 
     // Simular el click en el botón de 'Abandonar'
     const leaveButton = screen.getByRole("button", { name: /Abandonar/i });
 
     fireEvent.click(leaveButton);
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/lobby/1");
+      expect(mockNavigate).toHaveBeenCalledWith("/lobby");
     });
   });
 });
