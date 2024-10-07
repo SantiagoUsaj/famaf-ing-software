@@ -12,14 +12,6 @@ async def get_games():
             "state": game.state, "size": game.size, "current_player": PlayerGame.get_count_of_players_in_game(session, game.gameid), 
             "turn": game.turn} for game in games]
 
-@router.get("/tiles/{game_id}")
-async def get_tiles(game_id: str):
-    table = session.query(Table).filter_by(gameid=game_id).first()
-    if table is None:
-        raise HTTPException(status_code=404, detail="Game not found")
-    tiles = session.query(Tile).filter_by(table_id=table.id).all()
-    return [{"x": tile.x, "y": tile.y, "color": tile.color} for tile in tiles]
-
 @router.get("/game/{game_id}")
 async def get_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
@@ -140,7 +132,6 @@ async def start_game(player_id: str, game_id: str):
             session.commit()
             return {"message": "Game started"}
 
-
 @router.put("/next_turn/{player_id}/{game_id}")
 async def next_turn(player_id: str, game_id: str):
     if session.query(Game).filter_by(gameid=game_id).count() == 0:
@@ -189,7 +180,6 @@ async def delete_game(game_id: str):
     # Eliminar todas las relaciones de jugadores con el juego
     session.query(PlayerGame).filter_by(gameid=game_id).delete()
     
-    # Eliminar el juego
     session.query(Game).filter_by(gameid=game_id).delete()
     
     session.commit()

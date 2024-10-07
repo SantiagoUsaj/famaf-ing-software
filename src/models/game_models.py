@@ -110,7 +110,7 @@ class Figures(Base):
     __tablename__ = 'figures'
 
     id = Column(Integer, primary_key=True)
-    points = Column(String, nullable=False)
+    points = Column(String)
 
     @staticmethod
     def detect_figures(table_id: int):
@@ -148,4 +148,22 @@ def find_connected_components(tiles):
             dfs(tile, visited, component)
             components.append(component)
     return components
-    
+
+def match_figures(connected_components, figures):
+    matching_tiles = {}
+    for component in connected_components:
+        component_points = {f"{tile.x}{tile.y}" for tile in component}
+        matched = False
+        for figure in figures:
+            figure_points = set(figure.points.split(","))
+            if component_points == figure_points:
+                for tile in component:
+                    tile.highlight = True
+                    matching_tiles[f"{tile.x}{tile.y}"] = figure.id
+                matched = True
+                break
+        if not matched:
+            for tile in component:
+                tile.highlight = False
+    session.commit()  # Commit the changes to the database
+    return matching_tiles
