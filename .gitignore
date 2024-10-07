@@ -43,6 +43,7 @@ __pycache__/
 *.pyd
 .Python
 *.wsgi
+env/
 
 # Archivos de cobertura de pruebas
 .coverage

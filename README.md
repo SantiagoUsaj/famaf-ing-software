@@ -57,10 +57,38 @@ Ahora para ver la documentacion del mismo con ir a la pagina
 
 ## Runear los test
 
+Primero hay activar el entorno virtual:
+
+```bash
+source .venv/bin/activate
+```
+
+y luego descargar pytest, coverage y factory_boy:
+
+```bash
+pip install pytest
+```
+
+
+```bash
+pip install coverage
+```
+
+
+```bash
+pip install factory_boy
+```
+
 Hay que estar en la dirección `/backend/src` y ahí se ejecuta el comando:
 
 ```bash
-python3 -m pytest tests_endpoints.py -v
+coverage run -m pytest -v
+```
+
+Despues para ver el respuen del test se ejecuta:
+
+```bash
+coverage report -m
 ```
 
 ## Organizacion de archivos
