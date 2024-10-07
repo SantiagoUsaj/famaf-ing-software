@@ -46,6 +46,7 @@ pip install SQLalchemy
 Si queremos probar los tests, tendremos que ejecutar los siguientes comandos por consola
 ```bash
 pip install httpx
+pip install pytest-asyncio
 pip install pytest
 ```
 
