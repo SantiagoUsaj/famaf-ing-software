@@ -149,14 +149,26 @@ def find_connected_components(tiles):
             components.append(component)
     return components
 
+def normalize_points(points):
+    # Convert points to a list of tuples (x, y)
+    points = [tuple(map(int, point)) for point in points]
+    # Find the point with the smallest x and y values
+    min_x = min(point[0] for point in points)
+    min_y = min(point[1] for point in points)
+    # Normalize points so that the smallest point is (0, 0)
+    normalized_points = {(x - min_x, y - min_y) for x, y in points}
+    return normalized_points
+
 def match_figures(connected_components, figures):
     matching_tiles = {}
     for component in connected_components:
         component_points = {f"{tile.x}{tile.y}" for tile in component}
+        normalized_component_points = normalize_points(component_points)
         matched = False
         for figure in figures:
             figure_points = set(figure.points.split(","))
-            if component_points == figure_points:
+            normalized_figure_points = normalize_points(figure_points)
+            if normalized_component_points == normalized_figure_points:
                 for tile in component:
                     tile.highlight = True
                     matching_tiles[f"{tile.x}{tile.y}"] = figure.id

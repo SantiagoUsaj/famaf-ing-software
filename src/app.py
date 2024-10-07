@@ -12,8 +12,6 @@ app = FastAPI()
 manager = ConnectionManager()
 game_managers = {}
 
-
-
 @app.get("/figures/{game_id}")
 async def get_figures(game_id: str):
 
