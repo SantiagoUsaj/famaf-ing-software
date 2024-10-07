@@ -4,7 +4,7 @@ from models.manager_models import ConnectionManager
 from routes.player import router as player_router
 from routes.game import router as game_router
 import asyncio
-from models.game_models import Game, session, Table, Tile, Figures, find_connected_components,match_figures, TableGame
+from models.game_models import Game, session, Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.player_models import PlayerGame, Player
 
 app = FastAPI()
@@ -18,8 +18,7 @@ async def get_figures(game_id: str):
     tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
     connected_components = find_connected_components(tiles)
     matching_figures = match_figures(connected_components, session.query(Figures).all())
-    return  matching_figures
-    
+    return matching_figures
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,10 +79,18 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
 
             players_in_game = session.query(PlayerGame).filter_by(gameid=game_id).all()
             player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
-            turnos=game.turn
-            if(turnos!=None):
-                turnos=turnos.split(",")
-                turnos=turnos[0]
+            turnos = game.turn
+            if turnos is not None:
+                turnos = turnos.split(",")
+                turnos = turnos[0]
+
+            # Obtener el tablero y las fichas asociadas a la partida
+            table = session.query(Table).filter_by(gameid=game_id).first()
+            if table:
+                tiles = session.query(Tile).filter_by(table_id=table.id).all()
+                board = [{"id": tile.id, "x": tile.x, "y": tile.y, "color": tile.color, "highlight": tile.highlight} for tile in tiles]
+            else:
+                board = []
 
             game_details = {
                 "game_name": game.name,
@@ -92,16 +99,13 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "game_size": game.size,
                 "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                 "player_details": player_details,
-                "turn": turnos
+                "turn": turnos,
+                "board": board  # Agregar el tablero al game_details
             }
-        
-           
 
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
 
-
     except WebSocketDisconnect:
         await game_managers[game_id].disconnect(websocket)
         await game_managers[game_id].broadcast(f"Client #{game_id} left the chat")
-        

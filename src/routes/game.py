@@ -74,6 +74,7 @@ async def join_game(player_id: str, game_id: str):
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
         session.commit()
+        global update
         update = True
         return {"message": player.name + " joined the game " + game.name}
      
@@ -118,6 +119,8 @@ async def start_game(player_id: str, game_id: str):
         elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
             raise HTTPException(status_code=409, detail="The game is not full")
         else:
+            global update
+            update = True
             game.start_game()
             player_ids = [str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()]
             random.shuffle(player_ids)
