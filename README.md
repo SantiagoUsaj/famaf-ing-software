@@ -95,9 +95,12 @@ coverage report -m
 
 **`src/`**: Carpeta principal para el código fuente.
 
-**`endpoints.py`**: Contiene todos los endpoints de la API.
+**`models/`**: Contiene las clases y sus metodos.
 
 **`manager_models.py`**: Contiene el manejo de Webscket.
 
-**`"entidad"_models.py`**: Contiene la clase entidad y sus metodos.
+**`routes/`**: Contiene todos los endpoints de cada clase.
 
+**`test/`** Contiene todos los test.
+
+**`app.py`** Contiene el manejo principal de la API.
