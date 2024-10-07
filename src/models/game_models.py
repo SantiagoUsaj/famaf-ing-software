@@ -111,6 +111,9 @@ class Figures(Base):
 
     id = Column(Integer, primary_key=True)
     points = Column(String)
+    rot90=Column(String)
+    rot180=Column(String)
+    rot270=Column(String)
 
     @staticmethod
     def detect_figures(table_id: int):
@@ -166,13 +169,21 @@ def match_figures(connected_components, figures):
         normalized_component_points = normalize_points(component_points)
         matched = False
         for figure in figures:
-            figure_points = set(figure.points.split(","))
-            normalized_figure_points = normalize_points(figure_points)
-            if normalized_component_points == normalized_figure_points:
-                for tile in component:
-                    tile.highlight = True
-                    matching_tiles[f"{tile.x}{tile.y}"] = figure.id
-                matched = True
+            figure_points_variants = [
+                set(figure.points.split(",")),
+                set(figure.rot90.split(",")),
+                set(figure.rot180.split(",")),
+                set(figure.rot270.split(","))
+            ]
+            for figure_points in figure_points_variants:
+                normalized_figure_points = normalize_points(figure_points)
+                if normalized_component_points == normalized_figure_points:
+                    for tile in component:
+                        tile.highlight = True
+                        matching_tiles[f"{tile.x}{tile.y}"] = figure.id
+                    matched = True
+                    break
+            if matched:
                 break
         if not matched:
             for tile in component:
