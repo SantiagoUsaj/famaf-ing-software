@@ -38,13 +38,13 @@ develop-eggs/
 lib/
 lib64/
 __pycache__/
+__pycache__/*
 *.pyc
 *.pyo
 *.pyd
 .Python
 *.wsgi
 env/
-database/
 
 # Archivos de cobertura de pruebas
 .coverage
