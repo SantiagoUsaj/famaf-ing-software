@@ -37,38 +37,39 @@ const CreateGame = () => {
     }
   };
 
+  const goBack = () => {
+    console.log("Success");
+
+    navigate(`/lobby`);
+  };
+
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
   return (
-    <div className="pt-2">
+    <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
+      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
         Crear partida
       </h1>
       <Form
-        className="bg-black p-2 rounded-lg shadow-lg m-auto"
+        className="bg-black p-2"
         name="Crear Partida"
-        labelCol={{
-          span: 4,
-        }}
-        wrapperCol={{
-          span: 16,
-        }}
         style={{
-          maxWidth: 400,
-        }}
-        initialValues={{
-          remember: true,
+          maxWidth: 280,
+          margin: "0 auto", // Center the form horizontally
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center", // Center the form items horizontally
         }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
         <Form.Item
-          label={<span style={{ color: "black" }}>Nombre de la Partida</span>}
           name="nombre"
+          style={{ width: "100%" }}
           rules={[
             {
               validator: (_, value) => {
@@ -103,9 +104,7 @@ const CreateGame = () => {
 
         <Form.Item
           name="jugadores"
-          label={
-            <span style={{ color: "black" }}>Cantidad máxima de Jugadores</span>
-          }
+          style={{ width: "100%" }}
           rules={[
             { required: true, message: "Por favor selecciona una opción" },
           ]}
@@ -117,14 +116,15 @@ const CreateGame = () => {
           </Select>
         </Form.Item>
 
-        <Form.Item name="boton" wrapperCol={{ span: 24, offset: 0 }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button type="primary" htmlType="submit">
-              Crear
-            </Button>
-          </div>
+        <Form.Item name="boton">
+          <Button type="primary" htmlType="submit">
+            Crear
+          </Button>
         </Form.Item>
       </Form>
+      <Button className="flex m-auto" danger ghost onClick={() => goBack()}>
+        Atras
+      </Button>
     </div>
   );
 };

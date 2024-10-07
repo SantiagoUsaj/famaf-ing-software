@@ -16,6 +16,7 @@ const TablePlayers = ({ playersList, isCreator }) => {
       title: "Jugadores",
       dataIndex: "player_name",
       key: "player_name",
+      align: "center",
       render: (text) => <span>{text}</span>,
     },
     {
@@ -46,7 +47,7 @@ const TablePlayers = ({ playersList, isCreator }) => {
   return (
     <>
       <Table
-        className="w-1/4 my-8"
+        className="w-1/4 m-auto my-2 rounded-lg"
         pagination={false}
         columns={columns}
         align="center"

@@ -1,17 +1,37 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import CreateGame from "./../pages/CreateGame";
 import * as ReactRouterDom from "react-router-dom";
+import { usePlayerContext } from "../context/PlayerContext";
+import { useGameContext } from "../context/GameContext";
+import { CreateAGame } from "../services/CreateGameServices";
 
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom"); // Importamos lo que no queremos mockear
+  const actual = await vi.importActual("react-router-dom");
   return {
-    ...actual, // Retornamos el resto de las exportaciones reales
-    useNavigate: vi.fn(), // Mock para useNavigate
+    ...actual,
+    useNavigate: vi.fn(),
   };
 });
 
+vi.mock("../context/PlayerContext", () => ({
+  usePlayerContext: vi.fn(),
+}));
+
+vi.mock("../context/GameContext", () => ({
+  useGameContext: vi.fn(),
+}));
+
+vi.mock("../services/CreateGameServices", () => ({
+  CreateAGame: vi.fn(),
+}));
+
 describe("CreateGame", () => {
+  beforeEach(() => {
+    usePlayerContext.mockReturnValue({ playerID: "test-player-id" });
+    useGameContext.mockReturnValue({ setGameID: vi.fn() });
+  });
+
   it("should render the title 'Crear partida'", () => {
     render(
       <ReactRouterDom.BrowserRouter>
@@ -22,18 +42,18 @@ describe("CreateGame", () => {
     expect(title).toBeInTheDocument();
   });
 
-  it("should render the form with game name field, amount of players field, password field and submit button", () => {
+  it("should render the form with game name field, amount of players field, and submit button", () => {
     render(
       <ReactRouterDom.BrowserRouter>
         <CreateGame />
       </ReactRouterDom.BrowserRouter>
     );
 
-    const gameName = screen.getByLabelText(/Nombre de la Partida/i);
+    const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
     expect(gameName).toBeInTheDocument();
 
-    const players = screen.getByLabelText(/Cantidad máxima de Jugadores/i);
-    expect(players).toBeInTheDocument();
+    const playersPlaceholder = screen.getByText(/Selecciona cantidad jugadores/i, { selector: 'span' });
+    expect(playersPlaceholder).toBeInTheDocument();
 
     const button = screen.getByRole("button", { name: /Crear/i });
     expect(button).toBeInTheDocument();
@@ -63,12 +83,10 @@ describe("CreateGame", () => {
       </ReactRouterDom.BrowserRouter>
     );
 
+    const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
+    fireEvent.change(gameName, { target: { value: "game name!" } });
+
     const button = screen.getByRole("button", { name: /Crear/i });
-
-    fireEvent.change(screen.getByLabelText(/Nombre de la Partida/i), {
-      target: { value: "game name!" },
-    });
-
     fireEvent.click(button);
 
     const errorMessage = await screen.findByText(
@@ -84,12 +102,10 @@ describe("CreateGame", () => {
       </ReactRouterDom.BrowserRouter>
     );
 
+    const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
+    fireEvent.change(gameName, { target: { value: "game12345678901234567890" } });
+
     const button = screen.getByRole("button", { name: /Crear/i });
-
-    fireEvent.change(screen.getByLabelText(/Nombre de la Partida/i), {
-      target: { value: "game12345678901234567890" },
-    });
-
     fireEvent.click(button);
 
     const errorMessage = await screen.findByText(/¡No más de 20 caracteres!/i);
@@ -104,7 +120,6 @@ describe("CreateGame", () => {
     );
 
     const button = screen.getByRole("button", { name: /Crear/i });
-
     fireEvent.click(button);
 
     const errorMessage = await screen.findByText(
@@ -116,6 +131,7 @@ describe("CreateGame", () => {
   it("should navigate to /waitingRoom when form is submitted", async () => {
     const mockNavigate = vi.fn();
     ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
+    CreateAGame.mockResolvedValue({ game_id: "test-game-id" });
 
     render(
       <ReactRouterDom.BrowserRouter>
@@ -123,16 +139,14 @@ describe("CreateGame", () => {
       </ReactRouterDom.BrowserRouter>
     );
 
-    const button = screen.getByRole("button", { name: /Crear/i });
+    const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
+    fireEvent.change(gameName, { target: { value: "game123" } });
 
-    fireEvent.change(screen.getByLabelText(/Nombre de la Partida/i), {
-      target: { value: "game123" },
-    });
-    //despliega el menu
-    fireEvent.mouseDown(screen.getByLabelText(/Cantidad máxima de Jugadores/i));
-    //elige la cantidad de jugadores
+    const players = screen.getByText(/Selecciona cantidad jugadores/i);
+    fireEvent.mouseDown(players);
     fireEvent.click(screen.getByText("2 jugadores"));
 
+    const button = screen.getByRole("button", { name: /Crear/i });
     await act(async () => {
       fireEvent.click(button);
     });
@@ -140,5 +154,38 @@ describe("CreateGame", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockNavigate).toHaveBeenCalledWith("/waitingRoom");
+  });
+
+  it("should log error when CreateAGame service fails", async () => {
+    const mockNavigate = vi.fn();
+    ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
+    CreateAGame.mockRejectedValue(new Error("Failed to create game"));
+
+    console.error = vi.fn();
+
+    render(
+      <ReactRouterDom.BrowserRouter>
+        <CreateGame />
+      </ReactRouterDom.BrowserRouter>
+    );
+
+    const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
+    fireEvent.change(gameName, { target: { value: "game123" } });
+
+    const players = screen.getByText(/Selecciona cantidad jugadores/i);
+    fireEvent.mouseDown(players);
+    fireEvent.click(screen.getByText("2 jugadores"));
+
+    const button = screen.getByRole("button", { name: /Crear/i });
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(console.error).toHaveBeenCalledWith(
+      "Error joining lobby:",
+      new Error("Failed to create game")
+    );
   });
 });

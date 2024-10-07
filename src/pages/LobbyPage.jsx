@@ -59,9 +59,9 @@ const LobbyPage = () => {
   }, []);
 
   return (
-    <div className="pt-2 flex justify-center flex-col items-center">
+    <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
+      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
         LobbyPage
       </h1>
       <TableGames gamesList={partidas} />
