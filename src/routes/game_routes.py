@@ -186,6 +186,9 @@ async def delete_game(game_id: str):
     session.query(PlayerGame).filter_by(gameid=game_id).delete()
     
     session.query(Game).filter_by(gameid=game_id).delete()
+
+    # Eliminar todas las relaciones de tablas con el juego
+    session.query(TableGame).filter_by(gameid=game_id).delete()
     
     session.commit()
     return {"message": "Game and all associated data deleted"}
