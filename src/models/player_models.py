@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey,Boolean
 from sqlalchemy.orm import relationship
-from models.game_models import Game, engine, Base, session
+from models.game_models import engine, Base, session
 import uuid
 import random
 

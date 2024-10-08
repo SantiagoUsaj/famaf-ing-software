@@ -1,8 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models.manager_models import ConnectionManager
-from routes.player import router as player_router
-from routes.game import router as game_router
+from routes.player_routes import router as player_router
+from routes.game_routes import router as game_router
 import asyncio
 from models.game_models import Game, session, Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.player_models import PlayerGame, Player
