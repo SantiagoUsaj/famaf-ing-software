@@ -100,7 +100,7 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                 "player_details": player_details,
                 "turn": turnos,
-                "board": board  # Agregar el tablero al game_details
+                "board": board
             }
 
             await websocket.send_json(game_details)
