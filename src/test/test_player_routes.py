@@ -5,7 +5,7 @@ from app import app
 from models.game_models import Base, Game, engine, session
 from models.player_models import Player, PlayerGame
 from models.game_models import Game, session
-from test.PlayerFactory import PlayerFactory
+from PlayerFactory import PlayerFactory
 
 
 # Crea todas las tablas en la base de datos

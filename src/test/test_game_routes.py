@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from app import app
 from models.game_models import Base, Game, engine, session
-from test.GameFactory import GameFactory
+from GameFactory import GameFactory
 
 
 # Crea todas las tablas
