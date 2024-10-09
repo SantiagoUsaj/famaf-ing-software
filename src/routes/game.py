@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
 from models.player_models import Player, PlayerGame
+from models.figure_card_models import Figure_card, shuffle
 import random
     
 router = APIRouter()
@@ -122,6 +123,7 @@ async def start_game(player_id: str, game_id: str):
             player_ids = [str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()]
             random.shuffle(player_ids)
             game.turn = ",".join(player_ids)
+            shuffle(game_id)
             session.commit()
             update = True
             return {"message": "Game started"}
