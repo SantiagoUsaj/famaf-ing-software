@@ -1,11 +1,11 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from models.game_models import engine, Base, session
-from models.player_models import Player
 from models.movement_chart_models import MovementChart
 import uuid
+import random
 
-class HandMovemens(Base):
+class HandMovements(Base):
     __tablename__ = 'hand_movements'
     
     handid = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -17,31 +17,35 @@ class HandMovemens(Base):
         self.movementid = movementid
         self.playerid = playerid
         self.gameid = gameid
-    
-    # Reparte 3 movimientos al jugador de la partida
+        
     @staticmethod
-    def deals_moves(playerid: str, gameid: str):
-        for _ in range(3):
-            movementid = MovementChart.get_random_movement_chart_id()
-            new_movement_chart = HandMovemens(movementid=movementid, playerid=playerid, gameid=gameid)
-            session.add(new_movement_chart)
-            session.commit()
+    def count_movements_by_movementid(movementid: int, gameid: str):
+        return session.query(HandMovements).filter_by(movementid=movementid, gameid=gameid).count()
+    
+    # Reparte movimientos al jugador de la partida
+    @staticmethod
+    def deals_moves(playerid: str, gameid: str, quantity: int):
+        for _ in range(quantity):
+            movement_ids = []
+            for chart in range(7):
+                movement = HandMovements.count_movements_by_movementid(chart, gameid)
+                if 0 <= movement < 7:
+                    movement_ids.append(chart)
+                
+            if movement_ids:
+                movementid = random.choice(movement_ids)
+                session.add(HandMovements(movementid=movementid, playerid=playerid, gameid=gameid))
+                session.commit()
+                
+    @staticmethod
+    def count_movements_charts_by_gameid_and_playerid(gameid: str, playerid: str):
+        if session.query(HandMovements).filter_by(gameid=gameid, playerid=playerid).count() > 3:
+            raise Exception("The player has many movements")
+        return session.query(HandMovements).filter_by(gameid=gameid, playerid=playerid).count()
     
     @staticmethod
-    def get_movement_chart_by_id(movementid: int, playerid: str, gameid: str):
-        return session.query(MovementChart).filter_by(movementid=movementid, playerid=playerid, gameid=gameid).first()
-    
-    @staticmethod
-    def get_movement_chart_by_gameid(gameid: str):
-        return session.query(MovementChart).filter_by(gameid=gameid).all()
-    
-    @staticmethod
-    def get_movement_chart_by_playerid(playerid: str):
-        return session.query(MovementChart).filter_by(playerid=playerid).all()
-    
-    @staticmethod
-    def get_movement_chart_by_gameid_and_playerid(gameid: str, playerid: str):
-        return session.query(MovementChart).filter_by(gameid=gameid, playerid=playerid).all()
+    def player_havent_movement(playerid: str, gameid: str, movementid: int):
+        return session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid, movementid=movementid).count() < 0
 
 
 # Create the table

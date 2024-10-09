@@ -81,13 +81,10 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                 "player_details": player_details,
                 "turn": turnos
-            }
-        
-           
+            }   
 
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
-
 
     except WebSocketDisconnect:
         await game_managers[game_id].disconnect(websocket)

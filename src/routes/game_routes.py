@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
 from models.player_models import Player, PlayerGame
-from models.hand_movements_models import HandMovemens
-from models.movement_chart_models import MovementChart
+from models.hand_movements_models import HandMovements
 import random
     
 router = APIRouter()
@@ -130,7 +129,7 @@ async def start_game(player_id: str, game_id: str):
             game.turn = ",".join(player_ids)
             session.commit()
             for player in player_ids:
-                HandMovemens.deals_moves(player, game.gameid)
+                HandMovements.deals_moves(player, game.gameid, 3)
             update = True
             return {"message": "Game started"}
 
@@ -145,6 +144,7 @@ async def next_turn(player_id: str, game_id: str):
         if player_id != game.turn.split(",")[0]:
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
+            HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) - 3)
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
             session.commit()
             update = True
