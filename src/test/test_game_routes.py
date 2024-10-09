@@ -568,18 +568,18 @@ def test_next_turn_not_your_turn():
 # Test delete game
 
 def test_delete_game():
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  
-  game_name = "ValidGame"
-  game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response = client.delete(f"/delete_game/{game_id}")
-  assert response.status_code == 200
-  assert response.json() == {"message": "Game deleted"}
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+
+    game_name = "ValidGame"
+    game_size = 3
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+    game_id = response_game.json()["game_id"]
+
+    response = client.delete(f"/delete_game/{game_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Game and all associated data deleted"}
   
 def test_delete_game_not_found():
   game_id = "1234"
@@ -594,4 +594,4 @@ def test_delete_game_not_found():
 def test_delete_all():
   response = client.delete("/delete_all")
   assert response.status_code == 200
-  assert response.json() == {"message": "All players and games deleted"}
+  assert response.json() == {"message": "All players, games, tables, and tiles deleted"}

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session
+from models.game_models import Game, session,Table, Tile, TableGame
 from models.player_models import Player, PlayerGame
-from models.hand_movements_models import HandMovements
+from models.handMovements_models import HandMovements
+from models.movementChart_models import MovementChart
 import random
     
 router = APIRouter()
@@ -77,6 +78,7 @@ async def join_game(player_id: str, game_id: str):
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
         session.commit()
+        global update
         update = True
         return {"message": player.name + " joined the game " + game.name}
      
@@ -123,13 +125,25 @@ async def start_game(player_id: str, game_id: str):
         elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
             raise HTTPException(status_code=409, detail="The game is not full")
         else:
+            global update
+            update = True
             game.start_game()
             player_ids = [str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()]
             random.shuffle(player_ids)
             game.turn = ",".join(player_ids)
             session.commit()
+            
+            # Repartir movimientos a los jugadores
             for player in player_ids:
                 HandMovements.deals_moves(player, game.gameid, 3)
+
+            # Crear una tabla para el juego y las fichas asociadas
+            TableGame.create_table_for_game(game_id)
+            table = session.query(Table).filter_by(gameid=game_id).first()
+            tablegame = TableGame(table.id,game_id)
+            session.add(tablegame)
+            session.commit()
+            
             update = True
             return {"message": "Game started"}
 
@@ -150,14 +164,71 @@ async def next_turn(player_id: str, game_id: str):
             update = True
             return {"message": "Next turn"}
 
+@router.put("/swap_tiles{game_id}/{player_id}/{movement_id}/{tile_id1}/{tile_id2}")
+async def swap_tiles(game_id: str, player_id: str, movement_id: int, tile_id1: int, tile_id2: int):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
+    movement = session.query(MovementChart).filter_by(movementid=movement_id).first()
+    tile1 = session.query(Tile).filter_by(id=tile_id1).first()
+    tile2 = session.query(Tile).filter_by(id=tile_id2).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    elif movement is None:
+        raise HTTPException(status_code=404, detail="Movement not found")
+    elif tile1 is None:
+        raise HTTPException(status_code=404, detail="Tile 1 not found")
+    elif tile2 is None:
+        raise HTTPException(status_code=404, detail="Tile 2 not found")
+    elif HandMovements.player_have_not_movement(player_id, game_id, movement_id):
+        raise HTTPException(status_code=409, detail="Player has not this movement")
+    elif player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
+    else:
+        x = abs(tile1.x - tile2.x)
+        y = abs(tile1.y - tile2.y)
+        
+        movementchart = MovementChart.get_movement_chart_by_id(movement_id)
+        rot0 = movementchart.rot0.split(",")  
+        rot90 = movementchart.rot90.split(",")     
+        rot180 = movementchart.rot180.split(",")
+        rot270 = movementchart.rot270.split(",")
+        
+        if (x == int(rot0[0]) and y == int(rot0[1])) or (x == int(rot90[0]) and y == int(rot90[1])) or (x == int(rot180[0]) and y == int(rot180[1])) or (x == int(rot270[0]) and y == int(rot270[1])):
+            Tile.swap_tiles_color(tile_id1, tile_id2)
+            session.query(HandMovements).filter_by(playerid=player_id, gameid=game_id, movementid=movement_id).delete()
+            session.commit()
+            return {"message": "Tiles swapped"}
+        else:
+            raise HTTPException(status_code=409, detail="Invalid movement")
 
 @router.delete("/delete_game/{game_id}")
 async def delete_game(game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
-    else:
-        session.query(PlayerGame).filter_by(gameid=game_id).delete()
-        session.query(Game).filter_by(gameid=game_id).delete()
-        session.commit()
-        return {"message": "Game deleted"}
+    
+    # Eliminar todas las fichas asociadas a las tablas del juego
+    tables = session.query(Table).filter_by(gameid=game_id).all()
+    for table in tables:
+        session.query(Tile).filter_by(table_id=table.id).delete()
+    
+    # Eliminar todas las tablas asociadas al juego
+    session.query(Table).filter_by(gameid=game_id).delete()
+    
+    # Eliminar todas las relaciones de jugadores con el juego
+    session.query(PlayerGame).filter_by(gameid=game_id).delete()
+    
+    # Eliminar el juego
+    session.query(Game).filter_by(gameid=game_id).delete()
+
+    # Eliminar todas las relaciones de tablas con el juego
+    session.query(TableGame).filter_by(gameid=game_id).delete()
+    
+    # Eliminar todos los movimientos de manos asociados al juego
+    session.query(HandMovements).filter_by(gameid=game_id).delete()
+    
+    session.commit()
+    return {"message": "Game and all associated data deleted"}
+

@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
 from models.game_models import engine, Base, session
 import uuid
 import random
@@ -26,7 +25,6 @@ class PlayerGame(Base):
 
     playerid = Column(String, ForeignKey('players.playerid'), primary_key=True)
     gameid = Column(Integer, ForeignKey('games.gameid'), primary_key=True)
-    turn = Column(Integer, nullable=True, default=None)
 
 
     def __init__(self, playerid: str, gameid: int):
