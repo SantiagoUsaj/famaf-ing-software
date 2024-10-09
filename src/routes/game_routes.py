@@ -135,6 +135,11 @@ async def start_game(player_id: str, game_id: str):
             tablegame = TableGame(table.id,game_id)
             session.add(tablegame)
             session.commit()
+
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
+            session.commit()
             return {"message": "Game started"}
 
 @router.put("/next_turn/{player_id}/{game_id}")
