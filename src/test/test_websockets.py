@@ -1,12 +1,25 @@
 import pytest
 import asyncio
+import uvicorn
 import json
 from fastapi.testclient import TestClient
+from multiprocessing import Process
 from fastapi import WebSocket
 from websockets import connect
+from time import sleep
 from app import app
 
 client = TestClient(app)
+
+@pytest.fixture(scope="session", autouse=True)
+def start_server():
+    # Inicia el servidor en un proceso separado
+    process = Process(target=uvicorn.run, args=(app,), kwargs={"host": "127.0.0.1", "port": 8000})
+    process.start()
+    sleep(1)  # Espera un momento para que el servidor inicie
+    yield
+    process.terminate()
+    process.join()
 
 @pytest.mark.asyncio
 async def test_websocket_connection():
