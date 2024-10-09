@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
 from models.player_models import Player, PlayerGame
-from models.figure_card_models import Figure_card, shuffle
+from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
     
 router = APIRouter()
@@ -100,6 +100,8 @@ async def leave_game(player_id: str, game_id: str):
                 turn_order = [pid for pid in turn_order if pid != player_id]
                 game.turn = ",".join(turn_order)
             
+            session.query(Figure_card).filter_by(game_id=game_id, player_id=player_id).delete()
+
             session.commit()
             player = session.query(Player).filter_by(playerid=player_id).first()
             global update
@@ -124,6 +126,8 @@ async def start_game(player_id: str, game_id: str):
             random.shuffle(player_ids)
             game.turn = ",".join(player_ids)
             shuffle(game_id)
+            for player_id in player_ids:
+                take_cards(game_id, player_id)
             session.commit()
             update = True
             return {"message": "Game started"}
@@ -139,10 +143,27 @@ async def next_turn(player_id: str, game_id: str):
         if player_id != game.turn.split(",")[0]:
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
+            take_cards(game_id, player_id)
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
             session.commit()
             update = True
             return {"message": "Next turn"}
+        
+@router.put("/discard_card/{player_id}/{game_id}/{card_id}/{tile}")
+async def discard_card(player_id: str, game_id: str, card_id: str):
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    elif session.query(Figure_card).filter_by(game_id=game_id, player_id=player_id, cardid=card_id).count() == 0:
+        raise HTTPException(status_code=404, detail="Card not found")
+    else:
+        card = session.query(Figure_card).filter_by(game_id=game_id, player_id=player_id, cardid=card_id).first()
+    #   tiles = find_connected_components(tile)
+    #   match_figures(tiles, figure)
+        card.return_card()
+        session.commit()
+        return {"message": "Card discarded"}
 
 
 @router.delete("/delete_game/{game_id}")
@@ -153,5 +174,6 @@ async def delete_game(game_id: str):
     else:
         session.query(PlayerGame).filter_by(gameid=game_id).delete()
         session.query(Game).filter_by(gameid=game_id).delete()
+        session.query(Figure_card).filter_by(game_id=game_id).delete()
         session.commit()
         return {"message": "Game deleted"}

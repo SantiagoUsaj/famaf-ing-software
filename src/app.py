@@ -6,6 +6,7 @@ from routes.game import router as game_router
 import asyncio
 from models.game_models import Game, session
 from models.player_models import PlayerGame, Player
+from models.figure_card_models import Figure_card
 
 app = FastAPI()
 
@@ -40,7 +41,9 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
             gamelist = []
             for game in games:
                 players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
-                player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
+                player_details = [{"player_id": pg.playerid, 
+                                   "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name 
+                                  } for pg in players_in_game]
                 gamelist.append({
                     "game_name": game.name,
                     "game_id": game.gameid,
@@ -67,7 +70,10 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 break
 
             players_in_game = session.query(PlayerGame).filter_by(gameid=game_id).all()
-            player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
+            player_details = [{"player_id": pg.playerid, 
+                                   "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name, 
+                                   "figure_cards": [{"card_id": fc.cardid, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()]
+                                  } for pg in players_in_game]
             turnos=game.turn
             if(turnos!=None):
                 turnos=turnos.split(",")
