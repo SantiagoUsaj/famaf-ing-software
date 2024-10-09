@@ -5,8 +5,9 @@ from routes.player_routes import router as player_router
 from routes.game_routes import router as game_router
 from routes.movementChart_routes import router as movementChart_router
 import asyncio
-from models.game_models import Game, session, Table, Tile, Figures, find_connected_components, match_figures, TableGame
+from models.game_models import Game, session
 from models.player_models import PlayerGame, Player
+from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.handMovements_models import HandMovements
 from models.partialMovements_models import PartialMovements
 from models.figure_card_models import Figure_card
