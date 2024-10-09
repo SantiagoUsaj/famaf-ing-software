@@ -31,6 +31,10 @@ class HandMovements(Base):
             raise Exception("The player has many movements")
         return session.query(HandMovements).filter_by(gameid=gameid, playerid=playerid).count()
     
+    @staticmethod
+    def get_movements_charts_by_player_id(playerid: str, gameid: str):
+        return session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid).all()
+    
     # Reparte movimientos al jugador de la partida
     @staticmethod
     def deals_moves(playerid: str, gameid: str, quantity: int):

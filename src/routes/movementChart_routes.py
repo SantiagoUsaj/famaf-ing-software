@@ -41,5 +41,5 @@ async def player_movement_charts(game_id: str, player_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    return {"movements": HandMovements.get_movement_chart_by_player_id(player_id, game_id)}
+    return {"movements": HandMovements.get_movements_charts_by_player_id(player_id, game_id)}
     
