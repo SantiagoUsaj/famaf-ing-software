@@ -18,6 +18,7 @@ async def get_figures(game_id: str):
     tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
     connected_components = find_connected_components(tiles)
     matching_figures = match_figures(connected_components, session.query(Figures).all())
+    
     return matching_figures
 
 app.add_middleware(

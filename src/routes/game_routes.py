@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session,Table, Tile, TableGame
+from models.game_models import Game, session,Table, Tile, TableGame,find_connected_components, match_figures,Figures
 from models.player_models import Player, PlayerGame
 import random
     
@@ -149,6 +149,9 @@ async def next_turn(player_id: str, game_id: str):
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
             session.commit()
             update = True
             return {"message": "Next turn"}
@@ -165,6 +168,9 @@ async def swap_tiles(player_id: str, game_id: str, tile_id1: int, tile_id2: int)
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
             Tile.swap_tiles_color(tile_id1, tile_id2)
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
             session.commit()
             return {"message": "Tiles swapped"}
 
