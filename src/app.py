@@ -118,7 +118,6 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "turn": turnos,
                 "board": board
             }
-
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
 
