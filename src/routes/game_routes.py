@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session,Table, Tile, TableGame
+from models.game_models import Game, session,Table, Tile, TableGame,find_connected_components, match_figures,Figures
 from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
@@ -164,7 +164,9 @@ async def next_turn(player_id: str, game_id: str):
         else:
             HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) - 3)
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
-            take_cards(game_id, player_id)
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
             session.commit()
             update = True
             return {"message": "Next turn"}
@@ -199,6 +201,9 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
         rot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, tile1)
         
         if rot0 == tile2.id or rot90 == tile2.id or rot180 == tile2.id or rot270 == tile2.id:
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
             Tile.swap_tiles_color(tile_id1, tile_id2)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile_id1, tile_id2)
