@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
 from models.player_models import Player, PlayerGame
+from models.hand_movements_models import HandMovemens
+from models.movement_chart_models import MovementChart
 import random
     
 router = APIRouter()
@@ -113,6 +115,8 @@ async def start_game(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif session.query(Player).filter_by(playerid=player_id).count() == 0:
         raise HTTPException(status_code=404, detail="Player not found")
+    elif session.query(Game).filter_by(gameid=game_id).first().state == "playing":
+        raise HTTPException(status_code=409, detail="Game is already playing")
     else:
         game = session.query(Game).filter_by(gameid=game_id).first()
         if player_id != game.host:
@@ -125,6 +129,8 @@ async def start_game(player_id: str, game_id: str):
             random.shuffle(player_ids)
             game.turn = ",".join(player_ids)
             session.commit()
+            for player in player_ids:
+                HandMovemens.deals_moves(player, game.gameid)
             update = True
             return {"message": "Game started"}
 
