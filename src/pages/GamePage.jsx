@@ -42,67 +42,26 @@ const GamePage = () => {
   const [PossibleTiles2, setPossibleTiles2] = useState();
   const [PossibleTiles3, setPossibleTiles3] = useState();
   const [PossibleTiles4, setPossibleTiles4] = useState();
-  //
-
-  const handleSquareClick = (index) => {
-    const newSelectedSquares = [...selectedSquares];
-    newSelectedSquares[index] = !newSelectedSquares[index];
-
-    setSelectedSquares(newSelectedSquares);
-    if (SelectFirstTitle === null) {
-      setSelectFirstTitle(index);
-      console.log(`First square ${index} clicked`);
-    } else {
-      setSelectSecondTitle(index);
-      console.log(`Second square ${index} clicked`);
-
-      // Adding a delay to ensure setSelectSecondTitle is updated
-      setTimeout(() => {
-        if (
-          index === PossibleTiles1 ||
-          index === PossibleTiles2 ||
-          index === PossibleTiles3 ||
-          index === PossibleTiles4
-        ) {
-          console.log("hello");
-
-          swap().then((response) => {
-            if (response) {
-              console.log("Swap response:", response);
-              setSelectMovCard(null);
-              setSelectFirstTitle(null);
-              setSelectSecondTitle(null);
-              setPossibleTiles1(null);
-              setPossibleTiles2(null);
-              setPossibleTiles3(null);
-              setPossibleTiles4(null);
-            }
-          });
-        }
-      }, 0);
-    }
-  };
 
   const showModal = () => {
     setIsModalOpen(true);
   };
 
   const winner = () => {
-    // do this for 5 seconds
-    var duration = 5 * 1000;
+    var duration = 1 * 100;
     var end = Date.now() + duration;
 
     (function frame() {
       // launch a few confetti from the left edge
       confetti({
-        particleCount: 4,
+        particleCount: 6,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
       });
       // and launch a few from the right edge
       confetti({
-        particleCount: 4,
+        particleCount: 6,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
@@ -113,23 +72,6 @@ const GamePage = () => {
         requestAnimationFrame(frame);
       }
     })();
-  };
-
-  const getGameInfo = async (game_id) => {
-    console.log("Success");
-
-    try {
-      // Esperamos la resolución de la promesa de GameData
-      const response = await GameData(game_id);
-
-      if (response) {
-        console.log("Game Info:", response);
-
-        return response;
-      }
-    } catch (error) {
-      console.error("Error getting game data", error);
-    }
   };
 
   const quitRoom = async (game_id) => {
@@ -192,6 +134,174 @@ const GamePage = () => {
     }
   };
 
+  const handleSquareClick = (index) => {
+    const newSelectedSquares = [...selectedSquares];
+    newSelectedSquares[index] = !newSelectedSquares[index];
+
+    setSelectedSquares(newSelectedSquares);
+    if (SelectFirstTitle === null) {
+      setSelectFirstTitle(index);
+      console.log(`First square ${index} clicked`);
+    } else {
+      setSelectSecondTitle(index);
+      console.log(`Second square ${index} clicked`);
+    }
+  };
+
+  const invertBoard = (board, size) => {
+    const rows = [];
+    for (let i = 0; i < size; i++) {
+      rows.push(board.slice(i * size, (i + 1) * size));
+    }
+    // Invertir el orden de las filas
+    const invertedRows = rows.reverse();
+    return invertedRows.flat();
+  };
+
+  const gameBoard = (board) => {
+    const size = 6;
+    const invertedBoard = invertBoard(board, size);
+
+    return invertedBoard.map((item) => (
+      <Button
+        key={item.id}
+        disabled={playerID !== turn}
+        onClick={() => handleSquareClick(item.id)}
+        style={{
+          width: "40px",
+          height: "40px",
+          backgroundColor:
+            item.color === "red"
+              ? "#FF5959"
+              : item.color === "blue"
+              ? "#45B3EB"
+              : item.color === "green"
+              ? "#4ade80"
+              : item.color === "yellow"
+              ? "#FAD05A"
+              : item.color,
+          border:
+            item.highlight ||
+            item.id === PossibleTiles1 ||
+            item.id === PossibleTiles2 ||
+            item.id === PossibleTiles3 ||
+            item.id === PossibleTiles4
+              ? "5px solid white"
+              : "none",
+          boxShadow: selectedSquares[item.id]
+            ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
+            : "none",
+        }}
+      ></Button>
+    ));
+  };
+
+  const putSwap = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de SwapTiles
+      const response = await SwapTiles(
+        playerID,
+        game_id,
+        SelectMovCard,
+        SelectFirstTitle,
+        SelectSecondTitle
+      );
+
+      if (response) {
+        console.log("Swap:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
+  const swap = () => {
+    console.log("SelectFirstTitle:", SelectFirstTitle);
+    console.log("SelectSecondTitle:", SelectSecondTitle);
+
+    if (
+      SelectSecondTitle === PossibleTiles1 ||
+      SelectSecondTitle === PossibleTiles2 ||
+      SelectSecondTitle === PossibleTiles3 ||
+      SelectSecondTitle === PossibleTiles4
+    ) {
+      putSwap().then((response) => {
+        if (response) {
+          console.log("Swap response:", response);
+          setSelectMovCard(null);
+          setSelectFirstTitle(null);
+          setSelectSecondTitle(null);
+          setPossibleTiles1(null);
+          setPossibleTiles2(null);
+          setPossibleTiles3(null);
+          setPossibleTiles4(null);
+          setSelectedSquares(Array(36).fill(false));
+        }
+      });
+    }
+  };
+
+  const getPossibleMoves = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de PossiblesMoves
+      const response = await PossiblesMoves(
+        playerID,
+        game_id,
+        SelectMovCard,
+        SelectFirstTitle
+      );
+
+      if (response) {
+        console.log("Possible Moves:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
+  const startMove = () => {
+    if (SelectMovCard && SelectFirstTitle && playerID === turn) {
+      console.log("Carta de movimineto:", SelectMovCard);
+      console.log("Ficha:", SelectFirstTitle);
+
+      getPossibleMoves().then((response) => {
+        if (response) {
+          setPossibleTiles1(response.tile_1);
+          setPossibleTiles2(response.tile_2);
+          setPossibleTiles3(response.tile_3);
+          setPossibleTiles4(response.tile_4);
+        }
+      });
+    } else {
+      alert("Selecciona ambos componentes primero");
+    }
+  };
+
+  const getGameInfo = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de GameData
+      const response = await GameData(game_id);
+
+      if (response) {
+        console.log("Game Info:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
   useEffect(() => {
     // Llamamos a la función getGameInfo
     getGameInfo(game_id).then((response) => {
@@ -241,116 +351,15 @@ const GamePage = () => {
     };
   }, []);
 
-  const invertBoard = (board, size) => {
-    const rows = [];
-    for (let i = 0; i < size; i++) {
-      rows.push(board.slice(i * size, (i + 1) * size));
+  useEffect(() => {
+    if (SelectFirstTitle !== null && SelectMovCard !== null) {
+      startMove();
     }
-    // Invertir el orden de las filas
-    const invertedRows = rows.reverse();
-    return invertedRows.flat();
-  };
 
-  const gameBoard = (board) => {
-    const size = 6;
-    const invertedBoard = invertBoard(board, size);
-
-    return invertedBoard.map((item) => (
-      <Card
-        key={item.id}
-        onClick={() => handleSquareClick(item.id)}
-        style={{
-          width: "40px",
-          height: "40px",
-          backgroundColor:
-            item.color === "red"
-              ? "#FF5959"
-              : item.color === "blue"
-              ? "#45B3EB"
-              : item.color === "green"
-              ? "#4ade80"
-              : item.color === "yellow"
-              ? "#FAD05A"
-              : item.color,
-          border:
-            item.highlight ||
-            item.id === PossibleTiles1 ||
-            item.id === PossibleTiles2 ||
-            item.id === PossibleTiles3 ||
-            item.id === PossibleTiles4
-              ? "5px solid white"
-              : "none",
-          boxShadow: selectedSquares[item.id]
-            ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
-            : "none",
-        }}
-      ></Card>
-    ));
-  };
-
-  // Funciones para el intercambio de fichas
-  const getPossibleMoves = async () => {
-    console.log("Success");
-
-    try {
-      // Esperamos la resolución de la promesa de GameData
-      const response = await PossiblesMoves(
-        playerID,
-        game_id,
-        SelectMovCard,
-        SelectFirstTitle
-      );
-
-      if (response) {
-        console.log("Possible Moves:", response);
-
-        return response;
-      }
-    } catch (error) {
-      console.error("Error getting game data", error);
+    if (SelectFirstTitle !== null && SelectSecondTitle !== null) {
+      swap();
     }
-  };
-
-  const swap = async () => {
-    console.log("Success");
-
-    try {
-      // Esperamos la resolución de la promesa de GameData
-      const response = await SwapTiles(
-        playerID,
-        game_id,
-        SelectMovCard,
-        SelectFirstTitle,
-        SelectSecondTitle
-      );
-
-      if (response) {
-        console.log("Swap:", response);
-
-        return response;
-      }
-    } catch (error) {
-      console.error("Error getting game data", error);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (SelectMovCard && SelectFirstTitle && playerID === turn) {
-      console.log("Carta de movimineto:", SelectMovCard);
-      console.log("Ficha:", SelectFirstTitle);
-
-      getPossibleMoves().then((response) => {
-        if (response) {
-          setPossibleTiles1(response.tile_1);
-          setPossibleTiles2(response.tile_2);
-          setPossibleTiles3(response.tile_3);
-          setPossibleTiles4(response.tile_4);
-        }
-      });
-    } else {
-      alert("Selecciona ambos componentes primero");
-    }
-  };
+  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard]);
 
   return (
     <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
@@ -419,9 +428,6 @@ const GamePage = () => {
         </Modal>
         {isModalOpen && winner()}
       </div>
-      <Button className="mt-5" type="primary" onClick={() => handleSubmit()}>
-        Usar Datos Seleccionados
-      </Button>
     </div>
   );
 };
