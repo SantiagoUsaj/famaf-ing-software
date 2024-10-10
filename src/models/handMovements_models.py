@@ -40,7 +40,7 @@ class HandMovements(Base):
     def deals_moves(playerid: str, gameid: str, quantity: int):
         for _ in range(quantity):
             movement_ids = []
-            for chart in range(1, 7):
+            for chart in range(1, 8):
                 movement = HandMovements.count_movements_by_movementid(chart, gameid)
                 if 0 <= movement < 7:
                     movement_ids.append(chart)

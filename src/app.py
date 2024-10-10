@@ -86,7 +86,7 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 {
                     "player_id": pg.playerid,
                     "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name,
-                    "number of movement charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count()
+                    "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count()
                 }
                 for pg in players_in_game
             ]

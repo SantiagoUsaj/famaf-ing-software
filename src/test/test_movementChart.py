@@ -1,10 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 from app import app
-from models.game_models import Base, Game, Tile, engine, session
+from models.game_models import Base, Game, Table, TableGame, Tile, engine, session
 from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
-from models.movementChart_models import MovementChart
 
 # Crea todas las tablas en la base de datos
 Base.metadata.create_all(engine)
@@ -13,19 +12,27 @@ client = TestClient(app)
 
 @pytest.fixture(scope='function', autouse=True)
 def setup_database():
-  # Limpiar la base de datos antes de cada prueba
-  session.rollback()
-  session.query(HandMovements).delete()
-  session.query(Game).delete()
-  session.query(Player).delete()
-  session.query(PlayerGame).delete()
-  session.commit()
-  yield
-  # Limpiar después de cada prueba
-  session.rollback()
-  session.query(HandMovements).delete()
-  session.query(Game).delete()
-  session.commit()
+    # Limpiar la base de datos antes de cada prueba
+    session.rollback()
+    session.query(HandMovements).delete()
+    session.query(Game).delete()
+    session.query(Player).delete()
+    session.query(PlayerGame).delete()
+    session.query(TableGame).delete()
+    session.query(Table).delete()
+    session.query(Tile).delete() 
+    session.commit()
+    yield
+    # Limpiar después de cada prueba
+    session.rollback()
+    session.query(HandMovements).delete()
+    session.query(Game).delete()
+    session.query(Player).delete()
+    session.query(PlayerGame).delete()
+    session.query(TableGame).delete()
+    session.query(Table).delete()
+    session.query(Tile).delete()
+    session.commit()
     
 
 
