@@ -314,6 +314,114 @@ def test_join_game_is_full():
   assert response.status_code == 409
   assert response.json() == {"detail": "Game is full"}
   
+# Test discard figure_card
+def test_discard_figure_card():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+
+  response = client.put(f"/discard_figure_card/{player_id}/{game_id}")
+  assert response.status_code == 200
+  assert response.json() == {"message": "Figure card discarded"}
+
+def test_discard_figure_card_not_found():
+  player_id = "1234"
+  game_id = "1234"
+  
+  response = client.put(f"/discard_figure_card/{player_id}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Game not found"}
+
+def test_discard_figure_card_player_not_found():
+  player_id = "1234"
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  response = client.put(f"/discard_figure_card/{player_id}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Player not found"}
+
+def test_discard_figure_card_not_your_turn():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+  
+  response = client.put(f"/discard_figure_card/{player_id2}/{game_id}")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "It's not your turn"}
+
+def test_discard_figure_card_game_not_playing():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+
+  response = client.put(f"/discard_figure_card/{player_id}/{game_id}")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "The game is not playing"}
+
+def test_discard_figure_card_player_not_in_game():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  response = client.put(f"/discard_figure_card/{player_id2}/{game_id}")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "Player is not in the game"}
+
+def test_discard_figure_card_player_has_no_figure_card():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+  
+  response = client.put(f"/discard_figure_card/{player_id2}/{game_id}")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "Player has no figure card"}
+
 
 # Test leave game
 
