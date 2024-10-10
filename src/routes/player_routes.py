@@ -1,11 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from models.player_models import Player, PlayerGame
 from models.game_models import Game, session
+from models.movementChart_models import MovementChart
 
 router = APIRouter()
 
 @router.get("/players")
 async def get_players():
+    
+    
+    # QUITAR
+    if MovementChart.is_table_empty():
+        MovementChart.game_movement()
     players = session.query(Player).all()
     return [{"player_name": player.name, "player_id": player.playerid} for player in players]
 

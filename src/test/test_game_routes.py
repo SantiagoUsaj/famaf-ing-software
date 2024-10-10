@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from app import app
 from models.game_models import Base, Game, engine, session
-from test.GameFactory import GameFactory
+from GameFactory import GameFactory
 
 
 # Crea todas las tablas
@@ -13,15 +13,15 @@ client = TestClient(app)
 
 @pytest.fixture(scope='function', autouse=True)
 def setup_database():
-    # Limpiar la base de datos antes de cada prueba
-    session.rollback()
-    session.query(Game).delete()
-    session.commit()
-    yield
-    # Limpiar después de cada prueba
-    session.rollback()
-    session.query(Game).delete()
-    session.commit()
+  # Limpiar la base de datos antes de cada prueba
+  session.rollback()
+  session.query(Game).delete()
+  session.commit()
+  yield
+  # Limpiar después de cada prueba
+  session.rollback()
+  session.query(Game).delete()
+  session.commit()
     
 
 # Test de get games
@@ -446,6 +446,38 @@ def test_start_game_player_not_found():
   assert response_game.status_code == 404
   assert response_game.json() == {"detail": "Player not found"}
   
+def test_start_game_already_playing():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+  
+  player_name3 = "ValidPlayer3"
+  response_player3 = client.post(f"/create_player/{player_name3}")
+  player_id3 = response_player3.json()["player_id"]
+  
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+  
+  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}")
+  assert response_join2.json() == {"message": player_name3 + " joined the game " + game_name}
+  
+  response_start = client.put(f"/start_game/{player_id}/{game_id}")
+  assert response_start.status_code == 200
+  assert response_start.json() == {"message": "Game started"}
+  
+  response_start_again = client.put(f"/start_game/{player_id}/{game_id}")
+  assert response_start_again.status_code == 409
+  assert response_start_again.json() == {"detail": "Game is already playing"}
+    
 def test_start_game_not_host():
   player_name = "ValidPlayer"
   response_player = client.post(f"/create_player/{player_name}")
@@ -536,18 +568,18 @@ def test_next_turn_not_your_turn():
 # Test delete game
 
 def test_delete_game():
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  
-  game_name = "ValidGame"
-  game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response = client.delete(f"/delete_game/{game_id}")
-  assert response.status_code == 200
-  assert response.json() == {"message": "Game deleted"}
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+
+    game_name = "ValidGame"
+    game_size = 3
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+    game_id = response_game.json()["game_id"]
+
+    response = client.delete(f"/delete_game/{game_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Game and all associated data deleted"}
   
 def test_delete_game_not_found():
   game_id = "1234"
@@ -562,4 +594,4 @@ def test_delete_game_not_found():
 def test_delete_all():
   response = client.delete("/delete_all")
   assert response.status_code == 200
-  assert response.json() == {"message": "All players and games deleted"}
+  assert response.json() == {"message": "All players, games, tables, and tiles deleted"}
