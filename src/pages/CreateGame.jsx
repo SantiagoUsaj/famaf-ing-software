@@ -50,11 +50,11 @@ const CreateGame = () => {
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         Crear partida
       </h1>
       <Form
-        className="bg-black p-2"
+        className="bg-negrofondo p-2"
         name="Crear Partida"
         style={{
           maxWidth: 280,

@@ -229,13 +229,13 @@ const GamePage = () => {
           height: "40px",
           backgroundColor:
             item.color === "red"
-              ? "rgba(248, 113, 113, 1)"
+              ? "#FF5959"
               : item.color === "blue"
-              ? "rgba(96, 165, 250, 1)"
+              ? "#45B3EB"
               : item.color === "green"
-              ? "rgba(34, 197, 94, 1)"
+              ? "#4ade80"
               : item.color === "yellow"
-              ? "rgba(234, 179, 8, 1)"
+              ? "#FAD05A"
               : item.color,
           border: item.highlight ? "2px solid lightblue" : "none",
           boxShadow: selectedSquares[item.id]
@@ -289,7 +289,7 @@ const GamePage = () => {
   };
 
   return (
-    <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
+    <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
       <div
         className="container"
         style={{
@@ -344,7 +344,7 @@ const GamePage = () => {
           className="text-center"
           closable={false}
         >
-          <p className="text-black text-lg ">Has ganado la partida.</p>
+          <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
           <Button
             className="mt-5"
             type="primary"

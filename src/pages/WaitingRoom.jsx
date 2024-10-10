@@ -134,7 +134,7 @@ const WaitingRoom = ({
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         {gameName}
       </h1>
       <TablePlayers playersList={playersList} isCreator={isCreator} />

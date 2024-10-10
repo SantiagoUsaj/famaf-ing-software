@@ -39,11 +39,11 @@ const LoginPage = () => {
     <div>
       {/* <MovingBG /> */}
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         El Switcher
       </h1>
       <Form
-        className="bg-black p-2"
+        className="bg-negrofondo p-2"
         name="Login"
         style={{
           maxWidth: 235,
