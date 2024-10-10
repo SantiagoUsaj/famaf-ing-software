@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal } from "antd";
+import { Button, Modal, Card, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
-import ColorSquare from "../components/ColorSquare";
+//import gameBoard from "../components/Board";
 import {
   ChangeTurn,
   LeaveGame,
@@ -16,6 +16,7 @@ import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
+
 
 const GamePage = () => {
   const navigate = useNavigate();
@@ -33,6 +34,16 @@ const GamePage = () => {
   const { playerID } = usePlayerContext();
   // Obtener game_id desde el contexto
   const { game_id } = useGameContext();
+  const [board, setBoard] = useState([]);
+  const [selectedSquares, setSelectedSquares] = useState(Array(36).fill(false));
+
+
+  const handleSquareClick = (index) => {
+    const newSelectedSquares = [...selectedSquares];
+    newSelectedSquares[index] = !newSelectedSquares[index];
+    setSelectedSquares(newSelectedSquares);
+  };
+
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -143,32 +154,6 @@ const GamePage = () => {
     }
   };
 
-  const colorSquares = (() => {
-    const colorCount = { red: 9, yellow: 9, green: 9, blue: 9 };
-    const squares = [];
-
-    for (let i = 0; i < 36; i++) {
-      const availableColors = Object.keys(colorCount).filter(
-        (color) => colorCount[color] > 0
-      );
-      const randomColor =
-        availableColors[Math.floor(Math.random() * availableColors.length)];
-      colorCount[randomColor]--;
-
-      squares.push(
-        <div
-          key={`${randomColor}-${i}`}
-          className="grid-item"
-          style={{ width: "50px", height: "50px" }}
-        >
-          <ColorSquare color={randomColor} />
-        </div>
-      );
-    }
-
-    return squares;
-  })();
-
   useEffect(() => {
     // Llamamos a la función getGameInfo
     getGameInfo(game_id).then((response) => {
@@ -179,8 +164,12 @@ const GamePage = () => {
         setNumberOfPlayers(response.players);
         setMaxNumberOfPlayers(response.game_size);
         setPlayersList(response.player_details);
+        //setBoard(response.board);
+        
       }
     });
+
+
 
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
@@ -197,6 +186,7 @@ const GamePage = () => {
       console.log("Mensaje recibido:", data);
 
       setTurn(data.turn);
+      setBoard(data.board);
 
       if (data.players === 1) {
         showModal();
@@ -217,22 +207,60 @@ const GamePage = () => {
     };
   }, []);
 
+  const rotateBoardLeft = (board, size) => {
+    return board.map((item) => {
+      const newX = item.y;
+      const newY = size - 1 - item.x;
+      return { ...item, x: newX, y: newY };
+    });
+  };
+
+  const gameBoard = (board) => {
+    const size = 6;
+    const rotatedBoard = rotateBoardLeft(board, size);
+
+    return rotatedBoard.sort((a, b) => {
+      if (a.y === b.y) {
+      return a.x - b.x;
+      }
+      return a.y - b.y;
+    }).map((item) => (
+      <Card
+      key={item.id}
+      onClick={() => handleSquareClick(item.id)}
+      style={{
+        width: "40px",
+        height: "40px",
+        backgroundColor: item.color,
+        border: item.highlight ? "2px solid lightblue" : "none",
+        boxShadow: selectedSquares[item.id] ? "0 0 10px 5px rgba(255, 255, 255, 0.8)" : "none",
+      }}
+      >
+      </Card>
+    ));
+  };
+
   return (
     <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
       <div
         className="container"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(6, 50px)",
-          gap: "10px",
+          gridTemplateColumns: "repeat(6, 40px)",
+          gap: "5px",
           justifyContent: "center",
         }}
       >
-        {colorSquares}
+        {gameBoard(board)}
       </div>
-      <div className="Cards">
-        <MovementCard />
+      <div 
+        className="Cards"
+        style={{
+          marginTop: "50px",
+        }}
+      >
         <FigureCard />
+        <MovementCard />
       </div>
       <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
