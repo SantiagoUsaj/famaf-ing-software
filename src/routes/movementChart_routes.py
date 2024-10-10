@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session, Tile
+from models.game_models import Game, session
+from models.board_models import Tile
 from models.player_models import Player
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
