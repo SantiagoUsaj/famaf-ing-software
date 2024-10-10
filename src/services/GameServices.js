@@ -73,14 +73,14 @@ export const DeleteGame = async (game_id) => {
 };
 
 export const PossiblesMoves = async (
-  game_id,
   player_id,
+  game_id,
   movement_id,
   tile_id
 ) => {
   try {
     const response = await axios.get(
-      `http://127.0.0.1:8000/possible_movements/${game_id}/${player_id}/${movement_id}/${tile_id}`
+      `http://127.0.0.1:8000/possible_movements/${player_id}/${game_id}/${movement_id}/${tile_id}`
     );
 
     console.log(response.data);
@@ -100,7 +100,7 @@ export const SwapTiles = async (
 ) => {
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/swap_tiles/${game_id}/${player_id}/${movement_id}/${tile_id1}/${tile_id2}`
+      `http://127.0.0.1:8000/swap_tiles/${player_id}/${game_id}/${movement_id}/${tile_id1}/${tile_id2}`
     );
 
     console.log(response.data);

@@ -38,14 +38,23 @@ const GamePage = () => {
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
+  const [PossibleTiles1, setPossibleTiles1] = useState();
+  const [PossibleTiles2, setPossibleTiles2] = useState();
+  const [PossibleTiles3, setPossibleTiles3] = useState();
+  const [PossibleTiles4, setPossibleTiles4] = useState();
   //
 
   const handleSquareClick = (index) => {
     const newSelectedSquares = [...selectedSquares];
     newSelectedSquares[index] = !newSelectedSquares[index];
     setSelectedSquares(newSelectedSquares);
-    setSelectFirstTitle(index);
-    console.log(`square ${index} clicked`);
+    if (SelectFirstTitle === null) {
+      setSelectFirstTitle(index);
+      console.log(`First square ${index} clicked`);
+    } else {
+      setSelectSecondTitle(index);
+      console.log(`Second square ${index} clicked`);
+    }
   };
 
   const showModal = () => {
@@ -237,7 +246,14 @@ const GamePage = () => {
               : item.color === "yellow"
               ? "#FAD05A"
               : item.color,
-          border: item.highlight ? "2px solid lightblue" : "none",
+          border:
+            item.highlight ||
+            item.id === PossibleTiles1 ||
+            item.id === PossibleTiles2 ||
+            item.id === PossibleTiles3 ||
+            item.id === PossibleTiles4
+              ? "5px solid white"
+              : "none",
           boxShadow: selectedSquares[item.id]
             ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
             : "none",
@@ -253,8 +269,8 @@ const GamePage = () => {
     try {
       // Esperamos la resolución de la promesa de GameData
       const response = await PossiblesMoves(
-        game_id,
         playerID,
+        game_id,
         SelectMovCard,
         SelectFirstTitle
       );
@@ -278,7 +294,14 @@ const GamePage = () => {
       // Llamamos a la función getPossibleMoves
       getPossibleMoves().then((response) => {
         if (response) {
-          console.log("Possible Moves:", response);
+          setPossibleTiles1(response.tile_1);
+          setPossibleTiles2(response.tile_2);
+          setPossibleTiles3(response.tile_3);
+          setPossibleTiles4(response.tile_4);
+          console.log("Possible Tiles 1:", response.tile_1);
+          console.log("Possible Tiles 2:", response.tile_2);
+          console.log("Possible Tiles 3:", response.tile_3);
+          console.log("Possible Tiles 4:", response.tile_4);
         }
       });
 

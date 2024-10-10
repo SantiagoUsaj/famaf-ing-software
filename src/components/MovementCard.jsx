@@ -11,13 +11,13 @@ import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 const MovementCard = ({ onSelectMovCard }) => {
   const [data, setData] = useState([
     {
-      title: `${Math.floor(Math.random() * 7) + 1}`,
+      title: `4`,
     },
     {
-      title: `${Math.floor(Math.random() * 7) + 1}`,
+      title: `6`,
     },
     {
-      title: `${Math.floor(Math.random() * 7) + 1}`,
+      title: `1`,
     },
   ]);
 
