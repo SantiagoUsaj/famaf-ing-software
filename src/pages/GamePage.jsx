@@ -167,7 +167,6 @@ const GamePage = () => {
         setNumberOfPlayers(response.players);
         setMaxNumberOfPlayers(response.game_size);
         setPlayersList(response.player_details);
-        //setBoard(response.board);
       }
     });
 
@@ -207,40 +206,44 @@ const GamePage = () => {
     };
   }, []);
 
-  const rotateBoardLeft = (board, size) => {
-    return board.map((item) => {
-      const newX = item.y;
-      const newY = size - 1 - item.x;
-      return { ...item, x: newX, y: newY };
-    });
+  const invertBoard = (board, size) => {
+    const rows = [];
+    for (let i = 0; i < size; i++) {
+      rows.push(board.slice(i * size, (i + 1) * size));
+    }
+    // Invertir el orden de las filas
+    const invertedRows = rows.reverse();
+    return invertedRows.flat();
   };
 
   const gameBoard = (board) => {
     const size = 6;
-    const rotatedBoard = rotateBoardLeft(board, size);
+    const invertedBoard = invertBoard(board, size);
 
-    return rotatedBoard
-      .sort((a, b) => {
-        if (a.y === b.y) {
-          return a.x - b.x;
-        }
-        return a.y - b.y;
-      })
-      .map((item) => (
-        <Card
-          key={item.id}
-          onClick={() => handleSquareClick(item.id)}
-          style={{
-            width: "40px",
-            height: "40px",
-            backgroundColor: item.color,
-            border: item.highlight ? "2px solid lightblue" : "none",
-            boxShadow: selectedSquares[item.id]
-              ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
-              : "none",
-          }}
-        ></Card>
-      ));
+    return invertedBoard.map((item) => (
+      <Card
+        key={item.id}
+        onClick={() => handleSquareClick(item.id)}
+        style={{
+          width: "40px",
+          height: "40px",
+          backgroundColor:
+            item.color === "red"
+              ? "rgba(248, 113, 113, 1)"
+              : item.color === "blue"
+              ? "rgba(96, 165, 250, 1)"
+              : item.color === "green"
+              ? "rgba(34, 197, 94, 1)"
+              : item.color === "yellow"
+              ? "rgba(234, 179, 8, 1)"
+              : item.color,
+          border: item.highlight ? "2px solid lightblue" : "none",
+          boxShadow: selectedSquares[item.id]
+            ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
+            : "none",
+        }}
+      ></Card>
+    ));
   };
 
   // Funciones para el intercambio de fichas
@@ -294,20 +297,16 @@ const GamePage = () => {
           gridTemplateColumns: "repeat(6, 40px)",
           gap: "5px",
           justifyContent: "center",
+          marginBottom: "20px",
         }}
       >
         {gameBoard(board)}
       </div>
-      <div
-        className="Cards"
-        style={{
-          marginTop: "50px",
-        }}
-      >
+      <div className="Cards">
         <FigureCard />
         <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
       </div>
-      <div className="turn text-white mt-4">
+      <div className="turn text-white">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
           <div key={player.player_id}>
