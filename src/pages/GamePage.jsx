@@ -47,6 +47,7 @@ const GamePage = () => {
   const handleSquareClick = (index) => {
     const newSelectedSquares = [...selectedSquares];
     newSelectedSquares[index] = !newSelectedSquares[index];
+
     setSelectedSquares(newSelectedSquares);
     if (SelectFirstTitle === null) {
       setSelectFirstTitle(index);
@@ -54,6 +55,31 @@ const GamePage = () => {
     } else {
       setSelectSecondTitle(index);
       console.log(`Second square ${index} clicked`);
+
+      // Adding a delay to ensure setSelectSecondTitle is updated
+      setTimeout(() => {
+        if (
+          index === PossibleTiles1 ||
+          index === PossibleTiles2 ||
+          index === PossibleTiles3 ||
+          index === PossibleTiles4
+        ) {
+          console.log("hello");
+
+          swap().then((response) => {
+            if (response) {
+              console.log("Swap response:", response);
+              setSelectMovCard(null);
+              setSelectFirstTitle(null);
+              setSelectSecondTitle(null);
+              setPossibleTiles1(null);
+              setPossibleTiles2(null);
+              setPossibleTiles3(null);
+              setPossibleTiles4(null);
+            }
+          });
+        }
+      }, 0);
     }
   };
 
@@ -285,27 +311,42 @@ const GamePage = () => {
     }
   };
 
+  const swap = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de GameData
+      const response = await SwapTiles(
+        playerID,
+        game_id,
+        SelectMovCard,
+        SelectFirstTitle,
+        SelectSecondTitle
+      );
+
+      if (response) {
+        console.log("Swap:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
   const handleSubmit = () => {
     if (SelectMovCard && SelectFirstTitle && playerID === turn) {
-      // Aquí puedes usar los datos de ambos componentes
       console.log("Carta de movimineto:", SelectMovCard);
       console.log("Ficha:", SelectFirstTitle);
 
-      // Llamamos a la función getPossibleMoves
       getPossibleMoves().then((response) => {
         if (response) {
           setPossibleTiles1(response.tile_1);
           setPossibleTiles2(response.tile_2);
           setPossibleTiles3(response.tile_3);
           setPossibleTiles4(response.tile_4);
-          console.log("Possible Tiles 1:", response.tile_1);
-          console.log("Possible Tiles 2:", response.tile_2);
-          console.log("Possible Tiles 3:", response.tile_3);
-          console.log("Possible Tiles 4:", response.tile_4);
         }
       });
-
-      // Realiza la acción que necesitas con estos datos
     } else {
       alert("Selecciona ambos componentes primero");
     }

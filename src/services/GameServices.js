@@ -92,8 +92,8 @@ export const PossiblesMoves = async (
 };
 
 export const SwapTiles = async (
-  game_id,
   player_id,
+  game_id,
   movement_id,
   tile_id1,
   tile_id2
