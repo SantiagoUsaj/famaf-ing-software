@@ -42,6 +42,7 @@ async def delete_all():
     session.query(Tile).delete()  # Eliminar todas las fichas
     session.query(Table).delete()  # Eliminar todas las tablas
     session.query(TableGame).delete()  # Eliminar todas las relaciones entre tablas y juegos
+    session.query(HandMovements).delete()  # Eliminar todos los movimientos de las manos
     session.commit()
     return {"message": "All players, games, tables, and tiles deleted"}
 

@@ -6,22 +6,19 @@ from models.movementChart_models import MovementChart
 
 router = APIRouter()
 
-@router.get("/possible_movements/{game_id}/{player_id}/{movement_id}/{tile_id}")
-async def possible_movements(game_id: str, player_id: str, movement_id: int, tile_id: int):
+@router.get("/possible_movements/{player_id}/{game_id}/{movement_id}/{tile_id}")
+async def possible_movements(player_id: str, game_id: str, movement_id: int, tile_id: int):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
-    movement = session.query(MovementChart).filter_by(movementid=movement_id).first()
     cordenada = session.query(Tile).filter_by(id=tile_id).first()
-    if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif player is None:
+    if player is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    elif movement is None:
-        raise HTTPException(status_code=404, detail="Movement not found")
-    elif cordenada is None:
-        raise HTTPException(status_code=404, detail="Tile not found")
+    elif game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
     elif HandMovements.player_have_not_movement(player_id, game_id, movement_id):
         raise HTTPException(status_code=409, detail="Player has not this movement")
+    elif cordenada is None or cordenada.x < 0 or cordenada.x > 5 or cordenada.y < 0 or cordenada.y > 5 or tile_id > 36 or tile_id < 1:
+        raise HTTPException(status_code=404, detail="Tile not found")
     else:
         movementchart = MovementChart.get_movement_chart_by_id(movement_id)
     
@@ -30,16 +27,22 @@ async def possible_movements(game_id: str, player_id: str, movement_id: int, til
         retrot180 = MovementChart.get_tile_for_rotation(movementchart.rot180, cordenada)
         retrot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, cordenada)
                 
-        return {"tile 1": retrot0, "tile 2": retrot90,  "tile 3": retrot180, "tile 4": retrot270}
+        return {"tile_1": retrot0, "tile_2": retrot90,  "tile_3": retrot180, "tile_4": retrot270}
 
 
-@router.get("/player_movements/{game_id}/{player_id}")
-async def player_movement_charts(game_id: str, player_id: str):
+@router.get("/player_movement_charts/{player_id}/{game_id}")
+async def player_movement_charts(player_id: str, game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
-    if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif player is None:
+    if player is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    return {"movements": HandMovements.get_movements_charts_by_player_id(player_id, game_id)}
+    elif game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return {"ids_of_movement_charts": HandMovements.get_movements_charts_by_player_id(player_id, game_id)}
+
+@router.delete("/delete_hand_movements")
+async def delete_all():
+    session.query(HandMovements).delete()
+    session.commit()
+    return {"message": "All hand movements deleted"}
     

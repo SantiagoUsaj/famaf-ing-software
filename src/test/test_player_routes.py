@@ -1,10 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 from app import app
 from models.game_models import Base, Game, engine, session
-from models.player_models import Player, PlayerGame
-from models.game_models import Game, session
+from models.player_models import Player
 from PlayerFactory import PlayerFactory
 
 

@@ -33,7 +33,7 @@ class HandMovements(Base):
     
     @staticmethod
     def get_movements_charts_by_player_id(playerid: str, gameid: str):
-        return session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid).all()
+        return [movement.movementid for movement in session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid).all()]
     
     # Reparte movimientos al jugador de la partida
     @staticmethod
