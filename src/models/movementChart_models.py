@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
-from models.game_models import engine, Base, Tile, session
-
+from models.board_models import Tile
+from models.game_models import engine, Base, session
 
 class MovementChart(Base):
     __tablename__ = 'movement_chart'

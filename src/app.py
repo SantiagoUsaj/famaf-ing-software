@@ -101,7 +101,7 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
             table = session.query(Table).filter_by(gameid=game_id).first()
             if table:
                 tiles = session.query(Tile).filter_by(table_id=table.id).all()
-                board = [{"id": tile.id, "x": tile.x, "y": tile.y, "color": tile.color, "highlight": tile.highlight} for tile in tiles]
+                board = [{"id": tile.number, "x": tile.x, "y": tile.y, "color": tile.color, "highlight": tile.highlight} for tile in tiles]
             else:
                 board = []
 

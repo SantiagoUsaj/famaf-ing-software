@@ -1,16 +1,11 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, Boolean
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from models.game_models import engine, Base, session
 import random
 import uuid
 import os
 
-# Configurar el motor de la base de datos para usar un archivo SQLite en la carpeta "base de datos"
-engine = create_engine('sqlite:///database/games.db', connect_args={'check_same_thread': False})
-Base = declarative_base()
-
-Session = sessionmaker(bind=engine)
-session = Session()
 
 class Table(Base):
     __tablename__ = 'table'
@@ -31,13 +26,15 @@ class Tile(Base):
     y = Column(Integer, nullable=False)
     color = Column(String, default="white")
     highlight = Column(Boolean, default=False)
+    number = Column(Integer, default=0)
 
-    def __init__(self, table_id: int, x: int, y: int, color: str, highlight: bool):
+    def __init__(self, table_id: int, x: int, y: int, color: str, highlight: bool,number: int):
         self.table_id = table_id
         self.x = x
         self.y = y
         self.color = color
         self.highlight = False
+        self.number = number
 
     @staticmethod
     def create_tiles_for_table(table_id: int):
@@ -45,11 +42,12 @@ class Tile(Base):
         tiles = []
         color_distribution = colors * 9  # 36 tiles, 9 of each color
         random.shuffle(color_distribution)
-        
+        aux=1
         for i in range(6):
             for j in range(6):
                 color = color_distribution.pop()
-                tiles.append(Tile(table_id=table_id, x=i, y=j, color=color, highlight=False))
+                tiles.append(Tile(table_id=table_id, x=i, y=j, color=color, highlight=False,number=aux))
+                aux+=1
         session.add_all(tiles)
         session.commit()
 
