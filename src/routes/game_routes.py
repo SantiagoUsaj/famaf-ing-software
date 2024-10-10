@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session,Table, Tile, TableGame
+from models.game_models import Game, session,Table, Tile, TableGame,
 from models.player_models import Player, PlayerGame
 from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
@@ -175,10 +175,14 @@ async def discard_figure(player_id: str, game_id: str, tile: str):
         figure_card = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, tile=tile).first()
         if figure_card is None:
             raise HTTPException(status_code=404, detail="Figure card not found")
-        else:
-            
+        elif compare_tile_with_figure(tile, figure_card.figure):
+            figure_card.return_card()
             session.commit()
+            if session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id).count() == 0:
+                return {"message": "Game over, player " + player.name + " wins"}
             return {"message": "Figure card discarded"}
+        else:
+            raise HTTPException(status_code=409, detail="Figure card does not match the tile")
 
 @router.put("/swap_tiles/{player_id}/{game_id}/{tile_id1}/{tile_id2}")
 async def swap_tiles(player_id: str, game_id: str, tile_id1: int, tile_id2: int):

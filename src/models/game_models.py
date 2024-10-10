@@ -195,8 +195,7 @@ def match_figures(connected_components, figures):
         tile = session.query(Tile).filter_by(id=tile_id).first()
         figure = session.query(Figures).filter_by(id=figure_id).first()
         
-        if not tile or not figure:
-            return False
+ 
         
         # Get all tiles in the same table
         tiles = session.query(Tile).filter_by(table_id=tile.table_id).all()
