@@ -20,7 +20,7 @@ async def possible_movements(game_id: str, player_id: str, movement_id: int, til
         raise HTTPException(status_code=404, detail="Movement not found")
     elif cordenada is None:
         raise HTTPException(status_code=404, detail="Tile not found")
-    elif HandMovements.player_have_movement(player_id, game_id, movement_id):
+    elif HandMovements.player_have_not_movement(player_id, game_id, movement_id):
         raise HTTPException(status_code=409, detail="Player has not this movement")
     else:
         movementchart = MovementChart.get_movement_chart_by_id(movement_id)
@@ -30,7 +30,7 @@ async def possible_movements(game_id: str, player_id: str, movement_id: int, til
         retrot180 = MovementChart.get_tile_for_rotation(movementchart.rot180, cordenada)
         retrot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, cordenada)
                 
-        return {"rot0": retrot0, "rot90": retrot90,  "rot180": retrot180, "rot270": retrot270}
+        return {"tile 1": retrot0, "tile 2": retrot90,  "tile 3": retrot180, "tile 4": retrot270}
 
 
 @router.get("/player_movements/{game_id}/{player_id}")
