@@ -1,11 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 from app import app
 from models.game_models import Base, Game, engine, session
-from models.player_models import Player, PlayerGame
-from models.game_models import Game, session
-from test.PlayerFactory import PlayerFactory
+from models.player_models import Player
+from PlayerFactory import PlayerFactory
 
 
 # Crea todas las tablas en la base de datos
@@ -15,15 +13,15 @@ client = TestClient(app)
 
 @pytest.fixture(scope='function', autouse=True)
 def setup_database():
-    # Limpiar la base de datos antes de cada prueba
-    session.rollback()
-    session.query(Game).delete()
-    session.commit()
-    yield
-    # Limpiar después de cada prueba
-    session.rollback()
-    session.query(Game).delete()
-    session.commit()
+  # Limpiar la base de datos antes de cada prueba
+  session.rollback()
+  session.query(Game).delete()
+  session.commit()
+  yield
+  # Limpiar después de cada prueba
+  session.rollback()
+  session.query(Game).delete()
+  session.commit()
     
     
 # Test de get players
@@ -135,5 +133,5 @@ def test_delete_player_not_found():
   response = client.delete(f"/delete_player/{player_id}")
   assert response.status_code == 404
   assert response.json() == {"detail": "Player not found"}
-
+  response = client.delete("/delete_all")
 
