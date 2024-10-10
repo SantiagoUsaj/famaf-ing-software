@@ -9,6 +9,8 @@ import {
   LeaveGame,
   GameData,
   DeleteGame,
+  PossiblesMoves,
+  SwapTiles,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
