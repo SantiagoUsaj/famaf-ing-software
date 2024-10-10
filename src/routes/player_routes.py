@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from models.player_models import Player, PlayerGame
-from models.game_models import session
-from models.game_models import Game
+from models.game_models import Game, session
 
 router = APIRouter()
 

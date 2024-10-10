@@ -1,10 +1,10 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect,HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models.manager_models import ConnectionManager
-from routes.player import router as player_router
-from routes.game import router as game_router
+from routes.player_routes import router as player_router
+from routes.game_routes import router as game_router
 import asyncio
-from models.game_models import Game, session
+from models.game_models import Game, session, Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.player_models import PlayerGame, Player
 from models.figure_card_models import Figure_card
 
@@ -12,6 +12,14 @@ app = FastAPI()
 
 manager = ConnectionManager()
 game_managers = {}
+
+@app.get("/figures/{game_id}")
+async def get_figures(game_id: str):
+
+    tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+    connected_components = find_connected_components(tiles)
+    matching_figures = match_figures(connected_components, session.query(Figures).all())
+    return matching_figures
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,16 +29,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(player_router,tags=["player"])
-app.include_router(game_router,tags=["game"])
+app.include_router(player_router, tags=["player"])
+app.include_router(game_router, tags=["game"])
 
 @app.delete("/delete_all")
 async def delete_all():
     session.query(PlayerGame).delete()
     session.query(Game).delete()
     session.query(Player).delete()
+    session.query(Tile).delete()  # Eliminar todas las fichas
+    session.query(Figure_card).delete()  # Eliminar todas las cartas de figura
+    session.query(Table).delete()  # Eliminar todas las tablas
+    session.query(TableGame).delete()  # Eliminar todas las relaciones entre tablas y juegos
     session.commit()
-    return {"message": "All players and games deleted"}
+    return {"message": "All players, games, tables, and tiles deleted"}
 
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: str):
@@ -53,7 +65,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
                     "player_details": player_details
                 })
             await websocket.send_json(gamelist)
-            await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
+            await asyncio.sleep(1)  # Delay to avoid flooding the client with messages  
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -86,16 +98,13 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "game_size": game.size,
                 "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                 "player_details": player_details,
-                "turn": turnos
+                "turn": turnos,
+                "board": board
             }
-        
-           
 
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
 
-
     except WebSocketDisconnect:
         await game_managers[game_id].disconnect(websocket)
         await game_managers[game_id].broadcast(f"Client #{game_id} left the chat")
-        
