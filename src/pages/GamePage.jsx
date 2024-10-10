@@ -17,7 +17,6 @@ import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
 
-
 const GamePage = () => {
   const navigate = useNavigate();
   const [turn, setTurn] = useState();
@@ -30,20 +29,24 @@ const GamePage = () => {
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
-  // Obtener game_id desde el contexto
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
   const [selectedSquares, setSelectedSquares] = useState(Array(36).fill(false));
 
+  // Variables para el movimiento de las fichas
+  const [SelectMovCard, setSelectMovCard] = useState(null);
+  const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
+  const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
+  //
 
   const handleSquareClick = (index) => {
     const newSelectedSquares = [...selectedSquares];
     newSelectedSquares[index] = !newSelectedSquares[index];
     setSelectedSquares(newSelectedSquares);
+    setSelectFirstTitle(index);
+    console.log(`square ${index} clicked`);
   };
-
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -165,11 +168,8 @@ const GamePage = () => {
         setMaxNumberOfPlayers(response.game_size);
         setPlayersList(response.player_details);
         //setBoard(response.board);
-        
       }
     });
-
-
 
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
@@ -219,25 +219,70 @@ const GamePage = () => {
     const size = 6;
     const rotatedBoard = rotateBoardLeft(board, size);
 
-    return rotatedBoard.sort((a, b) => {
-      if (a.y === b.y) {
-      return a.x - b.x;
+    return rotatedBoard
+      .sort((a, b) => {
+        if (a.y === b.y) {
+          return a.x - b.x;
+        }
+        return a.y - b.y;
+      })
+      .map((item) => (
+        <Card
+          key={item.id}
+          onClick={() => handleSquareClick(item.id)}
+          style={{
+            width: "40px",
+            height: "40px",
+            backgroundColor: item.color,
+            border: item.highlight ? "2px solid lightblue" : "none",
+            boxShadow: selectedSquares[item.id]
+              ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
+              : "none",
+          }}
+        ></Card>
+      ));
+  };
+
+  // Funcion para el intercambio de fichas
+  const getPossibleMoves = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de GameData
+      const response = await PossiblesMoves(
+        game_id,
+        playerID,
+        SelectMovCard,
+        SelectFirstTitle
+      );
+
+      if (response) {
+        console.log("Possible Moves:", response);
+
+        return response;
       }
-      return a.y - b.y;
-    }).map((item) => (
-      <Card
-      key={item.id}
-      onClick={() => handleSquareClick(item.id)}
-      style={{
-        width: "40px",
-        height: "40px",
-        backgroundColor: item.color,
-        border: item.highlight ? "2px solid lightblue" : "none",
-        boxShadow: selectedSquares[item.id] ? "0 0 10px 5px rgba(255, 255, 255, 0.8)" : "none",
-      }}
-      >
-      </Card>
-    ));
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (SelectMovCard && SelectFirstTitle) {
+      // Aquí puedes usar los datos de ambos componentes
+      console.log("Carta de movimineto:", SelectMovCard);
+      console.log("Ficha:", SelectFirstTitle);
+
+      // Llamamos a la función getPossibleMoves
+      getPossibleMoves().then((response) => {
+        if (response) {
+          console.log("Possible Moves:", response);
+        }
+      });
+
+      // Realiza la acción que necesitas con estos datos
+    } else {
+      alert("Selecciona ambos componentes primero");
+    }
   };
 
   return (
@@ -253,14 +298,14 @@ const GamePage = () => {
       >
         {gameBoard(board)}
       </div>
-      <div 
+      <div
         className="Cards"
         style={{
           marginTop: "50px",
         }}
       >
         <FigureCard />
-        <MovementCard />
+        <MovementCard setSelectMovCard={setSelectMovCard} />
       </div>
       <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
@@ -311,6 +356,9 @@ const GamePage = () => {
         </Modal>
         {isModalOpen && winner()}
       </div>
+      <Button className="mt-5" type="primary" onClick={() => handleSubmit()}>
+        Usar Datos Seleccionados
+      </Button>
     </div>
   );
 };

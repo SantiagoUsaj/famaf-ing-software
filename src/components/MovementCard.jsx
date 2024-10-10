@@ -8,44 +8,45 @@ import mov5 from "../assets/images/mov5.svg"; // Add your image path here
 import mov6 from "../assets/images/mov6.svg"; // Add your image path here
 import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 
-const MovementCard = () => {
+const MovementCard = ({ setSelectMovCard }) => {
   const [data, setData] = useState([
     {
-      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
+      title: `${Math.floor(Math.random() * 7) + 1}`,
     },
     {
-      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
+      title: `${Math.floor(Math.random() * 7) + 1}`,
     },
     {
-      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
+      title: `${Math.floor(Math.random() * 7) + 1}`,
     },
   ]);
 
   const handleCardClick = (title) => {
     console.log(`Card with title ${title} clicked`);
-    const index = data.findIndex((item) => item.title === title);
+    setSelectMovCard(title);
+    /* const index = data.findIndex((item) => item.title === title);
     if (index !== -1) {
       const newData = [...data];
       newData.splice(index, 1);
       setData(newData);
-    }
+    } */
   };
 
   const getImageForTitle = (title) => {
     switch (title) {
-      case "Title 1":
+      case "1":
         return mov1;
-      case "Title 2":
+      case "2":
         return mov2;
-      case "Title 3":
+      case "3":
         return mov3;
-      case "Title 4":
+      case "4":
         return mov4;
-      case "Title 5":
+      case "5":
         return mov5;
-      case "Title 6":
+      case "6":
         return mov6;
-      case "Title 7":
+      case "7":
         return mov7;
       default:
         return mov1;
