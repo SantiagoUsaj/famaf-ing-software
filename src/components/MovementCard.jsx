@@ -8,7 +8,7 @@ import mov5 from "../assets/images/mov5.svg"; // Add your image path here
 import mov6 from "../assets/images/mov6.svg"; // Add your image path here
 import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 
-const MovementCard = ({ setSelectMovCard }) => {
+const MovementCard = ({ onSelectMovCard }) => {
   const [data, setData] = useState([
     {
       title: `${Math.floor(Math.random() * 7) + 1}`,
@@ -23,7 +23,7 @@ const MovementCard = ({ setSelectMovCard }) => {
 
   const handleCardClick = (title) => {
     console.log(`Card with title ${title} clicked`);
-    setSelectMovCard(title);
+    onSelectMovCard(title);
     /* const index = data.findIndex((item) => item.title === title);
     if (index !== -1) {
       const newData = [...data];

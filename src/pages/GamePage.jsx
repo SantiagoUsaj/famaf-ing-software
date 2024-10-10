@@ -243,7 +243,7 @@ const GamePage = () => {
       ));
   };
 
-  // Funcion para el intercambio de fichas
+  // Funciones para el intercambio de fichas
   const getPossibleMoves = async () => {
     console.log("Success");
 
@@ -267,7 +267,7 @@ const GamePage = () => {
   };
 
   const handleSubmit = () => {
-    if (SelectMovCard && SelectFirstTitle) {
+    if (SelectMovCard && SelectFirstTitle && playerID === turn) {
       // Aquí puedes usar los datos de ambos componentes
       console.log("Carta de movimineto:", SelectMovCard);
       console.log("Ficha:", SelectFirstTitle);
@@ -305,7 +305,7 @@ const GamePage = () => {
         }}
       >
         <FigureCard />
-        <MovementCard setSelectMovCard={setSelectMovCard} />
+        <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
       </div>
       <div className="turn text-white mt-4">
         <h3>Turno de:</h3>
