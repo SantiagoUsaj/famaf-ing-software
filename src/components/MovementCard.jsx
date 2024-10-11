@@ -61,7 +61,7 @@ const MovementCard = ({ onSelectMovCard }) => {
 
   useEffect(() => {
     getMoves().then((response) => {
-      setData(response.movements);
+      setData(response.ids_of_movement_charts);
       console.log("Data:", response);
     });
   }, []);
@@ -76,15 +76,10 @@ const MovementCard = ({ onSelectMovCard }) => {
       renderItem={(item) => (
         <List.Item style={{ display: "flex", justifyContent: "center" }}>
           <Card
-            onClick={() => handleCardClick(item.movementid)}
+            onClick={() => handleCardClick(item)}
             hoverable
             style={{ width: 284 / 3, height: 425 / 3 }} // Adjust the width and height as needed
-            cover={
-              <img
-                alt={item.movementid}
-                src={getImageForTitle(item.movementid)}
-              />
-            } // Add your image path here
+            cover={<img alt={item} src={getImageForTitle(item)} />} // Add your image path here
           />
         </List.Item>
       )}

@@ -114,7 +114,7 @@ export const SwapTiles = async (
 export const PlayerMovements = async (player_id, game_id) => {
   try {
     const response = await axios.get(
-      `http://127.0.0.1:8000/player_movements/${player_id}/${game_id}`
+      `http://127.0.0.1:8000/player_movement_charts/${player_id}/${game_id}`
     );
 
     console.log(response.data);
