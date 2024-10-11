@@ -184,13 +184,13 @@ const GamePage = () => {
               : item.highlight
               ? `5px solid ${
                   item.color === "red"
-                    ? "#B22222"
+                    ? "#bf4343"
                     : item.color === "blue"
-                    ? "#00008B"
+                    ? "#3486b0"
                     : item.color === "green"
-                    ? "#006400"
+                    ? "#38a660"
                     : item.color === "yellow"
-                    ? "#DAA520"
+                    ? "#bb9c44"
                     : "black"
                 }`
               : "none",
