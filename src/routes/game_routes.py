@@ -134,6 +134,7 @@ async def start_game(player_id: str, game_id: str):
             shuffle(game_id)
             for player_id in player_ids:
                 take_cards(game_id, player_id)
+            session.commit()
 
             # Crear una tabla para el juego y las fichas asociadas
             TableGame.create_table_for_game(game_id)
@@ -160,18 +161,14 @@ async def next_turn(player_id: str, game_id: str):
             update = True
             return {"message": "Next turn"}
 
-@router.put("/discard_figure/{player_id}/{game_id}/{tile}")
-async def discard_figure(player_id: str, game_id: str, tile: str):
+@router.put("/discard_figure/{player_id}/{game_id}/{tile}/{figure_card_id}")
+async def discard_figure(player_id: str, game_id: str, tile: str, figure_card_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
-    if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
-        raise HTTPException(status_code=404, detail="Player not found")
-    elif player_id != game.turn.split(",")[0]:
+    if  player_id != game.turn.split(",")[0]:
         raise HTTPException(status_code=409, detail="It's not your turn")
     else:
-        figure_card = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, tile=tile).first()
+        figure_card = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, id=figure_card_id, in_hand=True).first()
         if figure_card is None:
             raise HTTPException(status_code=404, detail="Figure card not found")
         elif compare_tile_with_figure(tile, figure_card.figure):
