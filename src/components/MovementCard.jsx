@@ -34,7 +34,7 @@ const MovementCard = () => {
   };
 
   const handleCardClick = (id) => {
-    console.log(`Card with title ${id} clicked`);
+    console.log(`Card with movement ${id} clicked`);
     const index = data.findIndex((item) => item.id === id);
     if (index !== -1) {
       const newData = [...data];
