@@ -35,6 +35,13 @@ class HandMovements(Base):
     def get_movements_charts_by_player_id(playerid: str, gameid: str):
         return [movement.movementid for movement in session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid).all()]
     
+    @staticmethod
+    def delete_hand_movements(playerid: str, gameid: str, movementid: str):
+        hand_movement = session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid, movementid=movementid).first()
+        if hand_movement:
+            session.delete(hand_movement)
+            session.commit()
+    
     # Reparte movimientos al jugador de la partida
     @staticmethod
     def deals_moves(playerid: str, gameid: str, quantity: int):

@@ -197,8 +197,7 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
         
         if (x == int(rot0[0]) and y == int(rot0[1])) or (x == int(rot90[0]) and y == int(rot90[1])) or (x == int(rot180[0]) and y == int(rot180[1])) or (x == int(rot270[0]) and y == int(rot270[1])):
             Tile.swap_tiles_color(tile_id1, tile_id2)
-            session.query(HandMovements).filter_by(playerid=player_id, gameid=game_id, movementid=movement_id).delete()
-            session.commit()
+            HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             return {"message": "Tiles swapped"}
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
