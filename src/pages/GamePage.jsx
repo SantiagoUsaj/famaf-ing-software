@@ -244,7 +244,6 @@ const GamePage = () => {
           setPossibleTiles2(null);
           setPossibleTiles3(null);
           setPossibleTiles4(null);
-          setSelectedSquares(Array(36).fill(false));
         }
       });
     }
