@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, String, ForeignKey
 from models.game_models import engine, Base, session
 import uuid
 import random
@@ -16,6 +15,13 @@ class HandMovements(Base):
         self.movementid = movementid
         self.playerid = playerid
         self.gameid = gameid
+        
+    @staticmethod
+    def create_hand_movement(movementid: str, playerid: str, gameid: str):
+        new_hand_movement = HandMovements(movementid=movementid, playerid=playerid, gameid=gameid)
+        session.add(new_hand_movement)
+        session.commit()
+        return new_hand_movement
         
     @staticmethod
     def count_movements_by_movementid(movementid: str, gameid: str):
