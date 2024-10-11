@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session,Table, Tile, TableGame,
+from models.game_models import Game, session,Table, Tile, TableGame, compare_tile_with_figure
 from models.player_models import Player, PlayerGame
 from models.figure_card_models import Figure_card, shuffle, take_cards
 import random

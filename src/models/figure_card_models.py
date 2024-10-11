@@ -7,12 +7,11 @@ import random
 class Figure_card(Base):
     __tablename__ = "Figure_cards"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    game_id = Column(String, nullable=False, primary_key=True, Foreign_key=Game)
-    player_id = Column(String, nullable=False, primary_key=True, Foreign_key=Player)
+    gameid = Column(String, ForeignKey('games.gameid'), nullable=False, primary_key=True)
+    playerid = Column(String, ForeignKey('players.playerid'), nullable=False, primary_key=True)
     figure = Column(Integer, nullable=False, primary_key=True)
-    in_hand = Column(Boolean, nullable=False, default=False)
-    blocked = Column(Boolean, nullable=False, default=False)
+    in_hand = Column(Boolean, default=False)
+    blocked = Column(Boolean, default=False)
 
     def __init__(self,game_id,player_id,figure):
         self.game_id = game_id

@@ -191,40 +191,40 @@ def match_figures(connected_components, figures):
     session.commit()  # Commit the changes to the database
     return matching_tiles
 
-    def compare_tile_with_figure(tile_id: int, figure_id: int):
-        tile = session.query(Tile).filter_by(id=tile_id).first()
-        figure = session.query(Figures).filter_by(id=figure_id).first()
+def compare_tile_with_figure(tile_id: int, figure_id: int):
+    tile = session.query(Tile).filter_by(id=tile_id).first()
+    figure = session.query(Figures).filter_by(id=figure_id).first()
         
  
         
         # Get all tiles in the same table
-        tiles = session.query(Tile).filter_by(table_id=tile.table_id).all()
+    tiles = session.query(Tile).filter_by(table_id=tile.table_id).all()
         
         # Find connected components starting from the given tile
-        connected_components = find_connected_components(tiles)
+    connected_components = find_connected_components(tiles)
         
         # Find the component that contains the given tile
-        component = next((comp for comp in connected_components if tile in comp), None)
+    component = next((comp for comp in connected_components if tile in comp), None)
         
-        if not component:
-            return False
+    if not component:
+        return False
         
         # Normalize the component points
-        component_points = {f"{t.x}{t.y}" for t in component}
-        normalized_component_points = normalize_points(component_points)
+    component_points = {f"{t.x}{t.y}" for t in component}
+    normalized_component_points = normalize_points(component_points)
         
         # Get all rotations of the figure points
-        figure_points_variants = [
-            set(figure.points.split(",")),
-            set(figure.rot90.split(",")),
-            set(figure.rot180.split(",")),
-            set(figure.rot270.split(","))
-        ]
+    figure_points_variants = [
+        set(figure.points.split(",")),
+        set(figure.rot90.split(",")),
+        set(figure.rot180.split(",")),
+        set(figure.rot270.split(","))
+    ]
         
         # Check if any rotation of the figure matches the component
-        for figure_points in figure_points_variants:
-            normalized_figure_points = normalize_points(figure_points)
-            if normalized_component_points == normalized_figure_points:
-                return True
+    for figure_points in figure_points_variants:
+        normalized_figure_points = normalize_points(figure_points)
+        if normalized_component_points == normalized_figure_points:
+            return True
         
-        return False
+    return False
