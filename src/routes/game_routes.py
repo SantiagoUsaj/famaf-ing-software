@@ -180,8 +180,9 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     movement = session.query(MovementChart).filter_by(movementid=movement_id).first()
-    tile1 = session.query(Tile).filter_by(id=tile_id1).first()
-    tile2 = session.query(Tile).filter_by(id=tile_id2).first()
+    table = session.query(Table).filter_by(gameid=game_id).first()
+    tile1 = session.query(Tile).filter_by(table_id=table.id, number=tile_id1).first()
+    tile2 = session.query(Tile).filter_by(table_id=table.id, number=tile_id2).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
