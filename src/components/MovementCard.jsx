@@ -40,19 +40,19 @@ const MovementCard = ({ onSelectMovCard }) => {
 
   const getImageForTitle = (movementid) => {
     switch (movementid) {
-      case 1:
+      case "1":
         return mov1;
-      case 2:
+      case "2":
         return mov2;
-      case 3:
+      case "3":
         return mov3;
-      case 4:
+      case "4":
         return mov4;
-      case 5:
+      case "5":
         return mov5;
-      case 6:
+      case "6":
         return mov6;
-      case 7:
+      case "7":
         return mov7;
       default:
         return mov1;

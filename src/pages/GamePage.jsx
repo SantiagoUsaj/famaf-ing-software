@@ -11,6 +11,8 @@ import {
   DeleteGame,
   PossiblesMoves,
   SwapTiles,
+  UndoMovement,
+  UndoAllMovements,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
@@ -109,6 +111,21 @@ const GamePage = () => {
 
       if (response) {
         console.log("New Game Info:", response);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
+  const undoMov = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de UndoMovement
+      const response = await UndoMovement(game_id);
+
+      if (response) {
+        console.log("Undo Mov:", response);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -400,13 +417,22 @@ const GamePage = () => {
         }}
       >
         {playerID === turn && (
-          <Button
-            className="text-blancofondo"
-            type="primary"
-            onClick={() => passTurn(game_id)}
-          >
-            Terminar Turno
-          </Button>
+          <div>
+            <Button
+              className="text-blancofondo"
+              type="primary"
+              onClick={() => passTurn(game_id)}
+            >
+              Terminar Turno
+            </Button>
+            <Button
+              className="text-blancofondo"
+              type="primary"
+              onClick={() => undoMov(game_id)}
+            >
+              Deshacer Movimiento
+            </Button>
+          </div>
         )}
         <Button
           className="bottom-0"
