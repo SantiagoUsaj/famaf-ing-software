@@ -3,19 +3,21 @@ from sqlalchemy.ext.declarative import declarative_base
 from models.game_models import Game, engine, Base, session
 from models.player_models import Player, PlayerGame
 import random
+import uuid
 
 class Figure_card(Base):
-    __tablename__ = "Figure_cards"
-
-    gameid = Column(String, ForeignKey('games.gameid'), nullable=False, primary_key=True)
-    playerid = Column(String, ForeignKey('players.playerid'), nullable=False, primary_key=True)
-    figure = Column(Integer, nullable=False, primary_key=True)
+    __tablename__ = 'Figure_cards'
+    id = Column(String, primary_key=True)
+    gameid = Column(String, ForeignKey('games.gameid'), nullable=False)
+    playerid = Column(String, ForeignKey('players.playerid'), nullable=False)
+    figure = Column(Integer, primary_key=True, nullable=False)
     in_hand = Column(Boolean, default=False)
     blocked = Column(Boolean, default=False)
 
     def __init__(self,game_id,player_id,figure):
-        self.game_id = game_id
-        self.player_id = player_id
+        self.id = str(uuid.uuid4())
+        self.gameid = game_id
+        self.playerid = player_id
         self.figure = figure
 
     def take_card(self):
@@ -42,7 +44,7 @@ def shuffle(game):
     # Repartir las easy_figures de manera que haya 2 de cada una
     for i, figure in enumerate(easy_figures):  # Duplicar las easy_figures
         player = players[i % num_players]
-        figure_card = Figure_card(game_id=game, player_id=player.playerid, figure=figure)
+        figure_card = Figure_card(game, player.playerid, figure)
 
         session.add(figure_card)
     try:
@@ -54,7 +56,7 @@ def shuffle(game):
     
     for i, figure in enumerate(hard_figures):  
         player = players[i % num_players]
-        figure_card = Figure_card(game_id=game, player_id=player.playerid, figure=figure)
+        figure_card = Figure_card(game, player.playerid, figure)
         
         session.add(figure_card)
     try:
@@ -64,8 +66,8 @@ def shuffle(game):
         raise 
 
 def take_cards(game, player):
-    num_cards = 3 - session.query(Figure_card).filter_by(game_id=game, player_id=player, in_hand=True).count()
-    cards = session.query(Figure_card).filter_by(game_id=game, player_id=player, in_hand=False).limit(num_cards).all()
+    num_cards = 3 - session.query(Figure_card).filter_by(gameid=game, playerid=player, in_hand=True).count()
+    cards = session.query(Figure_card).filter_by(gameid=game, playerid=player, in_hand=False).limit(num_cards).all()
     for card in cards:
         card.take_card()
         session.add(card)
