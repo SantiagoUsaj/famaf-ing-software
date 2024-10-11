@@ -99,7 +99,10 @@ const CreateGame = () => {
             },
           ]}
         >
-          <Input placeholder="Ingresar nombre partida" />
+          <Input
+            className="bg-blancofondo"
+            placeholder="Ingresar nombre partida"
+          />
         </Form.Item>
 
         <Form.Item
@@ -117,7 +120,7 @@ const CreateGame = () => {
         </Form.Item>
 
         <Form.Item name="boton">
-          <Button type="primary" htmlType="submit">
+          <Button className="text-blancofondo" type="primary" htmlType="submit">
             Crear
           </Button>
         </Form.Item>

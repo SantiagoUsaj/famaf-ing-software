@@ -12,7 +12,7 @@ export const PlayerColorProvider = ({ children }) => {
   });
 
   const getRandomColor = () => {
-    const colors = ["red", "blue", "green", "yellow"];
+    const colors = ["#FF5959", "#45B3EB", "#4ade80", "#FAD05A"];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 

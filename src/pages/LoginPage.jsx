@@ -86,11 +86,14 @@ const LoginPage = () => {
             },
           ]}
         >
-          <Input placeholder="Ingresar nombre jugador" />
+          <Input
+            placeholder="Ingresar nombre jugador"
+            className="bg-blancofondo"
+          />
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button className="text-blancofondo" type="primary" htmlType="submit">
             Jugar
           </Button>
         </Form.Item>

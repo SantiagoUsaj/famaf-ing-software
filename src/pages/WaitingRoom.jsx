@@ -141,7 +141,7 @@ const WaitingRoom = ({
       <div className="flex gap-24 ">
         {playerID === isCreator && numberOfPlayers === maxNumberOfPlayers && (
           <Button
-            className="flex m-auto my-3"
+            className="flex m-auto my-3 text-blancofondo"
             type="primary"
             disabled={!isCreator}
             onClick={() => start(game_id)}

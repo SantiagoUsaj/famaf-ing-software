@@ -186,11 +186,9 @@ const GamePage = () => {
             item.id === PossibleTiles2 ||
             item.id === PossibleTiles3 ||
             item.id === PossibleTiles4
-              ? "5px solid white"
+              ? "5px solid #FAFAFA"
               : "none",
-          boxShadow: selectedSquares[item.id]
-            ? "0 0 10px 5px rgba(255, 255, 255, 0.8)"
-            : "none",
+          boxShadow: selectedSquares[item.id] ? "0 0 10px 5px #FAFAFA" : "none",
         }}
       ></Button>
     ));
@@ -379,7 +377,7 @@ const GamePage = () => {
         <FigureCard />
         <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
       </div>
-      <div className="turn text-white">
+      <div className="turn text-blancofondo">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
           <div key={player.player_id}>
@@ -396,7 +394,11 @@ const GamePage = () => {
         }}
       >
         {playerID === turn && (
-          <Button type="primary" onClick={() => passTurn(game_id)}>
+          <Button
+            className="text-blancofondo"
+            type="primary"
+            onClick={() => passTurn(game_id)}
+          >
             Terminar Turno
           </Button>
         )}
@@ -419,7 +421,7 @@ const GamePage = () => {
         >
           <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
           <Button
-            className="mt-5"
+            className="mt-5 text-blancofondo"
             type="primary"
             onClick={() => finishGame(game_id)}
           >
