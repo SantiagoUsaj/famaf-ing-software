@@ -32,7 +32,6 @@ const GamePage = () => {
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
-  const [selectedSquares, setSelectedSquares] = useState(Array(36).fill(false));
 
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
@@ -135,10 +134,6 @@ const GamePage = () => {
   };
 
   const handleSquareClick = (index) => {
-    const newSelectedSquares = [...selectedSquares];
-    newSelectedSquares[index] = !newSelectedSquares[index];
-
-    setSelectedSquares(newSelectedSquares);
     if (SelectFirstTitle === null) {
       setSelectFirstTitle(index);
       console.log(`First square ${index} clicked`);
@@ -181,14 +176,26 @@ const GamePage = () => {
               ? "#FAD05A"
               : item.color,
           border:
-            item.highlight ||
             item.id === PossibleTiles1 ||
             item.id === PossibleTiles2 ||
             item.id === PossibleTiles3 ||
             item.id === PossibleTiles4
               ? "5px solid #FAFAFA"
+              : item.highlight
+              ? `5px solid ${
+                  item.color === "red"
+                    ? "#B22222"
+                    : item.color === "blue"
+                    ? "#00008B"
+                    : item.color === "green"
+                    ? "#006400"
+                    : item.color === "yellow"
+                    ? "#DAA520"
+                    : "black"
+                }`
               : "none",
-          boxShadow: selectedSquares[item.id] ? "0 0 10px 5px #FAFAFA" : "none",
+          boxShadow:
+            item.id === SelectFirstTitle ? "0 0 10px 5px #FAFAFA" : "none",
         }}
       ></Button>
     ));
