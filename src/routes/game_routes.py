@@ -176,8 +176,9 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: int, tile_id1: i
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     movement = session.query(MovementChart).filter_by(movementid=movement_id).first()
-    tile1 = session.query(Tile).filter_by(id=tile_id1).first()
-    tile2 = session.query(Tile).filter_by(id=tile_id2).first()
+    table = session.query(Table).filter_by(gameid=game_id).first()
+    tile1 = session.query(Tile).filter_by(table_id=table.id, number=tile_id1).first()
+    tile2 = session.query(Tile).filter_by(table_id=table.id, number=tile_id2).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
@@ -203,13 +204,13 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: int, tile_id1: i
         rot270 = movementchart.rot270.split(",")
         
         if (x == int(rot0[0]) and y == int(rot0[1])) or (x == int(rot90[0]) and y == int(rot90[1])) or (x == int(rot180[0]) and y == int(rot180[1])) or (x == int(rot270[0]) and y == int(rot270[1])):
-            Tile.swap_tiles_color(tile_id1, tile_id2)
+            Tile.swap_tiles_color(tile1.id, tile2.id)
             session.query(HandMovements).filter_by(playerid=player_id, gameid=game_id, movementid=movement_id).delete()
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all())
             session.commit()
-            return {"message": "Tiles swapped"}
+            return {"message": "Tiles swapped", "tile_id1": tile1.id, "tile_id2": tile2.id}
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
 
