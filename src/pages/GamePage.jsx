@@ -18,6 +18,7 @@ import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
+import { UndoOutlined } from "@ant-design/icons";
 
 const GamePage = () => {
   const navigate = useNavigate();
@@ -429,6 +430,15 @@ const GamePage = () => {
               className="text-blancofondo"
               type="primary"
               onClick={() => undoMov(game_id)}
+              icon={
+                <UndoOutlined
+                  style={{
+                    fontSize: "24px",
+                    display: "block",
+                    margin: "0 auto",
+                  }}
+                />
+              }
             >
               Deshacer Movimiento
             </Button>
