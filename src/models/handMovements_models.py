@@ -8,21 +8,21 @@ class HandMovements(Base):
     __tablename__ = 'hand_movements'
     
     handid = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    movementid = Column(Integer, ForeignKey('movement_chart.movementid'), primary_key=True, nullable=False)
+    movementid = Column(String, ForeignKey('movement_chart.movementid'), primary_key=True, nullable=False)
     playerid = Column(String, ForeignKey('players.playerid'), primary_key=True, nullable=False)
-    gameid = Column(Integer, ForeignKey('games.gameid'), primary_key=True, nullable=False)
+    gameid = Column(String, ForeignKey('games.gameid'), primary_key=True, nullable=False)
     
-    def __init__(self, movementid: int, playerid: str, gameid: str):
+    def __init__(self, movementid: str, playerid: str, gameid: str):
         self.movementid = movementid
         self.playerid = playerid
         self.gameid = gameid
         
     @staticmethod
-    def count_movements_by_movementid(movementid: int, gameid: str):
+    def count_movements_by_movementid(movementid: str, gameid: str):
         return session.query(HandMovements).filter_by(movementid=movementid, gameid=gameid).count()
     
     @staticmethod
-    def player_have_not_movement(playerid: str, gameid: str, movementid: int):
+    def player_have_not_movement(playerid: str, gameid: str, movementid: str):
         return session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid, movementid=movementid).count() <= 0
     
     @staticmethod

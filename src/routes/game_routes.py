@@ -165,7 +165,7 @@ async def next_turn(player_id: str, game_id: str):
             return {"message": "Next turn"}
 
 @router.put("/swap_tiles/{player_id}/{game_id}/{movement_id}/{tile_id1}/{tile_id2}")
-async def swap_tiles(player_id: str, game_id: str, movement_id: int, tile_id1: int, tile_id2: int):
+async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: str, tile_id2: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     movement = session.query(MovementChart).filter_by(movementid=movement_id).first()
