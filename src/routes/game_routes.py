@@ -187,16 +187,14 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
     elif player_id != game.turn.split(",")[0]:
             raise HTTPException(status_code=409, detail="It's not your turn")
     else:
-        x = abs(tile1.x - tile2.x)
-        y = abs(tile1.y - tile2.y)
         
         movementchart = MovementChart.get_movement_chart_by_id(movement_id)
-        rot0 = movementchart.rot0.split(",")  
-        rot90 = movementchart.rot90.split(",")     
-        rot180 = movementchart.rot180.split(",")
-        rot270 = movementchart.rot270.split(",")
+        rot0 = MovementChart.get_tile_for_rotation(movementchart.rot0, tile1)
+        rot90 = MovementChart.get_tile_for_rotation(movementchart.rot90, tile1)
+        rot180 = MovementChart.get_tile_for_rotation(movementchart.rot180, tile1)
+        rot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, tile1)
         
-        if (x == int(rot0[0]) and y == int(rot0[1])) or (x == int(rot90[0]) and y == int(rot90[1])) or (x == int(rot180[0]) and y == int(rot180[1])) or (x == int(rot270[0]) and y == int(rot270[1])):
+        if rot0 == tile2.id or rot90 == tile2.id or rot180 == tile2.id or rot270 == tile2.id:
             Tile.swap_tiles_color(tile_id1, tile_id2)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile_id1, tile_id2)
