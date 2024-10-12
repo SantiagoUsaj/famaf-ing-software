@@ -24,18 +24,12 @@ const GamePage = () => {
   const navigate = useNavigate();
   const [turn, setTurn] = useState();
   const [socket, setSocket] = useState(null);
-  const [gameName, setGameName] = useState();
   const [gamestate, setGamestate] = useState();
-  const [isCreator, setIsCreator] = useState();
-  const [numberOfPlayers, setNumberOfPlayers] = useState();
-  const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
-  const [partidas, setPartidas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
-
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
@@ -333,7 +327,7 @@ const GamePage = () => {
   };
 
   const getGameInfo = async (game_id) => {
-    console.log("Success");
+    console.log("LLame a GAMEINFO");
 
     try {
       // Esperamos la resolución de la promesa de GameData
@@ -350,18 +344,6 @@ const GamePage = () => {
   };
 
   useEffect(() => {
-    // Llamamos a la función getGameInfo
-    getGameInfo(game_id).then((response) => {
-      if (response) {
-        setGameName(response.game_name);
-        setGamestate(response.state);
-        setIsCreator(response.host_id);
-        setNumberOfPlayers(response.players);
-        setMaxNumberOfPlayers(response.game_size);
-        setPlayersList(response.player_details);
-      }
-    });
-
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
@@ -396,6 +378,17 @@ const GamePage = () => {
     return () => {
       ws.close();
     };
+  }, []);
+
+  useEffect(() => {
+    if (!gamestate) {
+      getGameInfo(game_id).then((response) => {
+        if (response) {
+          setGamestate(response.state);
+          setPlayersList(response.player_details);
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
