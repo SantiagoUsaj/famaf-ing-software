@@ -22,7 +22,6 @@ const WaitingRoom = ({
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [partidas, setPartidas] = useState([]);
   // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
   // Obtener game_id desde el contexto
@@ -82,18 +81,20 @@ const WaitingRoom = ({
   };
 
   useEffect(() => {
-    // Llamamos a la función getGameInfo
-    getGameInfo(game_id).then((response) => {
-      if (response) {
-        setGameName(response.game_name);
-        setGamestate(response.state);
-        setIsCreator(response.host_id);
-        setNumberOfPlayers(response.players);
-        setMaxNumberOfPlayers(response.game_size);
-        setPlayersList(response.player_details);
-      }
-    });
+    if (!gamestate) {
+      getGameInfo(game_id).then((response) => {
+        if (response) {
+          setGameName(response.game_name);
+          setGamestate(response.state);
+          setIsCreator(response.host_id);
+          setNumberOfPlayers(response.players);
+          setMaxNumberOfPlayers(response.game_size);
+        }
+      });
+    }
+  }, []);
 
+  useEffect(() => {
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
@@ -110,7 +111,14 @@ const WaitingRoom = ({
       console.log("Player_id:", playerID);
 
       setNumberOfPlayers(data.players);
-      setPlayersList(data.player_details);
+
+      // Agregar la clave 'key' a cada objeto en data.player_details
+      const playersWithKeys = data.player_details.map((player, index) => ({
+        ...player,
+        key: index,
+      }));
+
+      setPlayersList(playersWithKeys);
 
       if (data.state === "playing") {
         navigate(`/game`);

@@ -118,6 +118,10 @@ describe("WaitingRoom", () => {
 
     renderWithRouter(<WaitingRoom initialIsCreator={false} />);
 
+    // Esperar hasta que el nombre del juego sea renderizado
+    const gameName = await screen.findByText("Test Game");
+    expect(gameName).toBeInTheDocument();
+
     // Simular que el usuario no es el creador
     const leaveButton = screen.getByRole("button", { name: /Abandonar/i });
     expect(leaveButton).toBeInTheDocument();
