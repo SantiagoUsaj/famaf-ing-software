@@ -1,4 +1,4 @@
-import React from "react";
+import React, { act } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -15,12 +15,18 @@ vi.mock("../components/TablePlayers", () => ({
 }));
 
 // Mock WebSocket
-global.WebSocket = vi.fn(() => ({
+const mockWebSocket = {
   onopen: vi.fn(),
   onmessage: vi.fn(),
   onclose: vi.fn(),
   close: vi.fn(),
-}));
+};
+global.WebSocket = vi.fn((url) => {
+  if (!url.startsWith("http://")) {
+    throw new Error(`Invalid WebSocket URL: ${url}`);
+  }
+  return mockWebSocket;
+});
 
 // Mock useNavigate from react-router-dom
 const mockNavigate = vi.fn();
@@ -178,6 +184,79 @@ describe("WaitingRoom", () => {
     fireEvent.click(leaveButton);
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith("/lobby");
+    });
+  });
+
+  it("should update players list when WebSocket message is received", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom />);
+
+    // Simular el mensaje recibido
+    const data = {
+      players: 2,
+      player_details: [
+        {
+          player_id: "1",
+          player_name: "santi",
+        },
+        {
+          player_id: "2",
+          player_name: "juan",
+        },
+      ],
+    };
+
+    const event = { data: JSON.stringify(data) };
+
+    act(() => mockWebSocket.onmessage(event));
+
+    // Verificar si player_details fue modificado
+    expect(data.player_details).toEqual([
+      {
+        player_id: "1",
+        player_name: "santi",
+      },
+      {
+        player_id: "2",
+        player_name: "juan",
+      },
+    ]);
+  });
+
+  it("should navigate to /game when WebSocket message state is 'playing'", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom />);
+
+    // Simular el mensaje recibido
+    const data = {
+      players: 4,
+      player_details: [],
+      state: "playing",
+    };
+
+    const event = { data: JSON.stringify(data) };
+
+    act(() => mockWebSocket.onmessage(event));
+
+    // Esperar hasta que la navegación ocurra
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/game");
     });
   });
 });
