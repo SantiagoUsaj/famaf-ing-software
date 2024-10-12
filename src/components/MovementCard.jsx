@@ -11,7 +11,7 @@ import mov5 from "../assets/images/mov5.svg"; // Add your image path here
 import mov6 from "../assets/images/mov6.svg"; // Add your image path here
 import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 
-const MovementCard = ({ onSelectMovCard }) => {
+const MovementCard = ({ onSelectMovCard, updateboard }) => {
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [data, setData] = useState([]);
@@ -64,7 +64,7 @@ const MovementCard = ({ onSelectMovCard }) => {
       setData(response.ids_of_movement_charts);
       console.log("Data:", response);
     });
-  }, []);
+  }, [updateboard]);
 
   return (
     <List

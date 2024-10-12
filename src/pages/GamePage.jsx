@@ -133,6 +133,21 @@ const GamePage = () => {
     }
   };
 
+  const undoallMov = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de UndoAllMovements
+      const response = await UndoAllMovements(game_id);
+
+      if (response) {
+        console.log("Undo All Mov:", response);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
   const finishGame = async (game_id) => {
     console.log("Success");
 
@@ -159,6 +174,10 @@ const GamePage = () => {
       setSelectSecondTitle(index);
       console.log(`Second square ${index} clicked`);
     }
+  };
+
+  const resetSelect = () => {
+    setSelectFirstTitle(null);
   };
 
   const invertBoard = (board, size) => {
@@ -399,7 +418,10 @@ const GamePage = () => {
       </div>
       <div className="Cards">
         <FigureCard />
-        <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
+        <MovementCard
+          onSelectMovCard={(title) => setSelectMovCard(title)}
+          updateboard={board}
+        />
       </div>
       <div className="turn text-blancofondo">
         <h3>Turno de:</h3>
@@ -441,6 +463,29 @@ const GamePage = () => {
               }
             >
               Deshacer Movimiento
+            </Button>
+            <Button
+              className="text-blancofondo"
+              type="primary"
+              onClick={() => undoallMov(game_id)}
+              icon={
+                <UndoOutlined
+                  style={{
+                    fontSize: "24px",
+                    display: "block",
+                    margin: "0 auto",
+                  }}
+                />
+              }
+            >
+              Deshacer todos los Movimientos
+            </Button>
+            <Button
+              className="text-blancofondo"
+              type="primary"
+              onClick={() => resetSelect()}
+            >
+              Resetear Seleccion Ficha
             </Button>
           </div>
         )}
