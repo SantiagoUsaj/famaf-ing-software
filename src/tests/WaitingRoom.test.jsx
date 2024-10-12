@@ -216,7 +216,9 @@ describe("WaitingRoom", () => {
 
     const event = { data: JSON.stringify(data) };
 
-    act(() => mockWebSocket.onmessage(event));
+    await act(async () => {
+      mockWebSocket.onmessage(event);
+    });
 
     // Verificar si player_details fue modificado
     expect(data.player_details).toEqual([
@@ -411,5 +413,55 @@ describe("WaitingRoom", () => {
     });
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("should log 'Conectado al WebSocket del lobby' when WebSocket connection opens", async () => {
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom initialIsCreator={true} />);
+
+    // Simular la apertura de la conexión WebSocket
+    await act(async () => {
+      mockWebSocket.onopen();
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      "Conectado al WebSocket del lobby"
+    );
+
+    consoleLogSpy.mockRestore();
+  });
+
+  it("should log 'Conexión WebSocket cerrada' when WebSocket connection closes", async () => {
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom initialIsCreator={true} />);
+
+    // Simular el cierre de la conexión WebSocket
+    await act(async () => {
+      mockWebSocket.onclose();
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith("Conexión WebSocket cerrada");
+
+    consoleLogSpy.mockRestore();
   });
 });
