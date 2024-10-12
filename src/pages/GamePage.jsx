@@ -178,6 +178,12 @@ const GamePage = () => {
 
   const resetSelect = () => {
     setSelectFirstTitle(null);
+    setSelectSecondTitle(null);
+    setSelectMovCard(null);
+    setPossibleTiles1(null);
+    setPossibleTiles2(null);
+    setPossibleTiles3(null);
+    setPossibleTiles4(null);
   };
 
   const invertBoard = (board, size) => {
@@ -423,7 +429,7 @@ const GamePage = () => {
           updateboard={board}
         />
       </div>
-      <div className="turn text-blancofondo">
+      <div className="turn text-blancofondo font-sans uppercase">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
           <div key={player.player_id}>
@@ -431,66 +437,72 @@ const GamePage = () => {
           </div>
         ))}
       </div>
-      <div
-        style={{
-          position: "fixed",
-          bottom: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
-      >
-        {playerID === turn && (
-          <div>
-            <Button
-              className="text-blancofondo"
-              type="primary"
-              onClick={() => passTurn(game_id)}
-            >
-              Terminar Turno
-            </Button>
-            <Button
-              className="text-blancofondo"
-              type="primary"
-              onClick={() => undoMov(game_id)}
-              icon={
-                <UndoOutlined
-                  style={{
-                    fontSize: "24px",
-                    display: "block",
-                    margin: "0 auto",
-                  }}
-                />
-              }
-            >
-              Deshacer Movimiento
-            </Button>
-            <Button
-              className="text-blancofondo"
-              type="primary"
-              onClick={() => undoallMov(game_id)}
-              icon={
-                <UndoOutlined
-                  style={{
-                    fontSize: "24px",
-                    display: "block",
-                    margin: "0 auto",
-                  }}
-                />
-              }
-            >
-              Deshacer todos los Movimientos
-            </Button>
-            <Button
-              className="text-blancofondo"
-              type="primary"
-              onClick={() => resetSelect()}
-            >
-              Resetear Seleccion Ficha
-            </Button>
-          </div>
-        )}
+      <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
         <Button
-          className="bottom-0"
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => resetSelect()}
+        >
+          Resetear Seleccion
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => undoMov(game_id)}
+          icon={
+            <UndoOutlined
+              style={{
+                fontSize: "24px",
+                display: "block",
+                margin: "0 auto",
+              }}
+            />
+          }
+        >
+          Deshacer Movimiento
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => undoallMov(game_id)}
+          icon={
+            <UndoOutlined
+              style={{
+                fontSize: "24px",
+                display: "block",
+                margin: "0 auto",
+              }}
+            />
+          }
+        >
+          Deshacer todos los Movimientos
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => passTurn(game_id)}
+        >
+          Terminar Turno
+        </Button>
+
+        <Button
+          className="flex flex-col gap-4"
           danger
           ghost
           onClick={() => quitRoom(game_id)}
