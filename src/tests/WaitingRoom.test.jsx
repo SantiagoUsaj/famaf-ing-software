@@ -259,4 +259,157 @@ describe("WaitingRoom", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/game");
     });
   });
+
+  it("should call GameData and handle success response", async () => {
+    const mockResponse = {
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    };
+
+    GameData.mockResolvedValueOnce(mockResponse);
+
+    renderWithRouter(<WaitingRoom />);
+
+    await waitFor(() => {
+      expect(GameData).toHaveBeenCalledWith("1");
+    });
+
+    expect(GameData).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Test Game")).toBeInTheDocument();
+  });
+
+  it("should handle error when GameData fails", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    GameData.mockRejectedValueOnce(new Error("Error getting game data"));
+
+    renderWithRouter(<WaitingRoom />);
+
+    await waitFor(() => {
+      expect(GameData).toHaveBeenCalledWith("1");
+    });
+
+    expect(GameData).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error getting game data",
+      expect.any(Error)
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should call LeaveGame and navigate to /lobby on quitRoom success", async () => {
+    LeaveGame.mockResolvedValueOnce({});
+
+    renderWithRouter(<WaitingRoom initialIsCreator={false} />);
+
+    // Simular el click en el botón de 'Abandonar'
+    const leaveButton = screen.getByRole("button", { name: /Abandonar/i });
+
+    fireEvent.click(leaveButton);
+    await waitFor(() => {
+      expect(LeaveGame).toHaveBeenCalledWith("1", "1");
+      expect(mockNavigate).toHaveBeenCalledWith("/lobby");
+    });
+  });
+
+  it("should handle error when LeaveGame fails", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    LeaveGame.mockRejectedValueOnce(new Error("Error getting new game data"));
+
+    renderWithRouter(<WaitingRoom initialIsCreator={false} />);
+
+    // Simular el click en el botón de 'Abandonar'
+    const leaveButton = screen.getByRole("button", { name: /Abandonar/i });
+
+    fireEvent.click(leaveButton);
+    await waitFor(() => {
+      expect(LeaveGame).toHaveBeenCalledWith("1", "1");
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error getting new game data",
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should call StartGame and navigate to /game on start success", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom initialIsCreator={true} />);
+
+    StartGame.mockResolvedValueOnce({});
+
+    // Esperar hasta que el nombre del juego sea renderizado
+    const gameName = await screen.findByText("Test Game");
+    expect(gameName).toBeInTheDocument();
+
+    // Verificar si el botón de "Iniciar Partida" está visible
+    const startGameButton = screen.getByRole("button", {
+      name: /Iniciar Partida/i,
+    });
+    expect(startGameButton).toBeInTheDocument();
+
+    fireEvent.click(startGameButton);
+    await waitFor(() => {
+      expect(StartGame).toHaveBeenCalledWith("1", "1");
+      expect(mockNavigate).toHaveBeenCalledWith("/game");
+    });
+  });
+
+  it("should handle error when StartGame fails", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    StartGame.mockRejectedValueOnce(new Error("Error getting data"));
+
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom initialIsCreator={true} />);
+
+    StartGame.mockResolvedValueOnce({});
+
+    // Esperar hasta que el nombre del juego sea renderizado
+    const gameName = await screen.findByText("Test Game");
+    expect(gameName).toBeInTheDocument();
+
+    // Verificar si el botón de "Iniciar Partida" está visible
+    const startGameButton = screen.getByRole("button", {
+      name: /Iniciar Partida/i,
+    });
+    expect(startGameButton).toBeInTheDocument();
+
+    fireEvent.click(startGameButton);
+    await waitFor(() => {
+      expect(StartGame).toHaveBeenCalledWith("1", "1");
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error getting data",
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
 });
