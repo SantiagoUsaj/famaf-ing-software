@@ -3,7 +3,6 @@ import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
-import ColorSquare from "../components/ColorSquare";
 import {
   ChangeTurn,
   LeaveGame,
@@ -14,6 +13,7 @@ import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
+
 
 const GamePage = () => {
   const navigate = useNavigate();
@@ -31,7 +31,10 @@ const GamePage = () => {
   const { playerID } = usePlayerContext();
   // Obtener game_id desde el contexto
   const { game_id } = useGameContext();
+  const [board, setBoard] = useState([]);
+  const [selectedSquares, setSelectedSquares] = useState(Array(36).fill(false));
 
+  
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -141,32 +144,6 @@ const GamePage = () => {
     }
   };
 
-  const colorSquares = (() => {
-    const colorCount = { red: 9, yellow: 9, green: 9, blue: 9 };
-    const squares = [];
-
-    for (let i = 0; i < 36; i++) {
-      const availableColors = Object.keys(colorCount).filter(
-        (color) => colorCount[color] > 0
-      );
-      const randomColor =
-        availableColors[Math.floor(Math.random() * availableColors.length)];
-      colorCount[randomColor]--;
-
-      squares.push(
-        <div
-          key={`${randomColor}-${i}`}
-          className="grid-item"
-          style={{ width: "50px", height: "50px" }}
-        >
-          <ColorSquare color={randomColor} />
-        </div>
-      );
-    }
-
-    return squares;
-  })();
-
   useEffect(() => {
     // Llamamos a la función getGameInfo
     getGameInfo(game_id).then((response) => {
@@ -176,9 +153,11 @@ const GamePage = () => {
         setIsCreator(response.host_id);
         setNumberOfPlayers(response.players);
         setMaxNumberOfPlayers(response.game_size);
-        setPlayersList(response.player_details);
+        setPlayersList(response.player_details);       
       }
     });
+
+
 
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
@@ -195,6 +174,7 @@ const GamePage = () => {
       console.log("Mensaje recibido:", data);
 
       setTurn(data.turn);
+      setBoard(data.board);
 
       if (data.players === 1) {
         showModal();
@@ -215,24 +195,71 @@ const GamePage = () => {
     };
   }, []);
 
+  const handleSquareClick = (index) => {
+    const newSelectedSquares = [...selectedSquares];
+    newSelectedSquares[index] = !newSelectedSquares[index];
+    setSelectedSquares(newSelectedSquares);
+  };
+
+  const invertBoard = (board, size) => {
+    const rows = [];
+    for (let i = 0; i < size; i++) {
+      rows.push(board.slice(i * size, (i + 1) * size));
+    }
+    // Invertir el orden de las filas
+    const invertedRows = rows.reverse();
+    return invertedRows.flat();
+  };
+
+  const gameBoard = (board) => {
+    const size = 6;
+    const invertedBoard = invertBoard(board, size);
+
+    return invertedBoard.map((item) => (
+      <Button
+        key={item.id}
+        disabled={playerID !== turn}
+        onClick={() => handleSquareClick(item.id)}
+        style={{
+          width: "40px",
+          height: "40px",
+          backgroundColor: item.color === 'red' ? "#FF5959" :
+                           item.color === 'blue' ? "#45B3EB" :
+                           item.color === 'green' ? "#4ade80" :
+                           item.color === 'yellow' ? "#FAD05A" :
+                           item.color,          
+          border: item.highlight ? `5px solid ${ item.color === "red" ? "#bf4343" :
+                                                 item.color === "blue" ? "#3486b0" : 
+                                                 item.color === "green" ? "#38a660" : 
+                                                 item.color === "yellow" ? "#bb9c44" : 
+                                                 "black" }` : 
+                                                 "none",
+          boxShadow: selectedSquares[item.id] ? "0 0 10px 5px rgba(255, 255, 255, 0.8)" : "none",
+        }}
+      >
+      </Button>
+    ));
+  };
+
   return (
     <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
       <div
         className="container"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(6, 50px)",
-          gap: "10px",
+          gridTemplateColumns: "repeat(6, 40px)",
+          gap: "5px",
           justifyContent: "center",
+          marginBottom: "20px",
         }}
       >
-        {colorSquares}
+        {gameBoard(board)}
       </div>
       <div className="Cards">
-        <MovementCard />
         <FigureCard />
+        <MovementCard />
       </div>
-      <div className="turn text-white mt-4">
+      <div className="turn text-white">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
           <div key={player.player_id}>
