@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session,Table, Tile, TableGame, compare_tile_with_figure
+from models.game_models import Game, session,Table, Tile, TableGame
 from models.player_models import Player, PlayerGame
 from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
@@ -161,66 +161,7 @@ async def next_turn(player_id: str, game_id: str):
             update = True
             return {"message": "Next turn"}
 
-@router.put("/discard_figure/{player_id}/{game_id}/{tile}/{figure_card_id}")
-async def discard_figure(player_id: str, game_id: str, tile: str, figure_card_id: str, session):
-    # Validar que el juego exista
-    game = session.query(Game).filter_by(gameid=game_id).first()
-    if not game:
-        raise HTTPException(status_code=404, detail="Game not found")
 
-    # Validar que el jugador exista
-    player = session.query(Player).filter_by(playerid=player_id).first()
-    if not player:
-        raise HTTPException(status_code=404, detail="Player not found")
-
-    # Validar que sea el turno del jugador actual
-    if player_id != game.turn.split(",")[0]:
-        raise HTTPException(status_code=409, detail="It's not your turn")
-
-    # Validar que la carta figure esté en la mano del jugador
-    figure_card = session.query(Figure_card).filter_by(
-        playerid=player_id, 
-        gameid=game_id, 
-        id=figure_card_id, 
-        in_hand=True
-    ).first()
-
-    if not figure_card:
-        raise HTTPException(status_code=404, detail="Figure card not found")
-
-    # Comparar la figura con el tile (función auxiliar)
-    if not compare_tile_with_figure(tile, figure_card.figure):
-        raise HTTPException(status_code=409, detail="Figure card does not match the tile")
-
-    # Si la carta coincide con el tile, descartar la carta
-    figure_card.return_card()
-    session.commit()
-
-    # Verificar si el jugador ya no tiene cartas, entonces es el fin del juego
-    remaining_cards = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id).count()
-    if remaining_cards == 0:
-        return {"message": f"Game over, player {player.name} wins"}
-
-    return {"message": "Figure card discarded"}
-
-"""async def discard_figure(player_id: str, game_id: str, tile: str, figure_card_id: str):
-    game = session.query(Game).filter_by(gameid=game_id).first()
-    player = session.query(Player).filter_by(playerid=player_id).first()
-    if  player_id != game.turn.split(",")[0]:
-        raise HTTPException(status_code=409, detail="It's not your turn")
-    else:
-        figure_card = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, id=figure_card_id, in_hand=True).first()
-        if figure_card is None:
-            raise HTTPException(status_code=404, detail="Figure card not found")
-        elif compare_tile_with_figure(tile, figure_card.figure):
-            figure_card.return_card()
-            session.commit()
-            if session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id).count() == 0:
-                return {"message": "Game over, player " + player.name + " wins"}
-            return {"message": "Figure card discarded"}
-        else:
-            raise HTTPException(status_code=409, detail="Figure card does not match the tile")
-"""
 @router.put("/swap_tiles/{player_id}/{game_id}/{tile_id1}/{tile_id2}")
 async def swap_tiles(player_id: str, game_id: str, tile_id1: int, tile_id2: int):
     if session.query(Game).filter_by(gameid=game_id).count() == 0:
