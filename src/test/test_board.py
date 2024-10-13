@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models.game_models import Base, Table, Tile, Figures
-from app import find_connected_components, match_figures
+from models.game_models import Base, Table, Tile, Figures, compare_tile_with_figure
+from app import find_connected_components, match_figures 
 
 # Configura una base de datos en memoria para las pruebas
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -110,3 +110,26 @@ def test_highlight_tiles():
     # Verificar que las coordenadas esperadas tienen highlight en True
     for coord, highlight in expected_highlighted_tiles.items():
         assert matched_tiles.get(coord) == None
+
+def test_compare_tile_with_figure(db_session):
+    # Crear una nueva tabla para asociar los tiles
+    new_table = Table(gameid="game_4")
+    db_session.add(new_table)
+    db_session.commit()
+
+    # Crear tiles conectados
+    tiles = [
+        Tile(x=0, y=0, color="red", table_id=4, highlight=False),
+        Tile(x=0, y=1, color="red", table_id=4, highlight=False),
+        Tile(x=0, y=2, color="red", table_id=4, highlight=False),
+        Tile(x=0, y=3, color="red", table_id=4, highlight=False)
+    ]
+    db_session.add_all(tiles)
+    db_session.commit()
+    tile_id = tiles[0].id
+    
+    result = compare_tile_with_figure(tile_id, 1)
+    assert result is True
+
+    # Obtener los tiles de la base de datos
+    
