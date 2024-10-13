@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Card, Row, Col } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
-//import gameBoard from "../components/Board";
 import {
   ChangeTurn,
   LeaveGame,
@@ -35,14 +34,7 @@ const GamePage = () => {
   const [board, setBoard] = useState([]);
   const [selectedSquares, setSelectedSquares] = useState(Array(36).fill(false));
 
-
-  const handleSquareClick = (index) => {
-    const newSelectedSquares = [...selectedSquares];
-    newSelectedSquares[index] = !newSelectedSquares[index];
-    setSelectedSquares(newSelectedSquares);
-  };
-
-
+  
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -203,6 +195,12 @@ const GamePage = () => {
     };
   }, []);
 
+  const handleSquareClick = (index) => {
+    const newSelectedSquares = [...selectedSquares];
+    newSelectedSquares[index] = !newSelectedSquares[index];
+    setSelectedSquares(newSelectedSquares);
+  };
+
   const invertBoard = (board, size) => {
     const rows = [];
     for (let i = 0; i < size; i++) {
@@ -218,22 +216,28 @@ const GamePage = () => {
     const invertedBoard = invertBoard(board, size);
 
     return invertedBoard.map((item) => (
-      <Card
+      <Button
         key={item.id}
+        disabled={playerID !== turn}
         onClick={() => handleSquareClick(item.id)}
         style={{
           width: "40px",
           height: "40px",
-          backgroundColor: item.color === 'red' ? 'rgba(248, 113, 113, 1)' :
-                           item.color === 'blue' ? 'rgba(96, 165, 250, 1)' :
-                           item.color === 'green' ? 'rgba(34, 197, 94, 1)' :
-                           item.color === 'yellow' ? 'rgba(234, 179, 8, 1)' :
+          backgroundColor: item.color === 'red' ? "#FF5959" :
+                           item.color === 'blue' ? "#45B3EB" :
+                           item.color === 'green' ? "#4ade80" :
+                           item.color === 'yellow' ? "#FAD05A" :
                            item.color,          
-          border: item.highlight ? "2px solid lightblue" : "none",
+          border: item.highlight ? `5px solid ${ item.color === "red" ? "#bf4343" :
+                                                 item.color === "blue" ? "#3486b0" : 
+                                                 item.color === "green" ? "#38a660" : 
+                                                 item.color === "yellow" ? "#bb9c44" : 
+                                                 "black" }` : 
+                                                 "none",
           boxShadow: selectedSquares[item.id] ? "0 0 10px 5px rgba(255, 255, 255, 0.8)" : "none",
         }}
       >
-      </Card>
+      </Button>
     ));
   };
 
