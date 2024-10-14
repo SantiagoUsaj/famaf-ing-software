@@ -1,22 +1,34 @@
+import sys
+import os
+import random
+
+# Añadir el directorio raíz del proyecto al path de Python
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models.game_models import Base, Table, Tile, Figures
+from models.game_models import Base, session
+from models.board_models import Table, Tile, Figures
 from app import find_connected_components, match_figures
 
-# Configura una base de datos en memoria para las pruebas
-TEST_DATABASE_URL = "sqlite:///:memory:"
+# Configura la base de datos para las pruebas
+DATABASE_PATH = '/home/santiafonso/Documents/prueba/backend/src/test/database/games.db'
+TEST_DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 engine = create_engine(TEST_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Crea todas las tablas
 Base.metadata.create_all(bind=engine)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def db_session():
     session = SessionLocal()
     yield session
+    session.rollback()  # Revertir cualquier cambio hecho durante la prueba
     session.close()
+    Base.metadata.drop_all(bind=engine)  # Eliminar todas las tablas
+    Base.metadata.create_all(bind=engine)  # Crear todas las tablas de nuevo
 
 def test_create_table(db_session):
     # Crear una nueva tabla
@@ -36,7 +48,7 @@ def test_create_tile(db_session):
     db_session.commit()
 
     # Crear un nuevo tile
-    new_tile = Tile(x=0, y=0, color="red", table_id=new_table.id,highlight=False)
+    new_tile = Tile(x=0, y=0, color="red", table_id=new_table.id, highlight=False, number=1)
     db_session.add(new_tile)
     db_session.commit()
 
@@ -47,6 +59,7 @@ def test_create_tile(db_session):
     assert tile.y == 0
     assert tile.color == "red"
     assert tile.table_id == new_table.id
+    assert tile.number == 1
 
 def test_create_figure(db_session):
     # Crear una nueva figura
@@ -67,10 +80,10 @@ def test_find_connected_components(db_session):
 
     # Crear tiles conectados
     tiles = [
-        Tile(x=0, y=0, color="red", table_id=new_table.id, highlight=False),
-        Tile(x=0, y=1, color="red", table_id=new_table.id, highlight=False),
-        Tile(x=1, y=0, color="blue", table_id=new_table.id, highlight=False),
-        Tile(x=1, y=1, color="red", table_id=new_table.id, highlight=False)
+        Tile(x=0, y=0, color="red", table_id=new_table.id, highlight=False, number=1),
+        Tile(x=0, y=1, color="red", table_id=new_table.id, highlight=False, number=2),
+        Tile(x=1, y=0, color="blue", table_id=new_table.id, highlight=False, number=3),
+        Tile(x=1, y=1, color="red", table_id=new_table.id, highlight=False, number=4)
     ]
     db_session.add_all(tiles)
     db_session.commit()
@@ -82,31 +95,57 @@ def test_find_connected_components(db_session):
     components = find_connected_components(tiles)
     assert len(components) == 2  # Debería haber 2 componentes conectados
 
-def test_highlight_tiles():
-    # Crear tiles conectados manualmente
-    tiles = [
-        Tile(x=0, y=0, color="red", table_id=1, highlight=False),
-        Tile(x=0, y=1, color="red", table_id=1, highlight=False),
-        Tile(x=0, y=2, color="red", table_id=1, highlight=False),
-        Tile(x=0, y=3, color="red", table_id=1, highlight=False)
-    ]
+def test_create_tiles_for_table(db_session):
+    # Crear una nueva tabla
+    new_table = Table(gameid="game_5")
+    db_session.add(new_table)
+    db_session.commit()
 
-    # Crear una figura manualmente
-    new_figure = Figures(points="00,01,02,03", rot90="00,10,20,30", rot180="00,01,02,03", rot270="00,10,20,30")
+    # Llamar al método create_tiles_for_table
+    Tile.create_tiles_for_table(new_table.id)
 
-    # Encontrar componentes conectados
-    components = find_connected_components(tiles)
+    # Verificar que se han creado 36 tiles
+    tiles = db_session.query(Tile).filter_by(table_id=new_table.id).all()
+    assert len(tiles) == 36
 
-    # Encontrar y actualizar los tiles coincidentes
-    matched_tiles = match_figures(components, [new_figure])
+    # Verificar que cada tile tiene un color válido
+    valid_colors = ['red', 'green', 'yellow', 'blue']
+    for tile in tiles:
+        assert tile.color in valid_colors
+        def test_swap_tiles_color(db_session):
+            # Borrar todos los tiles existentes
+            db_session.query(Tile).delete()
+            db_session.commit()
 
-    # Verificar que los tiles coincidentes tienen el atributo highlight en True
-    expected_highlighted_tiles = {
-        "00": 1,
-        "01": 1,
-        "02": 1,
-        "03": 1
-    }
-    # Verificar que las coordenadas esperadas tienen highlight en True
-    for coord, highlight in expected_highlighted_tiles.items():
-        assert matched_tiles.get(coord) == None
+            # Crear una nueva tabla
+            new_table = Table(gameid="game_6")
+            db_session.add(new_table)
+            db_session.commit()
+
+            # Crear dos tiles con colores diferentes
+            tile1 = Tile(x=0, y=0, color="red", table_id=new_table.id, highlight=False, number=1)
+            tile2 = Tile(x=0, y=1, color="blue", table_id=new_table.id, highlight=False, number=2)
+            db_session.add_all([tile1, tile2])
+            db_session.commit()
+
+            # Llamar al método swap_tiles_color
+            tile1.swap_tiles_color(tile2.id)
+
+            # Verificar que los colores de los tiles se han intercambiado
+            tile1 = db_session.query(Tile).filter_by(number=1, table_id=new_table.id).first()
+            tile2 = db_session.query(Tile).filter_by(number=2, table_id=new_table.id).first()
+            assert tile1.color == "blue"
+            assert tile2.color == "red"
+
+def test_create_figures(db_session):
+    # Llamar al método create_figures
+    Figures.create_figures()
+
+    # Verificar que se han creado 25 figuras
+    figures = db_session.query(Figures).all()
+    assert len(figures) == 25
+
+    # Verificar algunas figuras específicas
+    figure = db_session.query(Figures).filter_by(points="01,02,01,11").first()
+    assert figure is not None
+    assert figure.points == "01,02,01,11"    
