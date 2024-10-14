@@ -105,6 +105,7 @@ const GamePage = () => {
 
       if (response) {
         console.log("New Game Info:", response);
+        resetSelect();
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -160,7 +161,9 @@ const GamePage = () => {
   };
 
   const handleSquareClick = (index) => {
-    if (SelectFirstTitle === null) {
+    if (index === SelectFirstTitle) {
+      resetSelect();
+    } else if (SelectFirstTitle === null) {
       setSelectFirstTitle(index);
       console.log(`First square ${index} clicked`);
     } else {

@@ -1,21 +1,30 @@
+import React, { act } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import GamePage from "../pages/GamePage"; // Asegúrate de que la ruta sea correcta
-import { usePlayerContext } from "../context/PlayerContext.jsx";
-import { useGameContext } from "../context/GameContext.jsx";
-import { MemoryRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
+import { ChangeTurn, PlayerMovements } from "../services/GameServices";
+import { usePlayerContext } from "../context/PlayerContext";
+import { useGameContext } from "../context/GameContext";
 
-// Mocks para contextos y servicios
+// Mock useNavigate from react-router-dom
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// Mock usePlayerContext
 vi.mock("../context/PlayerContext.jsx", () => ({
-  usePlayerContext: () => ({
-    playerID: "player1",
-  }),
+  usePlayerContext: vi.fn(),
 }));
 
+// Mock useGameContext
 vi.mock("../context/GameContext.jsx", () => ({
-  useGameContext: () => ({
-    game_id: "game123",
-  }),
+  useGameContext: vi.fn(),
 }));
 
 vi.mock("../services/GameServices", () => ({
@@ -23,60 +32,45 @@ vi.mock("../services/GameServices", () => ({
   LeaveGame: vi.fn(),
   ChangeTurn: vi.fn(),
   DeleteGame: vi.fn(),
+  PossiblesMoves: vi.fn(),
+  SwapTiles: vi.fn(),
+  UndoMovement: vi.fn(),
+  UndoAllMovements: vi.fn(),
+  FinishGame: vi.fn(),
+  PlayerMovements: vi.fn(),
+}));
+
+vi.mock("../components/MovementCard", () => ({
+  default: () => <div>MovementCard Mock</div>,
 }));
 
 // Mock WebSocket
-class MockWebSocket {
-  constructor(url) {
-    if (
-      !url.startsWith("ws://") &&
-      !url.startsWith("wss://") &&
-      !url.startsWith("http://") &&
-      !url.startsWith("https://")
-    ) {
-      throw new SyntaxError(
-        "The URL's scheme must be either 'ws', 'wss', 'http', or 'https'."
-      );
-    }
-    this.url = url;
-    this.readyState = 1; // OPEN
-    this.send = vi.fn();
-    this.close = vi.fn();
-    this.onmessage = null;
-    setTimeout(() => {
-      if (this.onopen) this.onopen();
-    }, 0);
+const mockWebSocket = {
+  onopen: vi.fn(),
+  onmessage: vi.fn(),
+  onclose: vi.fn(),
+  close: vi.fn(),
+};
+global.WebSocket = vi.fn((url) => {
+  if (!url.startsWith("http://")) {
+    throw new Error(`Invalid WebSocket URL: ${url}`);
   }
-
-  addEventListener(event, callback) {
-    if (event === "message") {
-      this.onmessage = callback;
-    }
-  }
-
-  removeEventListener(event, callback) {
-    if (event === "message" && this.onmessage === callback) {
-      this.onmessage = null;
-    }
-  }
-
-  dispatchEvent(event) {
-    if (event.type === "message" && this.onmessage) {
-      this.onmessage(event);
-    }
-  }
-}
-
-global.WebSocket = MockWebSocket;
+  return mockWebSocket;
+});
 
 describe("GamePage", () => {
-  it("should render the GamePage component", async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    usePlayerContext.mockReturnValue({ playerID: "player1" });
+    useGameContext.mockReturnValue({ game_id: "game123" });
     render(
-      <MemoryRouter>
+      <BrowserRouter>
         <GamePage />
-      </MemoryRouter>
+      </BrowserRouter>
     );
+  });
 
+  it("should render the GamePage component", async () => {
     expect(screen.getByText(/Turno de:/)).toBeInTheDocument();
     expect(screen.getByText(/Abandonar/i)).toBeInTheDocument();
   });
@@ -84,24 +78,12 @@ describe("GamePage", () => {
   it("should call LeaveGame on button click", async () => {
     const { LeaveGame } = await import("../services/GameServices");
 
-    render(
-      <MemoryRouter>
-        <GamePage />
-      </MemoryRouter>
-    );
-
     fireEvent.click(screen.getByText(/Abandonar/i));
 
     expect(LeaveGame).toHaveBeenCalled();
   });
 
   it("should handle WebSocket messages", async () => {
-    render(
-      <MemoryRouter>
-        <GamePage />
-      </MemoryRouter>
-    );
-
     const mockMessage = {
       data: JSON.stringify({
         turn: "player2",
@@ -110,12 +92,222 @@ describe("GamePage", () => {
       }),
     };
 
-    global.WebSocket.prototype.dispatchEvent(
-      new MessageEvent("message", mockMessage)
-    );
+    act(() => mockWebSocket.onmessage(mockMessage));
 
     await waitFor(() => {
       expect(screen.getByText(/Turno de:/)).toBeInTheDocument();
     });
+  });
+
+  it("should call ChangeTurn on button click", async () => {
+    const { ChangeTurn } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Terminar Turno/i));
+
+    await waitFor(() => {
+      expect(ChangeTurn).toHaveBeenCalled();
+    });
+  });
+
+  it("should call LeaveGame when quitting the room", async () => {
+    const { LeaveGame } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Abandonar/i));
+
+    await waitFor(() => {
+      expect(LeaveGame).toHaveBeenCalled();
+    });
+  });
+
+  it("should call UndoMovement when undoing a movement", async () => {
+    const { UndoMovement } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Deshacer Movimiento/i));
+
+    await waitFor(() => {
+      expect(UndoMovement).toHaveBeenCalled();
+    });
+  });
+
+  it("should call UndoAllMovements when undoing all movements", async () => {
+    const { UndoAllMovements } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Deshacer todos los Movimientos/i));
+
+    await waitFor(() => {
+      expect(UndoAllMovements).toHaveBeenCalled();
+    });
+  });
+
+  it("should call DeleteGame when finishing the game", async () => {
+    const { DeleteGame } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Volver al Lobby/i));
+
+    await waitFor(() => {
+      expect(DeleteGame).toHaveBeenCalled();
+    });
+  });
+
+  it("should call resetSelect when resetting selection", async () => {
+    fireEvent.click(screen.getByText(/Resetear Seleccion/i));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/First square/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Second square/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it("should call PossiblesMoves on component mount", async () => {
+    const { PossiblesMoves } = await import("../services/GameServices");
+
+    await waitFor(() => {
+      expect(PossiblesMoves).toHaveBeenCalled();
+    });
+  });
+
+  it("should call SwapTiles on valid swap", async () => {
+    const { SwapTiles } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/First square/i));
+    fireEvent.click(screen.getByText(/Second square/i));
+
+    await waitFor(() => {
+      expect(SwapTiles).toHaveBeenCalled();
+    });
+  });
+
+  it("should show modal on game win", async () => {
+    fireEvent.click(screen.getByText(/Ganar/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/¡Felicidades!/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should call finishGame on modal button click", async () => {
+    const { DeleteGame } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Ganar/i));
+    fireEvent.click(screen.getByText(/Volver al Lobby/i));
+
+    await waitFor(() => {
+      expect(DeleteGame).toHaveBeenCalled();
+    });
+  });
+
+  it("should call GameData on component mount", async () => {
+    const { GameData } = await import("../services/GameServices");
+
+    await waitFor(() => {
+      expect(GameData).toHaveBeenCalledWith("game123");
+    });
+  });
+
+  it("should call startMove when SelectFirstTitle and SelectMovCard are set", async () => {
+    const { PossiblesMoves } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/First square/i));
+    fireEvent.click(screen.getByText(/Second square/i));
+
+    await waitFor(() => {
+      expect(PossiblesMoves).toHaveBeenCalled();
+    });
+  });
+
+  it("should call swap when SelectFirstTitle and SelectSecondTitle are set", async () => {
+    const { SwapTiles } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/First square/i));
+    fireEvent.click(screen.getByText(/Second square/i));
+
+    await waitFor(() => {
+      expect(SwapTiles).toHaveBeenCalled();
+    });
+  });
+
+  it("should call UndoMovement on button click", async () => {
+    const { UndoMovement } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Deshacer Movimiento/i));
+
+    expect(UndoMovement).toHaveBeenCalled();
+  });
+
+  it("should call UndoAllMovements on button click", async () => {
+    const { UndoAllMovements } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Deshacer todos los Movimientos/i));
+
+    expect(UndoAllMovements).toHaveBeenCalled();
+  });
+
+  it("should call DeleteGame on button click", async () => {
+    const { DeleteGame } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Volver al Lobby/i));
+
+    expect(DeleteGame).toHaveBeenCalled();
+  });
+
+  it("should call resetSelect on button click", async () => {
+    fireEvent.click(screen.getByText(/Resetear Seleccion/i));
+
+    expect(screen.queryByText(/First square/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Second square/i)).not.toBeInTheDocument();
+  });
+
+  it("should call getPossibleMoves on component mount", async () => {
+    const { PossiblesMoves } = await import("../services/GameServices");
+
+    expect(PossiblesMoves).toHaveBeenCalled();
+  });
+
+  it("should call SwapTiles on valid swap", async () => {
+    const { SwapTiles } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/First square/i));
+    fireEvent.click(screen.getByText(/Second square/i));
+
+    expect(SwapTiles).toHaveBeenCalled();
+  });
+
+  it("should show modal on game win", async () => {
+    fireEvent.click(screen.getByText(/Ganar/i));
+
+    expect(screen.getByText(/¡Felicidades!/i)).toBeInTheDocument();
+  });
+
+  it("should call finishGame on modal button click", async () => {
+    const { DeleteGame } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/Ganar/i));
+    fireEvent.click(screen.getByText(/Volver al Lobby/i));
+
+    expect(DeleteGame).toHaveBeenCalled();
+  });
+
+  it("should call getGameInfo on component mount", async () => {
+    const { GameData } = await import("../services/GameServices");
+
+    expect(GameData).toHaveBeenCalledWith("game123");
+  });
+
+  it("should call startMove when SelectFirstTitle and SelectMovCard are set", async () => {
+    const { PossiblesMoves } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/First square/i));
+    fireEvent.click(screen.getByText(/Second square/i));
+
+    expect(PossiblesMoves).toHaveBeenCalled();
+  });
+
+  it("should call swap when SelectFirstTitle and SelectSecondTitle are set", async () => {
+    const { SwapTiles } = await import("../services/GameServices");
+
+    fireEvent.click(screen.getByText(/First square/i));
+    fireEvent.click(screen.getByText(/Second square/i));
+
+    expect(SwapTiles).toHaveBeenCalled();
   });
 });
