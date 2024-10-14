@@ -8,12 +8,13 @@ import {
   LeaveGame,
   GameData,
   DeleteGame,
+  PossiblesMoves,
+  SwapTiles,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
-
 
 const GamePage = () => {
   const navigate = useNavigate();
@@ -27,34 +28,38 @@ const GamePage = () => {
   const [playersList, setPlayersList] = useState([]);
   const [partidas, setPartidas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
-  // Obtener game_id desde el contexto
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
-  const [selectedSquares, setSelectedSquares] = useState(Array(36).fill(false));
 
-  
+  // Variables para el movimiento de las fichas
+  const [SelectMovCard, setSelectMovCard] = useState(null);
+  const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
+  const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
+  const [PossibleTiles1, setPossibleTiles1] = useState();
+  const [PossibleTiles2, setPossibleTiles2] = useState();
+  const [PossibleTiles3, setPossibleTiles3] = useState();
+  const [PossibleTiles4, setPossibleTiles4] = useState();
+
   const showModal = () => {
     setIsModalOpen(true);
   };
 
   const winner = () => {
-    // do this for 5 seconds
-    var duration = 5 * 1000;
+    var duration = 1 * 100;
     var end = Date.now() + duration;
 
     (function frame() {
       // launch a few confetti from the left edge
       confetti({
-        particleCount: 4,
+        particleCount: 6,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
       });
       // and launch a few from the right edge
       confetti({
-        particleCount: 4,
+        particleCount: 6,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
@@ -65,23 +70,6 @@ const GamePage = () => {
         requestAnimationFrame(frame);
       }
     })();
-  };
-
-  const getGameInfo = async (game_id) => {
-    console.log("Success");
-
-    try {
-      // Esperamos la resolución de la promesa de GameData
-      const response = await GameData(game_id);
-
-      if (response) {
-        console.log("Game Info:", response);
-
-        return response;
-      }
-    } catch (error) {
-      console.error("Error getting game data", error);
-    }
   };
 
   const quitRoom = async (game_id) => {
@@ -144,6 +132,179 @@ const GamePage = () => {
     }
   };
 
+  const handleSquareClick = (index) => {
+    if (SelectFirstTitle === null) {
+      setSelectFirstTitle(index);
+      console.log(`First square ${index} clicked`);
+    } else {
+      setSelectSecondTitle(index);
+      console.log(`Second square ${index} clicked`);
+    }
+  };
+
+  const invertBoard = (board, size) => {
+    const rows = [];
+    for (let i = 0; i < size; i++) {
+      rows.push(board.slice(i * size, (i + 1) * size));
+    }
+    // Invertir el orden de las filas
+    const invertedRows = rows.reverse();
+    return invertedRows.flat();
+  };
+
+  const gameBoard = (board) => {
+    const size = 6;
+    const invertedBoard = invertBoard(board, size);
+
+    return invertedBoard.map((item) => (
+      <Button
+        key={item.id}
+        disabled={playerID !== turn}
+        onClick={() => handleSquareClick(item.id)}
+        style={{
+          width: "40px",
+          height: "40px",
+          backgroundColor:
+            item.color === "red"
+              ? "#FF5959"
+              : item.color === "blue"
+              ? "#45B3EB"
+              : item.color === "green"
+              ? "#4ade80"
+              : item.color === "yellow"
+              ? "#FAD05A"
+              : item.color,
+          border:
+            item.id === PossibleTiles1 ||
+            item.id === PossibleTiles2 ||
+            item.id === PossibleTiles3 ||
+            item.id === PossibleTiles4
+              ? "5px solid #FAFAFA"
+              : item.highlight
+              ? `5px solid ${
+                  item.color === "red"
+                    ? "#B22222"
+                    : item.color === "blue"
+                    ? "#00008B"
+                    : item.color === "green"
+                    ? "#006400"
+                    : item.color === "yellow"
+                    ? "#DAA520"
+                    : "black"
+                }`
+              : "none",
+          boxShadow:
+            item.id === SelectFirstTitle ? "0 0 10px 5px #FAFAFA" : "none",
+        }}
+      ></Button>
+    ));
+  };
+
+  const putSwap = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de SwapTiles
+      const response = await SwapTiles(
+        playerID,
+        game_id,
+        SelectMovCard,
+        SelectFirstTitle,
+        SelectSecondTitle
+      );
+
+      if (response) {
+        console.log("Swap:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
+  const swap = () => {
+    console.log("SelectFirstTitle:", SelectFirstTitle);
+    console.log("SelectSecondTitle:", SelectSecondTitle);
+
+    if (
+      SelectSecondTitle === PossibleTiles1 ||
+      SelectSecondTitle === PossibleTiles2 ||
+      SelectSecondTitle === PossibleTiles3 ||
+      SelectSecondTitle === PossibleTiles4
+    ) {
+      putSwap().then((response) => {
+        if (response) {
+          console.log("Swap response:", response);
+          setSelectMovCard(null);
+          setSelectFirstTitle(null);
+          setSelectSecondTitle(null);
+          setPossibleTiles1(null);
+          setPossibleTiles2(null);
+          setPossibleTiles3(null);
+          setPossibleTiles4(null);
+        }
+      });
+    }
+  };
+
+  const getPossibleMoves = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de PossiblesMoves
+      const response = await PossiblesMoves(
+        playerID,
+        game_id,
+        SelectMovCard,
+        SelectFirstTitle
+      );
+
+      if (response) {
+        console.log("Possible Moves:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
+  const startMove = () => {
+    if (SelectMovCard && SelectFirstTitle && playerID === turn) {
+      console.log("Carta de movimineto:", SelectMovCard);
+      console.log("Ficha:", SelectFirstTitle);
+
+      getPossibleMoves().then((response) => {
+        if (response) {
+          setPossibleTiles1(response.tile_1);
+          setPossibleTiles2(response.tile_2);
+          setPossibleTiles3(response.tile_3);
+          setPossibleTiles4(response.tile_4);
+        }
+      });
+    } else {
+      alert("Selecciona ambos componentes primero");
+    }
+  };
+
+  const getGameInfo = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de GameData
+      const response = await GameData(game_id);
+
+      if (response) {
+        console.log("Game Info:", response);
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
   useEffect(() => {
     // Llamamos a la función getGameInfo
     getGameInfo(game_id).then((response) => {
@@ -153,11 +314,9 @@ const GamePage = () => {
         setIsCreator(response.host_id);
         setNumberOfPlayers(response.players);
         setMaxNumberOfPlayers(response.game_size);
-        setPlayersList(response.player_details);       
+        setPlayersList(response.player_details);
       }
     });
-
-
 
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
@@ -195,54 +354,18 @@ const GamePage = () => {
     };
   }, []);
 
-  const handleSquareClick = (index) => {
-    const newSelectedSquares = [...selectedSquares];
-    newSelectedSquares[index] = !newSelectedSquares[index];
-    setSelectedSquares(newSelectedSquares);
-  };
-
-  const invertBoard = (board, size) => {
-    const rows = [];
-    for (let i = 0; i < size; i++) {
-      rows.push(board.slice(i * size, (i + 1) * size));
+  useEffect(() => {
+    if (SelectFirstTitle !== null && SelectMovCard !== null) {
+      startMove();
     }
-    // Invertir el orden de las filas
-    const invertedRows = rows.reverse();
-    return invertedRows.flat();
-  };
 
-  const gameBoard = (board) => {
-    const size = 6;
-    const invertedBoard = invertBoard(board, size);
-
-    return invertedBoard.map((item) => (
-      <Button
-        key={item.id}
-        disabled={playerID !== turn}
-        onClick={() => handleSquareClick(item.id)}
-        style={{
-          width: "40px",
-          height: "40px",
-          backgroundColor: item.color === 'red' ? "#FF5959" :
-                           item.color === 'blue' ? "#45B3EB" :
-                           item.color === 'green' ? "#4ade80" :
-                           item.color === 'yellow' ? "#FAD05A" :
-                           item.color,          
-          border: item.highlight ? `5px solid ${ item.color === "red" ? "#bf4343" :
-                                                 item.color === "blue" ? "#3486b0" : 
-                                                 item.color === "green" ? "#38a660" : 
-                                                 item.color === "yellow" ? "#bb9c44" : 
-                                                 "black" }` : 
-                                                 "none",
-          boxShadow: selectedSquares[item.id] ? "0 0 10px 5px rgba(255, 255, 255, 0.8)" : "none",
-        }}
-      >
-      </Button>
-    ));
-  };
+    if (SelectFirstTitle !== null && SelectSecondTitle !== null) {
+      swap();
+    }
+  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard]);
 
   return (
-    <div className="text-white text-center m-auto flex flex-col items-center justify-center min-h-screen">
+    <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
       <div
         className="container"
         style={{
@@ -257,9 +380,9 @@ const GamePage = () => {
       </div>
       <div className="Cards">
         <FigureCard />
-        <MovementCard />
+        <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
       </div>
-      <div className="turn text-white">
+      <div className="turn text-blancofondo">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
           <div key={player.player_id}>
@@ -276,7 +399,11 @@ const GamePage = () => {
         }}
       >
         {playerID === turn && (
-          <Button type="primary" onClick={() => passTurn(game_id)}>
+          <Button
+            className="text-blancofondo"
+            type="primary"
+            onClick={() => passTurn(game_id)}
+          >
             Terminar Turno
           </Button>
         )}
@@ -297,9 +424,9 @@ const GamePage = () => {
           className="text-center"
           closable={false}
         >
-          <p className="text-black text-lg ">Has ganado la partida.</p>
+          <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
           <Button
-            className="mt-5"
+            className="mt-5 text-blancofondo"
             type="primary"
             onClick={() => finishGame(game_id)}
           >

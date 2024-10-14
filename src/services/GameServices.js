@@ -71,3 +71,42 @@ export const DeleteGame = async (game_id) => {
     console.error("Error al obtener datos:", error);
   }
 };
+
+export const PossiblesMoves = async (
+  player_id,
+  game_id,
+  movement_id,
+  tile_id
+) => {
+  try {
+    const response = await axios.get(
+      `http://127.0.0.1:8000/possible_movements/${player_id}/${game_id}/${movement_id}/${tile_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};
+
+export const SwapTiles = async (
+  player_id,
+  game_id,
+  movement_id,
+  tile_id1,
+  tile_id2
+) => {
+  try {
+    const response = await axios.put(
+      `http://127.0.0.1:8000/swap_tiles/${player_id}/${game_id}/${movement_id}/${tile_id1}/${tile_id2}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};

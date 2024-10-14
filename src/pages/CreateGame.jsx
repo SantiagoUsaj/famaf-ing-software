@@ -50,11 +50,11 @@ const CreateGame = () => {
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         Crear partida
       </h1>
       <Form
-        className="bg-black p-2"
+        className="bg-negrofondo p-2"
         name="Crear Partida"
         style={{
           maxWidth: 280,
@@ -99,7 +99,10 @@ const CreateGame = () => {
             },
           ]}
         >
-          <Input placeholder="Ingresar nombre partida" />
+          <Input
+            className="bg-blancofondo"
+            placeholder="Ingresar nombre partida"
+          />
         </Form.Item>
 
         <Form.Item
@@ -117,7 +120,7 @@ const CreateGame = () => {
         </Form.Item>
 
         <Form.Item name="boton">
-          <Button type="primary" htmlType="submit">
+          <Button className="text-blancofondo" type="primary" htmlType="submit">
             Crear
           </Button>
         </Form.Item>

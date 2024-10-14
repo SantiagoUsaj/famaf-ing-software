@@ -38,7 +38,7 @@ const TableGames = ({ gamesList }) => {
         className="w-1/4 m-auto my-2 rounded-lg"
         dataSource={gamesList}
         pagination={{ pageSize: 5, size: "small" }} // Set pagination size to small
-        style={{ backgroundColor: "#fafafa" }} // Set background color for pagination
+        style={{ backgroundColor: "#FAFAFA" }} // Set background color for pagination
       >
         <Column
           title={<div style={{ textAlign: "center" }}>Nombre Partida</div>}
@@ -65,15 +65,15 @@ const TableGames = ({ gamesList }) => {
               {record.state === "waiting" &&
               record.players < record.game_size ? (
                 <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
+                  className="bg-blue-500 hover:bg-blue-700 text-blancofondo font-bold py-2 px-2 rounded"
                   onClick={() => join(record.game_id)}
                 >
                   Unirme
                 </button>
               ) : record.state === "playing" ? (
-                <span className="text-green-500 font-bold">Jugando</span>
+                <span className="text-verdeficha font-bold">Jugando</span>
               ) : (
-                <span className="text-red-500 font-bold">Sala llena</span>
+                <span className="text-rojoficha font-bold">Sala llena</span>
               )}
             </Space>
           )}
