@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Card, Row, Col } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
 import FigureCard from "../components/FigureCard";
-//import gameBoard from "../components/Board";
 import {
   ChangeTurn,
   LeaveGame,
