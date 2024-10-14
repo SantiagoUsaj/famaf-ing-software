@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from models.manager_models import ConnectionManager
 from routes.player_routes import router as player_router
 from routes.game_routes import router as game_router
+from routes.movementChart_routes import router as movementChart_router
 import asyncio
 from models.game_models import Game, session, Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.player_models import PlayerGame, Player
 from models.figure_card_models import Figure_card
+from models.handMovements_models import HandMovements
 
 app = FastAPI()
 
@@ -31,6 +33,7 @@ app.add_middleware(
 
 app.include_router(player_router, tags=["player"])
 app.include_router(game_router, tags=["game"])
+app.include_router(movementChart_router, tags=["movementChart"])
 
 @app.delete("/delete_all")
 async def delete_all():
@@ -41,6 +44,7 @@ async def delete_all():
     session.query(Figure_card).delete()  # Eliminar todas las cartas de figura
     session.query(Table).delete()  # Eliminar todas las tablas
     session.query(TableGame).delete()  # Eliminar todas las relaciones entre tablas y juegos
+    session.query(HandMovements).delete()  # Eliminar todos los movimientos de las manos
     session.commit()
     return {"message": "All players, games, tables, and tiles deleted"}
 
@@ -82,14 +86,27 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 break
 
             players_in_game = session.query(PlayerGame).filter_by(gameid=game_id).all()
-            player_details = [{"player_id": pg.playerid, 
-                                   "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name, 
-                                   "figure_cards": [{"card_id": fc.cardid, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()]
-                                  } for pg in players_in_game]
-            turnos=game.turn
-            if(turnos!=None):
-                turnos=turnos.split(",")
-                turnos=turnos[0]
+            player_details = [
+                {
+                    "player_id": pg.playerid,
+                    "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name,
+                    "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count()
+                    "figure_cards": [{"card_id": fc.cardid, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()]
+                }
+                for pg in players_in_game
+            ]
+            turnos = game.turn
+            if turnos is not None:
+                turnos = turnos.split(",")
+                turnos = turnos[0]
+
+            # Obtener el tablero y las fichas asociadas a la partida
+            table = session.query(Table).filter_by(gameid=game_id).first()
+            if table:
+                tiles = session.query(Tile).filter_by(table_id=table.id).all()
+                board = [{"id": tile.id, "x": tile.x, "y": tile.y, "color": tile.color, "highlight": tile.highlight} for tile in tiles]
+            else:
+                board = []
 
             game_details = {
                 "game_name": game.name,
