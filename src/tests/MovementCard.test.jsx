@@ -21,7 +21,7 @@ describe("MovementCard Component", () => {
   const mockPlayerID = "player1";
   const mockGameID = "game1";
   const mockMovements = {
-    ids_of_movement_charts: ["1", "2", "3"],
+    ids_of_movement_charts: [1, 2, 3],
   };
 
   beforeEach(() => {
@@ -46,7 +46,7 @@ describe("MovementCard Component", () => {
     const card = await screen.findByAltText("1");
     fireEvent.click(card);
 
-    expect(mockOnSelectMovCard).toHaveBeenCalledWith("1");
+    expect(mockOnSelectMovCard).toHaveBeenCalledWith(1);
   });
 
   it("displays the correct images for each movement", async () => {
