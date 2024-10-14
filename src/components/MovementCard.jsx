@@ -97,3 +97,4 @@ const MovementCard = () => {
 };
 
 export default MovementCard;
+

@@ -10,7 +10,7 @@ import CreateGame from "./pages/CreateGame";
 
 function App() {
   return (
-    <div className="bg-black h-screen w-screen">
+    <div className="bg-negrofondo h-screen w-screen">
       {/* Envuelve la aplicación con PlayerProvider */}
       <PlayerProvider>
         <GameProvider>

@@ -61,12 +61,12 @@ const LobbyPage = () => {
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         LobbyPage
       </h1>
       <TableGames gamesList={partidas} />
       <Button
-        className="flex m-auto my-3"
+        className="flex m-auto my-3 text-blancofondo"
         type="primary"
         htmlType="submit"
         size="large"
