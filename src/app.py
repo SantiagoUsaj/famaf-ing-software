@@ -7,6 +7,7 @@ from routes.movementChart_routes import router as movementChart_router
 import asyncio
 from models.game_models import Game, session
 from models.player_models import PlayerGame, Player
+from models.handMovements_models import HandMovements
 from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.handMovements_models import HandMovements
 from models.partialMovements_models import PartialMovements

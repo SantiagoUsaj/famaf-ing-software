@@ -5,6 +5,7 @@ from models.board_models import  Table, Tile, Figures, find_connected_components
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.partialMovements_models import PartialMovements
+from models.board_models import Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
     
@@ -205,13 +206,14 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
         rot180 = MovementChart.get_tile_for_rotation(movementchart.rot180, tile1)
         rot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, tile1)
         
-        if rot0 == tile2.id or rot90 == tile2.id or rot180 == tile2.id or rot270 == tile2.id:
+        if rot0 == tile2.number or rot90 == tile2.number or rot180 == tile2.number or rot270 == tile2.number:
+            Tile.swap_tiles_color(tile1.id, tile2.id)
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all())
             Tile.swap_tiles_color(tile_id1, tile_id2)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
-            PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile_id1, tile_id2)
+            PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
             return {"message": "Tiles swapped"}
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
@@ -232,6 +234,10 @@ async def undo_a_movement(player_id: str, game_id: str):
             raise HTTPException(status_code=404, detail="No movements to undo")
         else:
             Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
+            session.commit()
             HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
             PartialMovements.delete_partial_movement(partial_movement.partialid)
             return {"message": "Movement undone"}
@@ -253,6 +259,10 @@ async def undo_all_movements(player_id: str, game_id: str):
         else:
             for partial_movement in partial_movements:
                 Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+                tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+                connected_components = find_connected_components(tiles)
+                match_figures(connected_components, session.query(Figures).all())
+                session.commit()
                 HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                 PartialMovements.delete_partial_movement(partial_movement.partialid)
             return {"message": "All movements undone"}
