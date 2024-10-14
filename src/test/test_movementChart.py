@@ -43,7 +43,7 @@ def test_possible_movements():
     player_name2 = "ValidPlayer2"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
     tile_id = 15
 
     response_player1 = client.post(f"/create_player/{player_name1}")
@@ -79,7 +79,7 @@ def test_possible_movements_player_not_found():
     player_id3 = "invalid_player_id"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
     tile_id = 15
 
     response_player1 = client.post(f"/create_player/{player_name1}")
@@ -115,7 +115,7 @@ def test_possible_movements_game_not_found():
     game_id2 = "invalid_game_id"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
     tile_id = 15
 
     response_player1 = client.post(f"/create_player/{player_name1}")
@@ -151,7 +151,7 @@ def test_possible_movements_player_has_not_movement():
     player_name2 = "ValidPlayer2"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 100
+    movement_id = "100"
     tile_id = 15
 
     response_player1 = client.post(f"/create_player/{player_name1}")
@@ -181,7 +181,7 @@ def test_possible_movements_tile_not_found():
     player_name2 = "ValidPlayer2"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
     tile_id = 200
 
     response_player1 = client.post(f"/create_player/{player_name1}")
@@ -219,7 +219,7 @@ def test_player_movement_charts():
     player_name2 = "ValidPlayer2"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
 
     response_player1 = client.post(f"/create_player/{player_name1}")
     player_id1 = response_player1.json()["player_id"]
@@ -246,7 +246,7 @@ def test_player_movement_charts():
 
     response = client.get(f"/player_movement_charts/{first_turn}/{game_id}")
     assert response.status_code == 200
-    assert response.json() == {"ids_of_movement_charts": [movement_id]}
+    assert response.json() == {"ids_of_movement_charts": ["3"]}
 
 def test_player_movement_charts_player_not_found():
     player_name1 = "ValidPlayer1"
@@ -254,7 +254,7 @@ def test_player_movement_charts_player_not_found():
     player_id3 = "1234"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
 
     response_player1 = client.post(f"/create_player/{player_name1}")
     player_id1 = response_player1.json()["player_id"]
@@ -289,7 +289,7 @@ def test_player_movement_charts_game_not_found():
     game_id2 = "invalid_game_id"
     game_name = "ValidGame"
     game_size = 2
-    movement_id = 3
+    movement_id = "3"
 
     response_player1 = client.post(f"/create_player/{player_name1}")
     player_id1 = response_player1.json()["player_id"]
