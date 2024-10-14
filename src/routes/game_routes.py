@@ -206,11 +206,14 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
         
-@router.put("/undo_a_movement/{game_id}")
-async def undo_a_movement(game_id: str):
+@router.put("/undo_a_movement/{player_id}/{game_id}")
+async def undo_a_movement(player_id: str, game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
+    elif player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:
@@ -223,11 +226,14 @@ async def undo_a_movement(game_id: str):
             PartialMovements.delete_partial_movement(partial_movement.partialid)
             return {"message": "Movement undone"}
         
-@router.put("/undo_all_movements/{game_id}")
-async def undo_all_movements(game_id: str):
+@router.put("/undo_all_movements/{player_id}/{game_id}")
+async def undo_all_movements(player_id: str, game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
+    elif player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:
