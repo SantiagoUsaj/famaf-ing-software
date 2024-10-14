@@ -4,6 +4,7 @@ from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.partialMovements_models import PartialMovements
+from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
     
 router = APIRouter()
@@ -104,6 +105,7 @@ async def leave_game(player_id: str, game_id: str):
                 turn_order = game.turn.split(",")
                 turn_order = [pid for pid in turn_order if pid != player_id]
                 game.turn = ",".join(turn_order)
+                session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id).delete()
             
             session.commit()
             player = session.query(Player).filter_by(playerid=player_id).first()
@@ -133,10 +135,11 @@ async def start_game(player_id: str, game_id: str):
             random.shuffle(player_ids)
             game.turn = ",".join(player_ids)
             session.commit()
-            
+            shuffle(game_id)
             # Repartir movimientos a los jugadores
             for player in player_ids:
                 HandMovements.deals_moves(player, game.gameid, 3)
+                take_cards(game_id, player_id)
 
             # Crear una tabla para el juego y las fichas asociadas
             TableGame.create_table_for_game(game_id)
@@ -161,6 +164,7 @@ async def next_turn(player_id: str, game_id: str):
         else:
             HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) - 3)
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
+            take_cards(game_id, player_id)
             session.commit()
             update = True
             return {"message": "Next turn"}

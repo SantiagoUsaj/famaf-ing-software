@@ -1,10 +1,10 @@
 import pytest
-from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from app import app
 from models.game_models import Base, Game, engine, session
+from models.player_models import PlayerGame
+from models.figure_card_models import Figure_card
 from GameFactory import GameFactory
-
 
 # Crea todas las tablas
 Base.metadata.create_all(engine)
@@ -313,7 +313,38 @@ def test_join_game_is_full():
   response = client.put(f"/join_game/{player_id3}/{game_id}")
   assert response.status_code == 409
   assert response.json() == {"detail": "Game is full"}
-  
+
+# Test de shuffle
+def test_shuffle():
+  player_name = "ValidPlayer1"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  game_name = "ValidGame"
+  game_size = 3
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_id = response_game.json()["game_id"]
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+  player_name3 = "ValidPlayer3"
+  response_player3 = client.post(f"/create_player/{player_name3}")
+  player_id3 = response_player3.json()["player_id"]
+  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}")
+  assert response_join2.json() == {"message": player_name3 + " joined the game " + game_name}
+
+
+  response = client.put(f"/start_game/{player_id}/{game_id}")
+  assert response.status_code == 200
+  assert response.json() == {"message": "Game started"}
+  assert session.query(PlayerGame).filter_by(gameid=game_id).count() == 3
+  assert session.query(Figure_card).filter_by(playerid=player_id).count() == 16 
+  assert session.query(Figure_card).filter_by(playerid=player_id3).count() == 16
+  assert session.query(Figure_card).filter_by(playerid=player_id2).count() == 16
+  assert session.query(Figure_card).filter_by(gameid=game_id).count() == 48
+  assert session.query(Figure_card).filter_by(gameid=game_id, in_hand=True).count() == 9
+
 
 # Test leave game
 

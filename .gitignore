@@ -16,6 +16,7 @@ database/*.db
 /env/
 /env.bak/
 /venv.bak/
+.venv/
 
 # Archivos de configuración de IDE
 .vscode/

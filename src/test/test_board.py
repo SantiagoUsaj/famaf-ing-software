@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.game_models import Base, Table, Tile, Figures
-from app import find_connected_components, match_figures
+from app import find_connected_components, match_figures 
 
 # Configura una base de datos en memoria para las pruebas
 TEST_DATABASE_URL = "sqlite:///:memory:"

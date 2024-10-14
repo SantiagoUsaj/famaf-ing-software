@@ -67,6 +67,16 @@ class Tile(Base):
         self.color = color
         self.highlight = False
 
+    def __hash__(self):
+        return hash((self.x, self.y, self.color))
+
+    def __eq__(self, other):
+        return (
+            self.x == other.x and
+            self.y == other.y and
+            self.color == other.color
+        )
+
     @staticmethod
     def create_tiles_for_table(table_id: int):
         colors = ['red', 'green', 'yellow', 'blue']
@@ -190,3 +200,52 @@ def match_figures(connected_components, figures):
                 tile.highlight = False
     session.commit()  # Commit the changes to the database
     return matching_tiles
+
+
+#no funciona
+"""
+def compare_tile_with_figure(tile_id: int, figure_id: int):
+    # Fetch the tile and figure from the database
+    tile = session.query(Tile).filter_by(id=tile_id).first()
+    figure = session.query(Figures).filter_by(id=figure_id).first()
+    
+    if not tile or not figure:
+        return False
+
+    # Get all tiles in the same table
+    tiles = session.query(Tile).filter_by(table_id=tile.table_id).all()
+        
+    # Find connected components starting from the given tile
+    connected_components = find_connected_components(tiles)
+    
+    # Find the component that contains the given tile
+    component = next((comp for comp in connected_components if tile in comp), None)
+
+    if not component:
+        return False
+        
+    # Normalize the component points
+    component_points = {f"{t.x},{t.y}" for t in component}
+    normalized_component_points = normalize_points(component_points)
+
+    # Sort normalized component points for comparison
+    sorted_component_points = sorted(normalized_component_points)
+    
+    # Get all rotations of the figure points
+    figure_points_variants = [
+        set(figure.points.split(",")),
+        set(figure.rot90.split(",")),
+        set(figure.rot180.split(",")),
+        set(figure.rot270.split(","))
+    ]
+    
+    # Check if any rotation of the figure matches the sorted component
+    for figure_points in figure_points_variants:
+        normalized_figure_points = normalize_points(figure_points)
+        sorted_figure_points = sorted(normalized_figure_points)
+        
+        if sorted_component_points == sorted_figure_points:
+            return True
+        
+    return False
+"""
