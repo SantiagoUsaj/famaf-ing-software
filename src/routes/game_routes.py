@@ -140,7 +140,7 @@ async def start_game(player_id: str, game_id: str):
             # Repartir movimientos a los jugadores
             for player in player_ids:
                 HandMovements.deals_moves(player, game.gameid, 3)
-                take_cards(game_id, player_id)
+                take_cards(game_id, player)
 
             # Crear una tabla para el juego y las fichas asociadas
             TableGame.create_table_for_game(game_id)
@@ -283,6 +283,8 @@ async def delete_game(game_id: str):
 
     # Eliminar todas las relaciones de tablas con el juego
     session.query(TableGame).filter_by(gameid=game_id).delete()
+
+    session.query(Figure_card).filter_by(gameid=game_id).delete()
     
     session.commit()
     return {"message": "Game and all associated data deleted"}
