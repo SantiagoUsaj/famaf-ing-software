@@ -7,9 +7,9 @@ from routes.movementChart_routes import router as movementChart_router
 import asyncio
 from models.game_models import Game, session, Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.player_models import PlayerGame, Player
-from models.figure_card_models import Figure_card
 from models.handMovements_models import HandMovements
 from models.partialMovements_models import PartialMovements
+from models.figure_card_models import Figure_card
 
 app = FastAPI()
 
@@ -42,7 +42,6 @@ async def delete_all():
     session.query(Game).delete()
     session.query(Player).delete()
     session.query(Tile).delete()  # Eliminar todas las fichas
-    session.query(Figure_card).delete()  # Eliminar todas las cartas de figura
     session.query(Table).delete()  # Eliminar todas las tablas
     session.query(TableGame).delete()  # Eliminar todas las relaciones entre tablas y juegos
     session.query(HandMovements).delete()  # Eliminar todos los movimientos de las manos
@@ -59,9 +58,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
             gamelist = []
             for game in games:
                 players_in_game = session.query(PlayerGame).filter_by(gameid=game.gameid).all()
-                player_details = [{"player_id": pg.playerid, 
-                                   "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name 
-                                  } for pg in players_in_game]
+                player_details = [{"player_id": pg.playerid, "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name} for pg in players_in_game]
                 gamelist.append({
                     "game_name": game.name,
                     "game_id": game.gameid,
@@ -92,7 +89,7 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 {
                     "player_id": pg.playerid,
                     "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name,
-                    "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count()
+                    "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count(),
                     "figure_cards": [{"card_id": fc.cardid, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()]
                 }
                 for pg in players_in_game
