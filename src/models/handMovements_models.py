@@ -19,9 +19,13 @@ class HandMovements(Base):
     @staticmethod
     def create_hand_movement(movementid: str, playerid: str, gameid: str):
         new_hand_movement = HandMovements(movementid=movementid, playerid=playerid, gameid=gameid)
-        session.add(new_hand_movement)
-        session.commit()
-        return new_hand_movement
+        try:
+            session.add(new_hand_movement)
+            session.commit()
+            return new_hand_movement
+        except Exception as e:
+            session.rollback()
+            raise e
         
     @staticmethod
     def count_movements_by_movementid(movementid: str, gameid: str):

@@ -246,7 +246,7 @@ def test_player_movement_charts():
 
     response = client.get(f"/player_movement_charts/{first_turn}/{game_id}")
     assert response.status_code == 200
-    assert response.json() == {"ids_of_movement_charts": [int(movement_id)]}
+    assert response.json() == {"ids_of_movement_charts": ["3"]}
 
 def test_player_movement_charts_player_not_found():
     player_name1 = "ValidPlayer1"

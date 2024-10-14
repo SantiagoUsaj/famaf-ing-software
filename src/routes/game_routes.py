@@ -3,7 +3,7 @@ from models.game_models import Game, session,Table, Tile, TableGame
 from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
-from models.partialMovements import PartialMovements
+from models.partialMovements_models import PartialMovements
 import random
     
 router = APIRouter()
@@ -227,12 +227,12 @@ async def undo_all_movements(game_id: str):
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:
-        partial_movements = PartialMovements.get_all_partial_movements(game_id)
+        partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
         if partial_movements is None:
             raise HTTPException(status_code=404, detail="No movements to undo")
         else:
             for partial_movement in partial_movements:
-                Tile.swap_tiles_color(partial_movement.tile_id1, partial_movement.tile_id2)
+                Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
                 HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                 PartialMovements.delete_partial_movement(partial_movement.partialid)
             return {"message": "All movements undone"}
