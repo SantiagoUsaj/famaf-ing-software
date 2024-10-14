@@ -468,7 +468,6 @@ def test_start_game_not_found():
   assert response.json() == {"detail": "Game not found"}
   
 def test_start_game_player_not_found():
-  player_name = "ValidPlayer"
   player_id = "1234"
   
   game_name = "ValidGame"
@@ -594,6 +593,32 @@ def test_next_turn_not_your_turn():
   response = client.put(f"/next_turn/{player_id3}/{game_id}")
   assert response.status_code == 409
   assert response.json() == {"detail": "It's not your turn"}
+  
+
+# Test para undo a movement
+
+def test_undo_movement_game_not_found():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  game_id = "1234"
+  
+  response = client.put(f"/start_game/{player_id}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Game not found"}
+  
+
+# Test para undo all movements
+
+def test_undo_all_movements_game_not_found():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  game_id = "1234"
+  
+  response = client.put(f"/start_game/{player_id}/{game_id}")
+  assert response.status_code == 404
+  assert response.json() == {"detail": "Game not found"}
 
   
 # Test delete game
