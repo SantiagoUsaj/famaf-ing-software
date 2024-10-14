@@ -67,8 +67,11 @@ def take_cards(game, player):
     cards_needed = max(0, 3 - num_cards_in_hand)  # Ensure cards_needed is not negative
 
     if cards_needed > 0:
-        # Obtener solo las cartas necesarias para completar las 3 en mano
-        cards = session.query(Figure_card).filter_by(gameid=game, playerid=player, in_hand=False).limit(cards_needed).all()
+        # Obtener todas las cartas disponibles que no están en mano
+        available_cards = session.query(Figure_card).filter_by(gameid=game, playerid=player, in_hand=False).all()
+        
+        # Seleccionar aleatoriamente las cartas necesarias
+        cards = random.sample(available_cards, min(cards_needed, len(available_cards)))
 
         # Marcar las cartas como tomadas (en mano) y guardarlas en la base de datos
         for card in cards:
