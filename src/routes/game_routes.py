@@ -3,7 +3,11 @@ from models.game_models import Game, session
 from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
+<<<<<<< HEAD
 from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
+=======
+from models.partialMovements_models import PartialMovements
+>>>>>>> 57203cd5b17ca795eb83174cfe5edceb858d1c41
 import random
     
 router = APIRouter()
@@ -172,7 +176,7 @@ async def next_turn(player_id: str, game_id: str):
             return {"message": "Next turn"}
 
 @router.put("/swap_tiles/{player_id}/{game_id}/{movement_id}/{tile_id1}/{tile_id2}")
-async def swap_tiles(player_id: str, game_id: str, movement_id: int, tile_id1: int, tile_id2: int):
+async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: str, tile_id2: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     movement = session.query(MovementChart).filter_by(movementid=movement_id).first()
@@ -194,15 +198,14 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: int, tile_id1: i
     elif player_id != game.turn.split(",")[0]:
             raise HTTPException(status_code=409, detail="It's not your turn")
     else:
-        x = abs(tile1.x - tile2.x)
-        y = abs(tile1.y - tile2.y)
         
         movementchart = MovementChart.get_movement_chart_by_id(movement_id)
-        rot0 = movementchart.rot0.split(",")  
-        rot90 = movementchart.rot90.split(",")     
-        rot180 = movementchart.rot180.split(",")
-        rot270 = movementchart.rot270.split(",")
+        rot0 = MovementChart.get_tile_for_rotation(movementchart.rot0, tile1)
+        rot90 = MovementChart.get_tile_for_rotation(movementchart.rot90, tile1)
+        rot180 = MovementChart.get_tile_for_rotation(movementchart.rot180, tile1)
+        rot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, tile1)
         
+<<<<<<< HEAD
         if (x == int(rot0[0]) and y == int(rot0[1])) or (x == int(rot90[0]) and y == int(rot90[1])) or (x == int(rot180[0]) and y == int(rot180[1])) or (x == int(rot270[0]) and y == int(rot270[1])):
             Tile.swap_tiles_color(tile1.id, tile2.id)
             session.query(HandMovements).filter_by(playerid=player_id, gameid=game_id, movementid=movement_id).delete()
@@ -211,8 +214,50 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: int, tile_id1: i
             match_figures(connected_components, session.query(Figures).all())
             session.commit()
             return {"message": "Tiles swapped", "tile_id1": tile1.id, "tile_id2": tile2.id}
+=======
+        if rot0 == tile2.id or rot90 == tile2.id or rot180 == tile2.id or rot270 == tile2.id:
+            Tile.swap_tiles_color(tile_id1, tile_id2)
+            HandMovements.delete_hand_movements(player_id, game_id, movement_id)
+            PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile_id1, tile_id2)
+            return {"message": "Tiles swapped"}
+>>>>>>> 57203cd5b17ca795eb83174cfe5edceb858d1c41
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
+        
+@router.put("/undo_a_movement/{game_id}")
+async def undo_a_movement(game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif game.state == "waiting":
+        raise HTTPException(status_code=409, detail="Game is not playing")
+    else:
+        partial_movement = PartialMovements.get_last_partial_movement(game_id)
+        if partial_movement is None:
+            raise HTTPException(status_code=404, detail="No movements to undo")
+        else:
+            Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+            HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
+            PartialMovements.delete_partial_movement(partial_movement.partialid)
+            return {"message": "Movement undone"}
+        
+@router.put("/undo_all_movements/{game_id}")
+async def undo_all_movements(game_id: str):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif game.state == "waiting":
+        raise HTTPException(status_code=409, detail="Game is not playing")
+    else:
+        partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
+        if partial_movements is None:
+            raise HTTPException(status_code=404, detail="No movements to undo")
+        else:
+            for partial_movement in partial_movements:
+                Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+                HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
+                PartialMovements.delete_partial_movement(partial_movement.partialid)
+            return {"message": "All movements undone"}
 
 @router.delete("/delete_game/{game_id}")
 async def delete_game(game_id: str):

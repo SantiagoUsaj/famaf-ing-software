@@ -8,7 +8,11 @@ import asyncio
 from models.game_models import Game, session
 from models.player_models import PlayerGame, Player
 from models.handMovements_models import HandMovements
+<<<<<<< HEAD
 from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
+=======
+from models.partialMovements_models import PartialMovements
+>>>>>>> 57203cd5b17ca795eb83174cfe5edceb858d1c41
 
 app = FastAPI()
 
@@ -45,6 +49,7 @@ async def delete_all():
     session.query(Table).delete()  # Eliminar todas las tablas
     session.query(TableGame).delete()  # Eliminar todas las relaciones entre tablas y juegos
     session.query(HandMovements).delete()  # Eliminar todos los movimientos de las manos
+    session.query(PartialMovements).delete()  # Eliminar todos los movimientos parciales
     session.commit()
     return {"message": "All players, games, tables, and tiles deleted"}
 
