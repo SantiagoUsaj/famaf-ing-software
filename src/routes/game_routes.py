@@ -175,19 +175,21 @@ async def next_turn(player_id: str, game_id: str):
             session.commit()
             
             # Devuelvo las cartas si tengo movimientos parciales y no descarte niguna figura
-            if PartialMovements.get_all_partial_movements_by_gameid(game_id) > 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
+            if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) > 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
                 for partial_movement in partial_movements:
                     Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
                     HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                     PartialMovements.delete_partial_movement(partial_movement.partialid)
+                    
             # Si descarte una figura y no tengo movimientos parciales reparto cartas nuevas
-            elif PartialMovements.get_all_partial_movements_by_gameid(game_id) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
+            elif len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id)-3)
                 take_cards(game_id, player_id)
             
             update = True
             return {"message": "Next turn"}
+
 
 @router.put("/swap_tiles/{player_id}/{game_id}/{movement_id}/{tile_id1}/{tile_id2}")
 async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: str, tile_id2: str):
@@ -239,6 +241,8 @@ async def undo_a_movement(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
+    elif player_id != game.turn.split(",")[0]:
+        raise HTTPException(status_code=409, detail="It's not your turn")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:
@@ -263,6 +267,8 @@ async def undo_all_movements(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
+    elif player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:
