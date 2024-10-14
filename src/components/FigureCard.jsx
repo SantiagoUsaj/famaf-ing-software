@@ -25,19 +25,82 @@ import fige04 from "../assets/images/fige04.svg";
 import fige05 from "../assets/images/fige05.svg";
 import fige06 from "../assets/images/fige06.svg";
 import fige07 from "../assets/images/fige07.svg";
+import { wSocketGame } from "../services/GameServices";
 
 const FigureCard = () => {
-  const [data, setData] = useState([
-    {
-      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
-    },
-    {
-      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
-    },
-    {
-      title: `Title ${Math.floor(Math.random() * 7) + 1}`,
-    },
-  ]);
+  const { playerID } = usePlayerContext();
+  const { game_id } = useGameContext();
+
+  const ws = wSocketGame(game_id);
+
+  const [data, setData] = useState([]);
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    console.log("Mensaje recibido:", data);
+
+    const hand = data.player_details.find((p) => p.player_id === playerID);
+
+    setData(hand.figure_cards);
+  };
+
+  const getImageForCard = (id) => {
+    switch (id) {
+      case 1:
+        return fig01;
+      case 2:
+        return fig02;
+      case 3:
+        return fig03;
+      case 4:
+        return fig04;
+      case 5:
+        return fig05;
+      case 6:
+        return fig06;
+      case 7:
+        return fig07;
+      case 8:
+        return fig08;
+      case 9:
+        return fig09;
+      case 10:
+        return fig10;
+      case 11:
+        return fig11;
+      case 12:
+        return fig12;
+      case 13:
+        return fig13;
+      case 14:
+        return fig14;
+      case 15:
+        return fig15;
+      case 16:
+        return fig16;
+      case 17:
+        return fig17;
+      case 18:
+        return fig18;
+      case 19:
+        return fige01;
+      case 20:
+        return fige02;
+      case 21:
+        return fige03;
+      case 22:
+        return fige04;
+      case 23:
+        return fige05;
+      case 24:
+        return fige06;
+      case 25:
+        return fige07;
+      default:
+        return fig01;
+    }
+  };
 
   const handleCardClick = (title) => {
     console.log(`Card with title ${title} clicked`);
@@ -59,11 +122,14 @@ const FigureCard = () => {
       renderItem={(item) => (
         <List.Item style={{ display: "flex", justifyContent: "center" }}>
           <Card
-            onClick={() => handleCardClick(item.title)}
+            onClick={() => handleCardClick(item.card_id)}
             hoverable
             style={{ width: 284 / 3, height: 284 / 3 }}
             cover={
-              <img src={fig01} className="fig01" alt="Tetris Figure Card" />
+              <img
+                alt={`Card ${item.card_id}`}
+                src={getImageForCard(item.card_id)}
+              />
             } // Add your image path here
           />
         </List.Item>

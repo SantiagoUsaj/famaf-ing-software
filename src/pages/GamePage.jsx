@@ -10,6 +10,7 @@ import {
   DeleteGame,
   PossiblesMoves,
   SwapTiles,
+  wSocketGame,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
@@ -319,7 +320,7 @@ const GamePage = () => {
     });
 
     // Crear la conexión WebSocket al backend
-    const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
+    const ws = wSocketGame(game_id);
 
     // Manejar la apertura de la conexión
     ws.onopen = () => {
