@@ -16,16 +16,16 @@ app = FastAPI()
 
 manager = ConnectionManager()
 game_managers = {}
+Figures.create_figures()
 
 @app.get("/figures/{game_id}")
 async def get_figures(game_id: str):
     tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
     connected_components = find_connected_components(tiles)
-    all_figures = session.query(Figures).all()
-    matching_figures = match_figures(connected_components, all_figures)
+    match_figures(connected_components, session.query(Figures).all())
+    session.commit()
+    return match_figures(connected_components, session.query(Figures).all())
     
-    return matching_figures
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
