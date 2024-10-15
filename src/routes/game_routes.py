@@ -82,7 +82,6 @@ async def join_game(player_id: str, game_id: str):
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
         session.commit()
-        global update
         update = True
         return {"message": player.name + " joined the game " + game.name}
      
@@ -97,7 +96,17 @@ async def leave_game(player_id: str, game_id: str):
         game = session.query(Game).filter_by(gameid=game_id).first()
 
         if game.host == player_id and game.state == "waiting":
-            raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
+            tables = session.query(Table).filter_by(gameid=game_id).all()
+            for table in tables:
+                session.query(Tile).filter_by(table_id=table.id).delete()
+            session.query(Table).filter_by(gameid=game_id).delete()
+            session.query(PlayerGame).filter_by(gameid=game_id).delete()
+            session.query(Game).filter_by(gameid=game_id).delete()
+            session.query(TableGame).filter_by(gameid=game_id).delete()
+            session.query(Figure_card).filter_by(gameid=game_id).delete()
+            session.commit()
+            update = True
+            return {"message": "Cancelled game"}
         elif session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).count() == 0:
             raise HTTPException(status_code=409, detail="Player is not in the game")
         else:
@@ -111,7 +120,6 @@ async def leave_game(player_id: str, game_id: str):
             
             session.commit()
             player = session.query(Player).filter_by(playerid=player_id).first()
-            global update
             update = True
             return {"message": player.name + " left the game " + game.name}
 
@@ -130,7 +138,6 @@ async def start_game(player_id: str, game_id: str):
         elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
             raise HTTPException(status_code=409, detail="The game is not full")
         else:
-            global update
             update = True
             game.start_game()
             player_ids = [str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()]
@@ -167,7 +174,6 @@ async def next_turn(player_id: str, game_id: str):
         if player_id != game.turn.split(",")[0]:
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
-            HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) - 3)
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
