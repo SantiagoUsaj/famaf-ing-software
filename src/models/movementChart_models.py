@@ -55,8 +55,8 @@ class MovementChart(Base):
         MovementChart.create_movement_chart("2", "0,2", "-2,0", "0,-2", "2,0")
         MovementChart.create_movement_chart("3", "0,1", "-1,0", "0,-1", "1,0")
         MovementChart.create_movement_chart("4", "1,1", "-1,1", "-1,-1", "1,-1")
-        MovementChart.create_movement_chart("5", "2,1", "-1,2", "-2,-1", "1,-2")
-        MovementChart.create_movement_chart("6", "1,2", "-2,1", "-1,-2", "2,-1")
+        MovementChart.create_movement_chart("5", "1,2", "-2,1", "-1,-2", "2,-1")
+        MovementChart.create_movement_chart("6", "2,1", "-1,2", "-2,-1", "1,-2")
         MovementChart.create_movement_chart("7", "0,4", "-4,0", "0,-4", "4,0")
         
 # Create the table
