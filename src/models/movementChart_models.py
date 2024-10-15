@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String
-from models.game_models import engine, Base, Tile, session
+from models.game_models import engine, Base, session
+from models.board_models import Tile
 
 
 class MovementChart(Base):
@@ -46,7 +47,7 @@ class MovementChart(Base):
                 return None
             else:
                 tile = session.query(Tile).filter_by(x=new_x, y=new_y).first()
-                return tile.id if tile else None
+                return tile.number if tile else None
     
     @staticmethod
     def game_movement():

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models.game_models import Game, session, Tile
+from models.game_models import Game, session
+from models.board_models import Tile
 from models.player_models import Player
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
@@ -28,7 +29,6 @@ async def possible_movements(player_id: str, game_id: str, movement_id: str, til
         retrot270 = MovementChart.get_tile_for_rotation(movementchart.rot270, cordenada)
                 
         return {"tile_1": retrot0, "tile_2": retrot90,  "tile_3": retrot180, "tile_4": retrot270}
-
 
 @router.get("/player_movement_charts/{player_id}/{game_id}")
 async def player_movement_charts(player_id: str, game_id: str):
