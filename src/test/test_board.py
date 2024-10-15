@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.game_models import Base, session
 from models.board_models import Table, Tile, Figures
-from app import find_connected_components, match_figures
+from app import find_connected_components, match_figures 
 
 # Configura la base de datos para las pruebas
 DATABASE_PATH = '/home/santiafonso/Documents/prueba/backend/src/test/database/games.db'

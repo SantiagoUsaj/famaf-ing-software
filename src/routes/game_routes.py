@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
 from models.player_models import Player, PlayerGame
+from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.partialMovements_models import PartialMovements
@@ -81,7 +82,6 @@ async def join_game(player_id: str, game_id: str):
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
         session.commit()
-        global update
         update = True
         return {"message": player.name + " joined the game " + game.name}
      
@@ -96,7 +96,17 @@ async def leave_game(player_id: str, game_id: str):
         game = session.query(Game).filter_by(gameid=game_id).first()
 
         if game.host == player_id and game.state == "waiting":
-            raise HTTPException(status_code=409, detail="You can't leave the game if you are the host")
+            tables = session.query(Table).filter_by(gameid=game_id).all()
+            for table in tables:
+                session.query(Tile).filter_by(table_id=table.id).delete()
+            session.query(Table).filter_by(gameid=game_id).delete()
+            session.query(PlayerGame).filter_by(gameid=game_id).delete()
+            session.query(Game).filter_by(gameid=game_id).delete()
+            session.query(TableGame).filter_by(gameid=game_id).delete()
+            session.query(Figure_card).filter_by(gameid=game_id).delete()
+            session.commit()
+            update = True
+            return {"message": "Cancelled game"}
         elif session.query(PlayerGame).filter_by(playerid=player_id, gameid=game_id).count() == 0:
             raise HTTPException(status_code=409, detail="Player is not in the game")
         else:
@@ -110,7 +120,6 @@ async def leave_game(player_id: str, game_id: str):
             
             session.commit()
             player = session.query(Player).filter_by(playerid=player_id).first()
-            global update
             update = True
             return {"message": player.name + " left the game " + game.name}
 
@@ -129,7 +138,6 @@ async def start_game(player_id: str, game_id: str):
         elif PlayerGame.get_count_of_players_in_game(session, game_id) < game.get_game_size():
             raise HTTPException(status_code=409, detail="The game is not full")
         else:
-            global update
             update = True
             game.start_game()
             player_ids = [str(player.playerid) for player in session.query(PlayerGame).filter_by(gameid=game_id).all()]
@@ -166,15 +174,26 @@ async def next_turn(player_id: str, game_id: str):
         if player_id != game.turn.split(",")[0]:
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
-            HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) - 3)
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
             take_cards(game_id, player_id)
-            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
-            connected_components = find_connected_components(tiles)
-            match_figures(connected_components, session.query(Figures).all())
             session.commit()
+            
+            # Devuelvo las cartas si tengo movimientos parciales y no descarte niguna figura
+            if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) > 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
+                partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
+                for partial_movement in partial_movements:
+                    Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+                    HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
+                    PartialMovements.delete_partial_movement(partial_movement.partialid)
+                    
+            # Si descarte una figura y no tengo movimientos parciales reparto cartas nuevas
+            elif len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
+                HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id)-3)
+                take_cards(game_id, player_id)
+            
             update = True
             return {"message": "Next turn"}
+
 
 @router.put("/swap_tiles/{player_id}/{game_id}/{movement_id}/{tile_id1}/{tile_id2}")
 async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: str, tile_id2: str):
@@ -211,18 +230,23 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all())
-            session.commit()
+            Tile.swap_tiles_color(tile_id1, tile_id2)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
             return {"message": "Tiles swapped"}
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
         
-@router.put("/undo_a_movement/{game_id}")
-async def undo_a_movement(game_id: str):
+@router.put("/undo_a_movement/{player_id}/{game_id}")
+async def undo_a_movement(player_id: str, game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
+    elif player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    elif player_id != game.turn.split(",")[0]:
+        raise HTTPException(status_code=409, detail="It's not your turn")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:
@@ -239,11 +263,16 @@ async def undo_a_movement(game_id: str):
             PartialMovements.delete_partial_movement(partial_movement.partialid)
             return {"message": "Movement undone"}
         
-@router.put("/undo_all_movements/{game_id}")
-async def undo_all_movements(game_id: str):
+@router.put("/undo_all_movements/{player_id}/{game_id}")
+async def undo_all_movements(player_id: str, game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
+    player = session.query(Player).filter_by(playerid=player_id).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
+    elif player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    elif player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
     else:

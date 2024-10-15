@@ -47,7 +47,7 @@ class MovementChart(Base):
                 return None
             else:
                 tile = session.query(Tile).filter_by(x=new_x, y=new_y).first()
-                return tile.id if tile else None
+                return tile.number if tile else None
     
     @staticmethod
     def game_movement():
