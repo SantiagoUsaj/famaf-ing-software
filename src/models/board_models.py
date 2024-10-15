@@ -163,6 +163,20 @@ def find_connected_components(tiles):
             components.append(component)
     return components
 
+def get_connected_component_for_tile_by_number(tile: Tile):
+    tile_number = tile.number
+    tile = session.query(Tile).filter_by(number=tile_number, table_id=tile.table_id).first()
+    if not tile:
+        return []
+
+    tiles = session.query(Tile).filter_by(table_id=tile.table_id).all()
+    connected_components = find_connected_components(tiles)
+    
+    for component in connected_components:
+        if tile in component:
+            return component
+    return []
+    
 def normalize_points(points):
     # Convert points to a list of tuples (x, y)
     points = [tuple(map(int, point)) for point in points]
