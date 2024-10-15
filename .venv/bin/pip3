@@ -1,4 +1,4 @@
-#!/home/santiafonso/Documents/prueba/backend/.venv/bin/python3
+#!/home/santiafonso/Documents/demo/backend/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
