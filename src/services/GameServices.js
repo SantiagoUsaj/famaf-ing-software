@@ -1,9 +1,5 @@
 import axios from "axios";
 
-export const wSocketGame = (game_id) => {
-  const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
-  return ws;
-};
 
 export const GameData = async (game_id) => {
   try {

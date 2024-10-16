@@ -10,7 +10,6 @@ import {
   DeleteGame,
   PossiblesMoves,
   SwapTiles,
-  wSocketGame,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
@@ -35,6 +34,7 @@ const GamePage = () => {
 
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
+  const [SelectFigCard, setSelectFigCard] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
   const [PossibleTiles1, setPossibleTiles1] = useState();
@@ -320,7 +320,7 @@ const GamePage = () => {
     });
 
     // Crear la conexión WebSocket al backend
-    const ws = wSocketGame(game_id);
+    const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
     // Manejar la apertura de la conexión
     ws.onopen = () => {
@@ -335,6 +335,7 @@ const GamePage = () => {
 
       setTurn(data.turn);
       setBoard(data.board);
+      setPlayersList(data.player_details);
 
       if (data.players === 1) {
         showModal();
@@ -380,7 +381,11 @@ const GamePage = () => {
         {gameBoard(board)}
       </div>
       <div className="Cards">
-        <FigureCard />
+        <FigureCard
+          playersList={playersList}
+          onSelectFigCard={(title) => setSelectFigCard(title)}
+          updateboard={board}
+        />
         <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
       </div>
       <div className="turn text-blancofondo">
