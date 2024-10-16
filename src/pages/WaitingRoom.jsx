@@ -110,6 +110,14 @@ const WaitingRoom = ({
       console.log("Mensaje recibido:", data);
       console.log("Player_id:", playerID);
 
+      if (data.state === "playing") {
+        navigate(`/game`);
+      }
+
+      if (data.error === "Game not found") {
+        navigate(`/lobby`);
+      }
+
       setNumberOfPlayers(data.players);
 
       // Agregar la clave 'key' a cada objeto en data.player_details
@@ -119,10 +127,6 @@ const WaitingRoom = ({
       }));
 
       setPlayersList(playersWithKeys);
-
-      if (data.state === "playing") {
-        navigate(`/game`);
-      }
     };
 
     // Manejar el cierre de la conexión
@@ -146,7 +150,7 @@ const WaitingRoom = ({
         {gameName}
       </h1>
       <TablePlayers playersList={playersList} isCreator={isCreator} />
-      <div className="flex gap-24 ">
+      <div className="flex flex-col">
         {playerID === isCreator && numberOfPlayers === maxNumberOfPlayers && (
           <Button
             className="flex m-auto my-3 text-blancofondo"
@@ -157,16 +161,14 @@ const WaitingRoom = ({
             Iniciar Partida
           </Button>
         )}
-        {playerID !== isCreator && (
-          <Button
-            className="flex m-auto my-3"
-            danger
-            ghost
-            onClick={() => quitRoom(game_id)}
-          >
-            Abandonar
-          </Button>
-        )}
+        <Button
+          className="flex m-auto my-3"
+          danger
+          ghost
+          onClick={() => quitRoom(game_id)}
+        >
+          Abandonar
+        </Button>
       </div>
     </div>
   );
