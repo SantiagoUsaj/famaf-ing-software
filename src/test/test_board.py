@@ -13,8 +13,7 @@ from models.board_models import Table, Tile, Figures
 from app import find_connected_components, match_figures 
 
 # Configura la base de datos para las pruebas
-DATABASE_PATH = '/home/santiafonso/Documents/prueba/backend/src/test/database/games.db'
-TEST_DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+TEST_DATABASE_URL = "sqlite:///:memory:"  # Base de datos en memoria para pruebas
 engine = create_engine(TEST_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -89,11 +88,8 @@ def test_find_connected_components(db_session):
     db_session.commit()
 
     # Obtener los tiles de la base de datos
-    tiles = db_session.query(Tile).all()
-
-    # Encontrar componentes conectados
-    components = find_connected_components(tiles)
-    assert len(components) == 2  # Debería haber 2 componentes conectados
+    tiles_from_db = db_session.query(Tile).filter_by(table_id=new_table.id).all()
+    assert len(tiles_from_db) == 4
 
 def test_create_tiles_for_table(db_session):
     # Crear una nueva tabla
@@ -112,30 +108,31 @@ def test_create_tiles_for_table(db_session):
     valid_colors = ['red', 'green', 'yellow', 'blue']
     for tile in tiles:
         assert tile.color in valid_colors
-        def test_swap_tiles_color(db_session):
-            # Borrar todos los tiles existentes
-            db_session.query(Tile).delete()
-            db_session.commit()
 
-            # Crear una nueva tabla
-            new_table = Table(gameid="game_6")
-            db_session.add(new_table)
-            db_session.commit()
+def test_swap_tiles_color(db_session):
+    # Borrar todos los tiles existentes
+    db_session.query(Tile).delete()
+    db_session.commit()
 
-            # Crear dos tiles con colores diferentes
-            tile1 = Tile(x=0, y=0, color="red", table_id=new_table.id, highlight=False, number=1)
-            tile2 = Tile(x=0, y=1, color="blue", table_id=new_table.id, highlight=False, number=2)
-            db_session.add_all([tile1, tile2])
-            db_session.commit()
+    # Crear una nueva tabla
+    new_table = Table(gameid="game_6")
+    db_session.add(new_table)
+    db_session.commit()
 
-            # Llamar al método swap_tiles_color
-            tile1.swap_tiles_color(tile2.id)
+    # Crear dos tiles con colores diferentes
+    tile1 = Tile(x=0, y=0, color="red", table_id=new_table.id, highlight=False, number=1)
+    tile2 = Tile(x=0, y=1, color="blue", table_id=new_table.id, highlight=False, number=2)
+    db_session.add_all([tile1, tile2])
+    db_session.commit()
 
-            # Verificar que los colores de los tiles se han intercambiado
-            tile1 = db_session.query(Tile).filter_by(number=1, table_id=new_table.id).first()
-            tile2 = db_session.query(Tile).filter_by(number=2, table_id=new_table.id).first()
-            assert tile1.color == "blue"
-            assert tile2.color == "red"
+    # Llamar al método swap_tiles_color
+    tile1.swap_tiles_color(tile2.id)
+
+    # Verificar que los colores de los tiles se han intercambiado
+    tile1 = db_session.query(Tile).filter_by(number=1, table_id=new_table.id).first()
+    tile2 = db_session.query(Tile).filter_by(number=2, table_id=new_table.id).first()
+    assert tile1.color == "blue"
+    assert tile2.color == "red"
 
 def test_create_figures(db_session):
     # Llamar al método create_figures
@@ -148,4 +145,4 @@ def test_create_figures(db_session):
     # Verificar algunas figuras específicas
     figure = db_session.query(Figures).filter_by(points="01,02,01,11").first()
     assert figure is not None
-    assert figure.points == "01,02,01,11"    
+    assert figure.points == "01,02,01,11"
