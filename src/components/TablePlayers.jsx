@@ -41,7 +41,13 @@ const TablePlayers = ({ playersList, isCreator }) => {
 
   const data = playersList.map((player) => ({
     ...player,
-    tags: [player.player_id === isCreator ? "Creador" : "Jugador"],
+    tags: [
+      player.player_name === "flor"
+        ? "🌼"
+        : player.player_id === isCreator
+        ? "Creador"
+        : "Jugador",
+    ],
   }));
 
   return (
