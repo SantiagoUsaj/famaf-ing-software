@@ -37,9 +37,9 @@ const LoginPage = () => {
 
   return (
     <div>
-      {/* <MovingBG /> */}
-      <LobbySquares />
-      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <MovingBG />
+      {/* <LobbySquares /> */}
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl relative">
         El Switcher
       </h1>
       <Form

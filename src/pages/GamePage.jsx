@@ -10,28 +10,25 @@ import {
   DeleteGame,
   PossiblesMoves,
   SwapTiles,
+  UndoMovement,
+  UndoAllMovements,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
+import { UndoOutlined } from "@ant-design/icons";
 
 const GamePage = () => {
   const navigate = useNavigate();
   const [turn, setTurn] = useState();
   const [socket, setSocket] = useState(null);
-  const [gameName, setGameName] = useState();
   const [gamestate, setGamestate] = useState();
-  const [isCreator, setIsCreator] = useState();
-  const [numberOfPlayers, setNumberOfPlayers] = useState();
-  const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
-  const [partidas, setPartidas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
-
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
@@ -109,6 +106,37 @@ const GamePage = () => {
 
       if (response) {
         console.log("New Game Info:", response);
+        resetSelect();
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
+  const undoMov = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de UndoMovement
+      const response = await UndoMovement(game_id);
+
+      if (response) {
+        console.log("Undo Mov:", response);
+      }
+    } catch (error) {
+      console.error("Error getting new game data", error);
+    }
+  };
+
+  const undoallMov = async (game_id) => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de UndoAllMovements
+      const response = await UndoAllMovements(game_id);
+
+      if (response) {
+        console.log("Undo All Mov:", response);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -134,13 +162,25 @@ const GamePage = () => {
   };
 
   const handleSquareClick = (index) => {
-    if (SelectFirstTitle === null) {
+    if (index === SelectFirstTitle) {
+      resetSelect();
+    } else if (SelectFirstTitle === null) {
       setSelectFirstTitle(index);
       console.log(`First square ${index} clicked`);
     } else {
       setSelectSecondTitle(index);
       console.log(`Second square ${index} clicked`);
     }
+  };
+
+  const resetSelect = () => {
+    setSelectFirstTitle(null);
+    setSelectSecondTitle(null);
+    setSelectMovCard(null);
+    setPossibleTiles1(null);
+    setPossibleTiles2(null);
+    setPossibleTiles3(null);
+    setPossibleTiles4(null);
   };
 
   const invertBoard = (board, size) => {
@@ -184,13 +224,13 @@ const GamePage = () => {
               : item.highlight
               ? `5px solid ${
                   item.color === "red"
-                    ? "#B22222"
+                    ? "#bf4343"
                     : item.color === "blue"
-                    ? "#00008B"
+                    ? "#3486b0"
                     : item.color === "green"
-                    ? "#006400"
+                    ? "#38a660"
                     : item.color === "yellow"
-                    ? "#DAA520"
+                    ? "#bb9c44"
                     : "black"
                 }`
               : "none",
@@ -290,7 +330,7 @@ const GamePage = () => {
   };
 
   const getGameInfo = async (game_id) => {
-    console.log("Success");
+    console.log("LLame a GAMEINFO");
 
     try {
       // Esperamos la resolución de la promesa de GameData
@@ -307,18 +347,6 @@ const GamePage = () => {
   };
 
   useEffect(() => {
-    // Llamamos a la función getGameInfo
-    getGameInfo(game_id).then((response) => {
-      if (response) {
-        setGameName(response.game_name);
-        setGamestate(response.state);
-        setIsCreator(response.host_id);
-        setNumberOfPlayers(response.players);
-        setMaxNumberOfPlayers(response.game_size);
-        setPlayersList(response.player_details);
-      }
-    });
-
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
@@ -357,6 +385,17 @@ const GamePage = () => {
   }, []);
 
   useEffect(() => {
+    if (!gamestate) {
+      getGameInfo(game_id).then((response) => {
+        if (response) {
+          setGamestate(response.state);
+          setPlayersList(response.player_details);
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     if (SelectFirstTitle !== null && SelectMovCard !== null) {
       startMove();
     }
@@ -386,9 +425,12 @@ const GamePage = () => {
           onSelectFigCard={(title) => setSelectFigCard(title)}
           updateboard={board}
         />
-        <MovementCard onSelectMovCard={(title) => setSelectMovCard(title)} />
+        <MovementCard
+          onSelectMovCard={(title) => setSelectMovCard(title)}
+          updateboard={board}
+        />
       </div>
-      <div className="turn text-blancofondo">
+      <div className="turn text-blancofondo font-sans uppercase">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
           <div key={player.player_id}>
@@ -396,25 +438,72 @@ const GamePage = () => {
           </div>
         ))}
       </div>
-      <div
-        style={{
-          position: "fixed",
-          bottom: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
-      >
-        {playerID === turn && (
-          <Button
-            className="text-blancofondo"
-            type="primary"
-            onClick={() => passTurn(game_id)}
-          >
-            Terminar Turno
-          </Button>
-        )}
+      <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
         <Button
-          className="bottom-0"
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => resetSelect()}
+        >
+          Resetear Seleccion
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => undoMov(game_id)}
+          icon={
+            <UndoOutlined
+              style={{
+                fontSize: "24px",
+                display: "block",
+                margin: "0 auto",
+              }}
+            />
+          }
+        >
+          Deshacer Movimiento
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => undoallMov(game_id)}
+          icon={
+            <UndoOutlined
+              style={{
+                fontSize: "24px",
+                display: "block",
+                margin: "0 auto",
+              }}
+            />
+          }
+        >
+          Deshacer todos los Movimientos
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => passTurn(game_id)}
+        >
+          Terminar Turno
+        </Button>
+
+        <Button
+          className="flex flex-col gap-4"
           danger
           ghost
           onClick={() => quitRoom(game_id)}

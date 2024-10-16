@@ -1,4 +1,4 @@
-import React from "react";
+import React, { act } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -82,7 +82,11 @@ describe("LobbyPage", () => {
 
   it("should log WebSocket connection close", () => {
     const consoleSpy = vi.spyOn(console, "log");
-    mockWebSocket.onclose({ wasClean: true, code: 1000, reason: 'Normal closure' });
+    mockWebSocket.onclose({
+      wasClean: true,
+      code: 1000,
+      reason: "Normal closure",
+    });
     expect(consoleSpy).toHaveBeenCalledWith("Conexión WebSocket cerrada");
   });
 
@@ -104,5 +108,20 @@ describe("LobbyPage", () => {
     );
     unmount();
     expect(mockWebSocket.close).toHaveBeenCalled();
+  });
+
+  it("should update partidas state on WebSocket message", async () => {
+    const data = [
+      { game_name: "Test Game 1", state: "waiting", host_id: "1" },
+      { game_name: "Test Game 2", state: "waiting", host_id: "2" },
+    ];
+    const event = { data: JSON.stringify(data) };
+
+    act(() => mockWebSocket.onmessage(event));
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Game 1")).toBeInTheDocument();
+      expect(screen.getByText("Test Game 2")).toBeInTheDocument();
+    });
   });
 });

@@ -24,10 +24,10 @@ describe("TablePlayers", () => {
   });
 
   const playersList = [
-    { player_id: 1, player_name: "Santi Usaj" },
-    { player_id: 2, player_name: "Ferrari" },
-    { player_id: 3, player_name: "Mateo Angeli" },
-    { player_id: 4, player_name: "Fede Di Forte" },
+    { player_id: 1, player_name: "Santi Usaj", key: 1 },
+    { player_id: 2, player_name: "Ferrari", key: 2 },
+    { player_id: 3, player_name: "Mateo Angeli", key: 3 },
+    { player_id: 4, player_name: "Fede Di Forte", key: 4 },
   ];
 
   it("debe renderizar el componente correctamente", () => {

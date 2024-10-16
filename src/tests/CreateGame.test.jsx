@@ -52,7 +52,10 @@ describe("CreateGame", () => {
     const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
     expect(gameName).toBeInTheDocument();
 
-    const playersPlaceholder = screen.getByText(/Selecciona cantidad jugadores/i, { selector: 'span' });
+    const playersPlaceholder = screen.getByText(
+      /Selecciona cantidad jugadores/i,
+      { selector: "span" }
+    );
     expect(playersPlaceholder).toBeInTheDocument();
 
     const button = screen.getByRole("button", { name: /Crear/i });
@@ -103,7 +106,9 @@ describe("CreateGame", () => {
     );
 
     const gameName = screen.getByPlaceholderText(/Ingresar nombre partida/i);
-    fireEvent.change(gameName, { target: { value: "game12345678901234567890" } });
+    fireEvent.change(gameName, {
+      target: { value: "game12345678901234567890" },
+    });
 
     const button = screen.getByRole("button", { name: /Crear/i });
     fireEvent.click(button);
@@ -187,5 +192,21 @@ describe("CreateGame", () => {
       "Error joining lobby:",
       new Error("Failed to create game")
     );
+  });
+
+  it("should navigate to /lobby when 'Atras' button is clicked", () => {
+    const mockNavigate = vi.fn();
+    ReactRouterDom.useNavigate.mockReturnValue(mockNavigate);
+
+    render(
+      <ReactRouterDom.BrowserRouter>
+        <CreateGame />
+      </ReactRouterDom.BrowserRouter>
+    );
+
+    const backButton = screen.getByRole("button", { name: /Atras/i });
+    fireEvent.click(backButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith("/lobby");
   });
 });
