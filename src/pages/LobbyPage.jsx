@@ -1,10 +1,11 @@
 import React from "react";
-import { useEffect, useState } from "react";
-import { Button } from "antd";
+import { useEffect, useState, useRef } from "react";
+import { Button, Slider, Switch } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
+import music from "../assets/sounds/musicaMenuAgeII.mp3";
 
 const LobbyPage = () => {
   const navigate = useNavigate();
@@ -12,6 +13,21 @@ const LobbyPage = () => {
   const [partidas, setPartidas] = useState([]);
   // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
+
+  const audioRef = useRef(null); // Referencia para el elemento <audio>
+  const [volume, setVolume] = useState(0.5); // Estado inicial del volumen (50%)
+
+  // Función para manejar cambios en el volumen
+  const handleVolumeChange = (event) => {
+    const newVolume = event.target.value;
+    setVolume(newVolume); // Actualiza el estado del volumen
+    audioRef.current.volume = newVolume; // Cambia el volumen del audio
+  };
+
+  const [disabled, setDisabled] = useState(false);
+  const onChange = (checked) => {
+    setDisabled(checked);
+  };
 
   console.log("playerID", playerID);
 
@@ -74,6 +90,22 @@ const LobbyPage = () => {
       >
         Crear Partida
       </Button>
+
+      {/* Control de volumen vertical en la esquina inferior izquierda */}
+      <div className="h-10 fixed bottom-10 left-5">
+        <audio ref={audioRef} src={music} autoPlay loop />
+        <Slider
+          vertical
+          id="volume"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={(value) => handleVolumeChange({ target: { value } })}
+        />
+        <button onClick={() => audioRef.current.play()}>Play ▶️</button>
+        <button onClick={() => audioRef.current.pause()}>Pause ⏸️</button>
+      </div>
     </div>
   );
 };
