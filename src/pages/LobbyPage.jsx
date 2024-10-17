@@ -93,7 +93,7 @@ const LobbyPage = () => {
 
       {/* Control de volumen vertical en la esquina inferior izquierda */}
       <div className="h-10 fixed bottom-10 left-5">
-        <audio ref={audioRef} src={music} autoPlay loop />
+        <audio ref={audioRef} src={music} loop />
         <Slider
           vertical
           id="volume"
@@ -103,8 +103,8 @@ const LobbyPage = () => {
           value={volume}
           onChange={(value) => handleVolumeChange({ target: { value } })}
         />
-        <button onClick={() => audioRef.current.play()}>Play ▶️</button>
-        <button onClick={() => audioRef.current.pause()}>Pause ⏸️</button>
+        <Button onClick={() => audioRef.current.play()}>Play ▶️</Button>
+        <Button onClick={() => audioRef.current.pause()}>Pause ⏸️</Button>
       </div>
     </div>
   );

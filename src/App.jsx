@@ -7,6 +7,7 @@ import WaitingRoom from "./pages/WaitingRoom";
 import LobbyPage from "./pages/LobbyPage";
 import GamePage from "./pages/GamePage";
 import CreateGame from "./pages/CreateGame";
+import CreditsPage from "./pages/CreditsPage.jsx";
 
 function App() {
   return (
@@ -20,8 +21,9 @@ function App() {
                 <Route path="/" element={<LoginPage />} />
                 <Route path="/lobby" element={<LobbyPage />} />
                 <Route path="/waitingRoom" element={<WaitingRoom />} />
-                <Route path="/game" element={<GamePage />} />
                 <Route path="/creategame" element={<CreateGame />} />
+                <Route path="/game" element={<GamePage />} />
+                <Route path="/credits" element={<CreditsPage />} />
               </Routes>
             </Router>
           </PlayerColorProvider>
