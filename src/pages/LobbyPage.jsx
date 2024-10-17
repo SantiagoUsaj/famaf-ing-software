@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState, useRef } from "react";
-import { Button, Slider, FloatButton, Dropdown, Space } from "antd";
+import { Button, Dropdown, Space } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
@@ -17,14 +17,6 @@ const LobbyPage = () => {
   const { playerID } = usePlayerContext();
 
   const audioRef = useRef(null); // Referencia para el elemento <audio>
-  const [volume, setVolume] = useState(0.5); // Estado inicial del volumen (50%)
-
-  // Función para manejar cambios en el volumen
-  const handleVolumeChange = (event) => {
-    const newVolume = event.target.value;
-    setVolume(newVolume); // Actualiza el estado del volumen
-    audioRef.current.volume = newVolume; // Cambia el volumen del audio
-  };
 
   const [disabled, setDisabled] = useState(false);
   const onChange = (checked) => {
@@ -39,21 +31,6 @@ const LobbyPage = () => {
     {
       key: "2",
       label: <a onClick={() => audioRef.current.pause()}>Pause</a>,
-    },
-    {
-      key: "3",
-      label: (
-        <Slider
-          id="volume"
-          min={0}
-          max={100}
-          step={1}
-          value={volume * 100}
-          onChange={(value) =>
-            handleVolumeChange({ target: { value: value / 100 } })
-          }
-        />
-      ),
     },
   ];
 
@@ -121,18 +98,20 @@ const LobbyPage = () => {
 
       {/* Control de volumen vertical en la esquina inferior izquierda */}
       <audio ref={audioRef} src={music} loop />
-      <Space direction="vertical">
-        <Space wrap>
-          <Dropdown
-            menu={{
-              items,
-            }}
-            placement="topLeft"
-          >
-            <Button>topLeft</Button>
-          </Dropdown>
+      <div style={{ position: "fixed", bottom: 0, left: 0, margin: "10px" }}>
+        <Space direction="vertical">
+          <Space wrap>
+            <Dropdown
+              menu={{
+                items,
+              }}
+              placement="topLeft"
+            >
+              <Button icon={<img src={age} alt="Age Icon" />}></Button>
+            </Dropdown>
+          </Space>
         </Space>
-      </Space>
+      </div>
     </div>
   );
 };
