@@ -181,6 +181,7 @@ async def next_turn(player_id: str, game_id: str):
             # Devuelvo las cartas si tengo movimientos parciales y no descarte niguna figura
             if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) > 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
+                partial_movements = sorted(partial_movements, key=lambda x: x.orden, reverse=True)
                 for partial_movement in partial_movements:
                     Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
                     HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
@@ -190,7 +191,11 @@ async def next_turn(player_id: str, game_id: str):
             if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 HandMovements.deals_moves(player_id, game.gameid, 3 - HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id))
                 take_cards(game_id, player_id)
-            
+                
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all())
+            session.commit()
             update = True
             return {"message": "Next turn"}
 
@@ -230,6 +235,7 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all())
+            session.commit()
             Tile.swap_tiles_color(tile_id1, tile_id2)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
@@ -280,6 +286,7 @@ async def undo_all_movements(player_id: str, game_id: str):
         if partial_movements is None:
             raise HTTPException(status_code=404, detail="No movements to undo")
         else:
+            partial_movements = sorted(partial_movements, key=lambda x: x.orden, reverse=True)
             for partial_movement in partial_movements:
                 Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
                 tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
