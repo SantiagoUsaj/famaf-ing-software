@@ -31,15 +31,11 @@ class MovementChart(Base):
         return session.query(MovementChart).filter_by(movementid=movementid).first()
     
     @staticmethod
-    def get_movement_chart_by_player_id(player_id: str, game_id: str):
-        return session.query(MovementChart).filter_by(playerid=player_id, gameid=game_id).all()
-    
-    @staticmethod
     def is_table_empty():
         return session.query(MovementChart).count() == 0
     
     @staticmethod
-    def get_tile_for_rotation(rotation, cordenada:Tile):
+    def get_tile_for_rotation(rotation: str, cordenada:Tile):
             rot = rotation.split(",")
             new_x = int(rot[0]) + cordenada.x
             new_y = int(rot[1]) + cordenada.y

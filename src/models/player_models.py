@@ -24,7 +24,7 @@ class PlayerGame(Base):
     __tablename__ = 'playergames'
 
     playerid = Column(String, ForeignKey('players.playerid'), primary_key=True)
-    gameid = Column(Integer, ForeignKey('games.gameid'), primary_key=True)
+    gameid = Column(String, ForeignKey('games.gameid'), primary_key=True)
 
 
     def __init__(self, playerid: str, gameid: int):
