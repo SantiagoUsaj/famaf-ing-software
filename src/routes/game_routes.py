@@ -187,8 +187,8 @@ async def next_turn(player_id: str, game_id: str):
                     PartialMovements.delete_partial_movement(partial_movement.partialid)
                     
             # Si descarte una figura y no tengo movimientos parciales reparto cartas nuevas
-            elif len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
-                HandMovements.deals_moves(player_id, game.gameid, HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id)-3)
+            if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
+                HandMovements.deals_moves(player_id, game.gameid, 3 - HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id))
                 take_cards(game_id, player_id)
             
             update = True

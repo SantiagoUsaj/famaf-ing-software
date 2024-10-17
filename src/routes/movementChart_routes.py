@@ -5,7 +5,7 @@ from models.player_models import Player
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.figure_card_models import Figure_card
-from models.partialMovements_models import PartialMovements, get_partial_movements_by_movement_id
+from models.partialMovements_models import PartialMovements
 router = APIRouter()
 
 @router.get("/possible_movements/{player_id}/{game_id}/{movement_id}/{tile_id}")
@@ -59,7 +59,7 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
         components = get_connected_component_for_tile_by_number(tile)
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
         if check_tile_coordinates_with_rotations(figure, components):
-            movimientos_parciales = get_partial_movements_by_movement_id(game_id)
+            movimientos_parciales = PartialMovements.get_all_partial_movements_by_gameid(game_id)
             for movimiento in movimientos_parciales:
                 session.delete(movimiento)
             session.delete(figure_card)
