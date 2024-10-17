@@ -7,7 +7,7 @@ import TableGames from "../components/TableGames";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import music from "../assets/sounds/musicaMenuAgeII.mp3";
 import { PlayCircleOutlined, PauseCircleOutlined } from "@ant-design/icons";
-import age from "../assets/images/iconoAge.png";
+import age from "../assets/images/iconoAge.jpeg";
 
 const LobbyPage = () => {
   const navigate = useNavigate();
@@ -17,22 +17,6 @@ const LobbyPage = () => {
   const { playerID } = usePlayerContext();
 
   const audioRef = useRef(null); // Referencia para el elemento <audio>
-
-  const [disabled, setDisabled] = useState(false);
-  const onChange = (checked) => {
-    setDisabled(checked);
-  };
-
-  const items = [
-    {
-      key: "1",
-      label: <a onClick={() => audioRef.current.play()}>Play</a>,
-    },
-    {
-      key: "2",
-      label: <a onClick={() => audioRef.current.pause()}>Pause</a>,
-    },
-  ];
 
   console.log("playerID", playerID);
 
@@ -98,19 +82,49 @@ const LobbyPage = () => {
 
       {/* Control de volumen vertical en la esquina inferior izquierda */}
       <audio ref={audioRef} src={music} loop />
-      <div style={{ position: "fixed", bottom: 0, left: 0, margin: "10px" }}>
-        <Space direction="vertical">
-          <Space wrap>
-            <Dropdown
-              menu={{
-                items,
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          margin: "10px",
+          opacity: 0,
+          transition: "opacity 0.3s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0)}
+      >
+        <Button
+          className="bg-negrofondo"
+          icon={<img src={age} alt="Age Icon" />}
+          onClick={() => {
+            if (audioRef.current.paused) {
+              audioRef.current.play();
+            } else {
+              audioRef.current.pause();
+            }
+          }}
+        ></Button>
+        {!audioRef.current?.paused && (
+          <div
+            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
+          >
+            <span role="img" aria-label="music-note">
+              🎵
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              defaultValue="1"
+              onChange={(e) => {
+                audioRef.current.volume = e.target.value;
               }}
-              placement="topLeft"
-            >
-              <Button icon={<img src={age} alt="Age Icon" />}></Button>
-            </Dropdown>
-          </Space>
-        </Space>
+              style={{ width: "100px", marginLeft: "10px" }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
