@@ -6,6 +6,7 @@ from models.board_models import Table, Tile, TableGame, Figures
 from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
+from models.figure_card_models import Figure_card
 
 # Crea todas las tablas en la base de datos
 Base.metadata.create_all(engine)
@@ -346,3 +347,60 @@ def test_delete_all_hand_movements():
 
     hand_movements = session.query(HandMovements).all()
     assert len(hand_movements) == 0
+
+def test_use_figure_chart():
+    player_name1 = "ValidPlayer1"
+    player_name2 = "ValidPlayer2"
+    game_name = "ValidGame"
+    game_size = 2
+    figure_id = 6
+    tile_id = 1
+    
+    
+
+    session.commit()
+    response_player1 = client.post(f"/create_player/{player_name1}")
+    player_id1 = response_player1.json()["player_id"]  
+
+    response_player2 = client.post(f"/create_player/{player_name2}")
+    player_id2 = response_player2.json()["player_id"]
+    
+    response_game = client.post(f"/create_game/{player_id1}/{game_name}/{game_size}")
+    game_id = response_game.json()["game_id"]
+
+    client.put(f"/join_game/{player_id2}/{game_id}")
+    client.put(f"/start_game/{player_id1}/{game_id}")
+
+    id_table = session.query(Table).filter_by(gameid=game_id).first().id
+    # Obtener los registros que deseas eliminar
+    tiles_to_delete = session.query(Tile).filter_by(table_id=id_table).order_by(Tile.number).limit(4).all()
+
+    # Eliminar los registros obtenidos
+    for tile in tiles_to_delete:
+        session.delete(tile)
+
+    # Confirmar la transacción
+    session.commit()    
+    session.add_all([
+        Tile(table_id=id_table, color="red", number=1, x=0, y=0, highlight=False),
+        Tile(table_id=id_table, color="red", number=2, x=0, y=1, highlight=False),
+        Tile(table_id=id_table, color="red", number=3, x=0, y=2, highlight=False),
+        Tile(table_id=id_table, color="red", number=4, x=0, y=3, highlight=False)
+    ])
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    assert game is not None, "Game not found"
+    turn = game.turn
+    assert turn is not None, "Turn not found"
+    first_turn = turn.split(",")[0]
+    
+    session.query(Figure_card).filter().delete()
+    session.commit()
+    session.add(Figure_card(figure=figure_id, player_id=first_turn, game_id=game_id))
+    a=session.query(Figure_card).filter_by(playerid=first_turn, gameid=game_id).first()
+    a.take_card()
+    session.commit()
+    
+    response = client.post(f"/use_figure_chart/{first_turn}/{game_id}/{figure_id}/{tile_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Figure card used and removed from hand"}
+
