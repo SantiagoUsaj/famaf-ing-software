@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState, useRef } from "react";
-import { Button, Slider, FloatButton } from "antd";
+import { Button, Slider, FloatButton, Dropdown, Space } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
@@ -30,6 +30,32 @@ const LobbyPage = () => {
   const onChange = (checked) => {
     setDisabled(checked);
   };
+
+  const items = [
+    {
+      key: "1",
+      label: <a onClick={() => audioRef.current.play()}>Play</a>,
+    },
+    {
+      key: "2",
+      label: <a onClick={() => audioRef.current.pause()}>Pause</a>,
+    },
+    {
+      key: "3",
+      label: (
+        <Slider
+          id="volume"
+          min={0}
+          max={100}
+          step={1}
+          value={volume * 100}
+          onChange={(value) =>
+            handleVolumeChange({ target: { value: value / 100 } })
+          }
+        />
+      ),
+    },
+  ];
 
   console.log("playerID", playerID);
 
@@ -95,37 +121,18 @@ const LobbyPage = () => {
 
       {/* Control de volumen vertical en la esquina inferior izquierda */}
       <audio ref={audioRef} src={music} loop />
-      <>
-        <FloatButton.Group
-          trigger="click"
-          type="primary"
-          style={{
-            position: "fixed",
-            bottom: 10,
-            left: 10,
-          }}
-          icon={<img src={age} />}
-        >
-          <FloatButton
-            icon={<PlayCircleOutlined />}
-            onClick={() => audioRef.current.play()}
-          />
-          <FloatButton
-            icon={<PauseCircleOutlined />}
-            onClick={() => audioRef.current.pause()}
-          />
-          <Slider
-            id="volume"
-            min={0}
-            max={100}
-            step={1}
-            value={volume * 100}
-            onChange={(value) =>
-              handleVolumeChange({ target: { value: value / 100 } })
-            }
-          />
-        </FloatButton.Group>
-      </>
+      <Space direction="vertical">
+        <Space wrap>
+          <Dropdown
+            menu={{
+              items,
+            }}
+            placement="topLeft"
+          >
+            <Button>topLeft</Button>
+          </Dropdown>
+        </Space>
+      </Space>
     </div>
   );
 };
