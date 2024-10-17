@@ -19,13 +19,9 @@ class HandMovements(Base):
     @staticmethod
     def create_hand_movement(movementid: str, playerid: str, gameid: str):
         new_hand_movement = HandMovements(movementid=movementid, playerid=playerid, gameid=gameid)
-        try:
-            session.add(new_hand_movement)
-            session.commit()
-            return new_hand_movement
-        except Exception as e:
-            session.rollback()
-            raise e
+        session.add(new_hand_movement)
+        session.commit()
+        return new_hand_movement
         
     @staticmethod
     def count_movements_by_movementid(movementid: str, gameid: str):
@@ -44,14 +40,7 @@ class HandMovements(Base):
     @staticmethod
     def get_movements_charts_by_player_id(playerid: str, gameid: str):
         return [movement.movementid for movement in session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid).all()]
-    
-    @staticmethod
-    def delete_hand_movements(playerid: str, gameid: str, movementid: str):
-        hand_movement = session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid, movementid=movementid).first()
-        if hand_movement:
-            session.delete(hand_movement)
-            session.commit()
-    
+     
     # Reparte movimientos al jugador de la partida
     @staticmethod
     def deals_moves(playerid: str, gameid: str, quantity: int):
@@ -67,6 +56,12 @@ class HandMovements(Base):
                 session.add(HandMovements(movementid=movementid, playerid=playerid, gameid=gameid))
                 session.commit()
                 
+    @staticmethod
+    def delete_hand_movements(playerid: str, gameid: str, movementid: str):
+        hand_movement = session.query(HandMovements).filter_by(playerid=playerid, gameid=gameid, movementid=movementid).first()
+        if hand_movement:
+            session.delete(hand_movement)
+            session.commit()
     
 
 

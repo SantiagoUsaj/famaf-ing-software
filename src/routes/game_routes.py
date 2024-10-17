@@ -90,15 +90,13 @@ async def join_game(player_id: str, game_id: str):
 async def leave_game(player_id: str, game_id: str):
     if session.query(Game).filter_by(gameid=game_id).count() == 0:
         raise HTTPException(status_code=404, detail="Game not found")
-    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
+    elif not session.query(Player).filter_by(playerid=player_id).first():
         raise HTTPException(status_code=404, detail="Player not found")
     else:
         game = session.query(Game).filter_by(gameid=game_id).first()
-
+        # If the game is in waiting state and the player is the host, cancel the game
         if game.host == player_id and game.state == "waiting":
             tables = session.query(Table).filter_by(gameid=game_id).all()
-            for table in tables:
-                session.query(Tile).filter_by(table_id=table.id).delete()
             session.query(Table).filter_by(gameid=game_id).delete()
             session.query(PlayerGame).filter_by(gameid=game_id).delete()
             session.query(Game).filter_by(gameid=game_id).delete()
@@ -129,6 +127,8 @@ async def start_game(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif session.query(Player).filter_by(playerid=player_id).count() == 0:
         raise HTTPException(status_code=404, detail="Player not found")
+    elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() == 0:
+        raise HTTPException(status_code=409, detail="Player is not in the game")
     elif session.query(Game).filter_by(gameid=game_id).first().state == "playing":
         raise HTTPException(status_code=409, detail="Game is already playing")
     else:
@@ -208,15 +208,15 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
     table = session.query(Table).filter_by(gameid=game_id).first()
     tile1 = session.query(Tile).filter_by(table_id=table.id, number=tile_id1).first()
     tile2 = session.query(Tile).filter_by(table_id=table.id, number=tile_id2).first()
-    if game is None:
+    if session.query(Game).filter_by(gameid=game_id).count() == 0:
         raise HTTPException(status_code=404, detail="Game not found")
-    elif player is None:
+    elif session.query(Player).filter_by(playerid=player_id).count() == 0:
         raise HTTPException(status_code=404, detail="Player not found")
-    elif movement is None:
-        raise HTTPException(status_code=404, detail="Movement not found")
-    elif tile1 is None:
+    elif session.query(PlayerGame).filter_by(gameid=game_id, playerid=player_id).count() == 0:
+        raise HTTPException(status_code=409, detail="Player is not in the game")
+    elif session.query(Tile).filter_by(table_id=table.id, number=tile_id1).count() == 0:
         raise HTTPException(status_code=404, detail="Tile 1 not found")
-    elif tile2 is None:
+    elif session.query(Tile).filter_by(table_id=table.id, number=tile_id2).count() == 0:
         raise HTTPException(status_code=404, detail="Tile 2 not found")
     elif HandMovements.player_have_not_movement(player_id, game_id, movement_id):
         raise HTTPException(status_code=409, detail="Player has not this movement")
@@ -251,10 +251,10 @@ async def undo_a_movement(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    elif player_id != game.turn.split(",")[0]:
-        raise HTTPException(status_code=409, detail="It's not your turn")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
+    elif player_id != game.turn.split(",")[0]:
+        raise HTTPException(status_code=409, detail="It's not your turn")
     else:
         partial_movement = PartialMovements.get_last_partial_movement(game_id)
         if partial_movement is None:
@@ -277,10 +277,10 @@ async def undo_all_movements(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     elif player is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    elif player_id != game.turn.split(",")[0]:
-            raise HTTPException(status_code=409, detail="It's not your turn")
     elif game.state == "waiting":
         raise HTTPException(status_code=409, detail="Game is not playing")
+    elif player_id != game.turn.split(",")[0]:
+            raise HTTPException(status_code=409, detail="It's not your turn")
     else:
         partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
         if partial_movements is None:
