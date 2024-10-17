@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
@@ -22,6 +22,7 @@ const WaitingRoom = ({
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
   // Obtener game_id desde el contexto
@@ -110,6 +111,14 @@ const WaitingRoom = ({
       console.log("Mensaje recibido:", data);
       console.log("Player_id:", playerID);
 
+      if (data.state === "playing") {
+        navigate(`/game`);
+      }
+
+      if (data.error === "Game not found") {
+        setIsModalOpen(true);
+      }
+
       setNumberOfPlayers(data.players);
 
       // Agregar la clave 'key' a cada objeto en data.player_details
@@ -119,10 +128,6 @@ const WaitingRoom = ({
       }));
 
       setPlayersList(playersWithKeys);
-
-      if (data.state === "playing") {
-        navigate(`/game`);
-      }
     };
 
     // Manejar el cierre de la conexión
@@ -146,7 +151,7 @@ const WaitingRoom = ({
         {gameName}
       </h1>
       <TablePlayers playersList={playersList} isCreator={isCreator} />
-      <div className="flex gap-24 ">
+      <div className="flex flex-col">
         {playerID === isCreator && numberOfPlayers === maxNumberOfPlayers && (
           <Button
             className="flex m-auto my-3 text-blancofondo"
@@ -157,16 +162,32 @@ const WaitingRoom = ({
             Iniciar Partida
           </Button>
         )}
-        {playerID !== isCreator && (
+        <Button
+          className="flex m-auto my-3"
+          danger
+          ghost
+          onClick={() => quitRoom(game_id)}
+        >
+          Abandonar
+        </Button>
+      </div>
+      <div>
+        <Modal
+          title="Oops!"
+          open={isModalOpen}
+          footer={null}
+          className="text-center"
+          closable={false}
+        >
+          <p className="text-negrofondo text-lg ">El creador decidio irse</p>
           <Button
-            className="flex m-auto my-3"
-            danger
-            ghost
-            onClick={() => quitRoom(game_id)}
+            className="mt-5 text-blancofondo"
+            type="primary"
+            onClick={() => navigate(`/lobby`)}
           >
-            Abandonar
+            Volver al Lobby
           </Button>
-        )}
+        </Modal>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ import {
 
 import { usePlayerContext } from "../context/PlayerContext";
 import { useGameContext } from "../context/GameContext";
+import FigureCard from "../components/FigureCard";
 
 // Mock useNavigate from react-router-dom
 const mockNavigate = vi.fn();
@@ -109,6 +110,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player2",
         board: [],
+        player_details: [],
         players: 2,
       }),
     };
@@ -128,6 +130,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
+        player_details: [],
         players: 2,
       }),
     };
@@ -156,6 +159,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
+        player_details: [],
         players: 1,
       }),
     };
@@ -175,6 +179,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
+        player_details: [],
         players: 1,
       }),
     };
@@ -204,6 +209,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
+        player_details: [],
         players: 2,
       }),
     };
@@ -223,6 +229,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
+        player_details: [],
         players: 1,
       }),
     };
