@@ -464,4 +464,74 @@ describe("WaitingRoom", () => {
 
     consoleLogSpy.mockRestore();
   });
+
+  it("should open modal when WebSocket message error is 'Game not found'", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom />);
+
+    // Simular el mensaje recibido
+    const data = {
+      players: 4,
+      player_details: [],
+      error: "Game not found",
+    };
+
+    const event = { data: JSON.stringify(data) };
+
+    await act(async () => {
+      mockWebSocket.onmessage(event);
+    });
+
+    // Verificar si el modal está abierto
+    const modalText = await screen.findByText("El creador decidio irse");
+    expect(modalText).toBeInTheDocument();
+  });
+
+  it("should navigate to /lobby when clicking 'Volver al Lobby' in the modal", async () => {
+    GameData.mockResolvedValueOnce({
+      game_name: "Test Game",
+      state: "waiting",
+      host_id: "1",
+      players: 4,
+      game_size: 4,
+      player_details: [],
+    });
+
+    renderWithRouter(<WaitingRoom />);
+
+    // Simular el mensaje recibido que abre el modal
+    const data = {
+      players: 4,
+      player_details: [],
+      error: "Game not found",
+    };
+
+    const event = { data: JSON.stringify(data) };
+
+    await act(async () => {
+      mockWebSocket.onmessage(event);
+    });
+
+    // Verificar si el modal está abierto
+    const modalText = await screen.findByText("El creador decidio irse");
+    expect(modalText).toBeInTheDocument();
+
+    // Simular el click en el botón de 'Volver al Lobby'
+    const returnToLobbyButton = screen.getByRole("button", {
+      name: /Volver al Lobby/i,
+    });
+
+    fireEvent.click(returnToLobbyButton);
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/lobby");
+    });
+  });
 });

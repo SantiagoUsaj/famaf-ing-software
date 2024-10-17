@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
@@ -22,6 +22,7 @@ const WaitingRoom = ({
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
   // Obtener game_id desde el contexto
@@ -115,7 +116,7 @@ const WaitingRoom = ({
       }
 
       if (data.error === "Game not found") {
-        navigate(`/lobby`);
+        setIsModalOpen(true);
       }
 
       setNumberOfPlayers(data.players);
@@ -169,6 +170,24 @@ const WaitingRoom = ({
         >
           Abandonar
         </Button>
+      </div>
+      <div>
+        <Modal
+          title="Oops!"
+          open={isModalOpen}
+          footer={null}
+          className="text-center"
+          closable={false}
+        >
+          <p className="text-negrofondo text-lg ">El creador decidio irse</p>
+          <Button
+            className="mt-5 text-blancofondo"
+            type="primary"
+            onClick={() => navigate(`/lobby`)}
+          >
+            Volver al Lobby
+          </Button>
+        </Modal>
       </div>
     </div>
   );
