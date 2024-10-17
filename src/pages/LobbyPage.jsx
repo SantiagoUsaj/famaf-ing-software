@@ -1,13 +1,12 @@
 import React from "react";
 import { useEffect, useState, useRef } from "react";
-import { Button, Slider, Switch } from "antd";
+import { Button, Slider, FloatButton } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import music from "../assets/sounds/musicaMenuAgeII.mp3";
 import { PlayCircleOutlined, PauseCircleOutlined } from "@ant-design/icons";
-import { FloatButton } from "antd";
 import age from "../assets/images/iconoAge.png";
 
 const LobbyPage = () => {
