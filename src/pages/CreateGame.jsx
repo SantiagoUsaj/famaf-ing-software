@@ -16,24 +16,28 @@ const CreateGame = () => {
   const onFinish = async (values) => {
     console.log("Success:", values);
 
-    try {
-      // Esperamos la resolución de la promesa de JoinLobby
-      const response = await CreateAGame(
-        playerID,
-        values.nombre,
-        values.jugadores
-      );
+    if (values.nombre.toLowerCase() === "becarefuleense") {
+      navigate(`/credits`);
+    } else {
+      try {
+        // Esperamos la resolución de la promesa de JoinLobby
+        const response = await CreateAGame(
+          playerID,
+          values.nombre,
+          values.jugadores
+        );
 
-      if (response) {
-        console.log("Lobby response:", response);
+        if (response) {
+          console.log("Lobby response:", response);
 
-        // Actualizar el gameID en el contexto
-        setGameID(response.game_id);
+          // Actualizar el gameID en el contexto
+          setGameID(response.game_id);
 
-        navigate(`/waitingRoom`);
+          navigate(`/waitingRoom`);
+        }
+      } catch (error) {
+        console.error("Error joining lobby:", error);
       }
-    } catch (error) {
-      console.error("Error joining lobby:", error);
     }
   };
 

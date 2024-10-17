@@ -1,6 +1,5 @@
 import axios from "axios";
 
-
 export const GameData = async (game_id) => {
   try {
     const response = await axios.get(`http://127.0.0.1:8000/game/${game_id}`);
@@ -126,10 +125,10 @@ export const PlayerMovements = async (player_id, game_id) => {
   }
 };
 
-export const UndoMovement = async (game_id) => {
+export const UndoMovement = async (player_id, game_id) => {
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/undo_a_movement/${game_id}`
+      `http://127.0.0.1:8000/undo_a_movement/${player_id}/${game_id}`
     );
 
     console.log(response.data);
@@ -140,10 +139,10 @@ export const UndoMovement = async (game_id) => {
   }
 };
 
-export const UndoAllMovements = async (game_id) => {
+export const UndoAllMovements = async (player_id, game_id) => {
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/undo_all_movements/${game_id}`
+      `http://127.0.0.1:8000/undo_all_movements/${player_id}/${game_id}`
     );
 
     console.log(response.data);

@@ -6,6 +6,9 @@ import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import music from "../assets/sounds/musicaMenuAgeII.mp3";
+import { PlayCircleOutlined, PauseCircleOutlined } from "@ant-design/icons";
+import { FloatButton } from "antd";
+import age from "../assets/images/iconoAge.png";
 
 const LobbyPage = () => {
   const navigate = useNavigate();
@@ -92,20 +95,38 @@ const LobbyPage = () => {
       </Button>
 
       {/* Control de volumen vertical en la esquina inferior izquierda */}
-      <div className="h-10 fixed bottom-10 left-5">
-        <audio ref={audioRef} src={music} loop />
-        <Slider
-          vertical
-          id="volume"
-          min={0}
-          max={1}
-          step={0.01}
-          value={volume}
-          onChange={(value) => handleVolumeChange({ target: { value } })}
-        />
-        <Button onClick={() => audioRef.current.play()}>Play ▶️</Button>
-        <Button onClick={() => audioRef.current.pause()}>Pause ⏸️</Button>
-      </div>
+      <audio ref={audioRef} src={music} loop />
+      <>
+        <FloatButton.Group
+          trigger="click"
+          type="primary"
+          style={{
+            position: "fixed",
+            bottom: 10,
+            left: 10,
+          }}
+          icon={<img src={age} />}
+        >
+          <FloatButton
+            icon={<PlayCircleOutlined />}
+            onClick={() => audioRef.current.play()}
+          />
+          <FloatButton
+            icon={<PauseCircleOutlined />}
+            onClick={() => audioRef.current.pause()}
+          />
+          <Slider
+            id="volume"
+            min={0}
+            max={100}
+            step={1}
+            value={volume * 100}
+            onChange={(value) =>
+              handleVolumeChange({ target: { value: value / 100 } })
+            }
+          />
+        </FloatButton.Group>
+      </>
     </div>
   );
 };

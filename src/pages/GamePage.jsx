@@ -118,7 +118,7 @@ const GamePage = () => {
 
     try {
       // Esperamos la resolución de la promesa de UndoMovement
-      const response = await UndoMovement(game_id);
+      const response = await UndoMovement(playerID, game_id);
 
       if (response) {
         console.log("Undo Mov:", response);
@@ -133,7 +133,7 @@ const GamePage = () => {
 
     try {
       // Esperamos la resolución de la promesa de UndoAllMovements
-      const response = await UndoAllMovements(game_id);
+      const response = await UndoAllMovements(playerID, game_id);
 
       if (response) {
         console.log("Undo All Mov:", response);
@@ -439,17 +439,6 @@ const GamePage = () => {
         ))}
       </div>
       <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
-        <Button
-          className="text-blancofondo"
-          type="primary"
-          disabled={playerID !== turn}
-          style={{
-            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
-          }}
-          onClick={() => resetSelect()}
-        >
-          Resetear Seleccion
-        </Button>
         <Button
           className="text-blancofondo"
           type="primary"
