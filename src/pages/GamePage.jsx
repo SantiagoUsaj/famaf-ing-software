@@ -31,6 +31,7 @@ const GamePage = () => {
   const [board, setBoard] = useState([]);
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
+  const [SelectFigCard, setSelectFigCard] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
   const [PossibleTiles1, setPossibleTiles1] = useState();
@@ -362,6 +363,7 @@ const GamePage = () => {
 
       setTurn(data.turn);
       setBoard(data.board);
+      setPlayersList(data.player_details);
 
       if (data.players === 1) {
         showModal();
@@ -418,7 +420,11 @@ const GamePage = () => {
         {gameBoard(board)}
       </div>
       <div className="Cards">
-        <FigureCard />
+        <FigureCard
+          playersList={playersList}
+          onSelectFigCard={(title) => setSelectFigCard(title)}
+          updateboard={board}
+        />
         <MovementCard
           onSelectMovCard={(title) => setSelectMovCard(title)}
           updateboard={board}
