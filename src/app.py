@@ -50,6 +50,7 @@ async def delete_all():
     session.query(TableGame).delete()  # Eliminar todas las relaciones entre tablas y juegos
     session.query(HandMovements).delete()  # Eliminar todos los movimientos de las manos
     session.query(PartialMovements).delete()  # Eliminar todos los movimientos parciales
+    session.query(Figure_card).delete()  # Eliminar todas las cartas de figuras
     session.commit()
     return {"message": "All players, games, tables, and tiles deleted"}
 
@@ -93,13 +94,14 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 {
                     "player_id": pg.playerid,
                     "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name,
-                    "number_of_figure_card": session.query(Figure_card).filter_by(playerid=pg.playerid, gameid=game_id, in_hand=False).count(),  
+                    "number_of_figure_card": session.query(Figure_card).filter_by(playerid=pg.playerid, gameid=game_id).count(),  
                     "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count(),
                     "figure_cards": [{"card_id": fc.id, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()]
                 }
                 for pg in players_in_game
             ]
             turnos = game.turn
+            round = turnos.split(",") if turnos else []
             if turnos is not None:
                 turnos = turnos.split(",")
                 turnos = turnos[0]
@@ -120,7 +122,8 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                 "player_details": player_details,
                 "turn": turnos,
-                "board": board
+                "board": board,
+                "round": round  
             }
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
