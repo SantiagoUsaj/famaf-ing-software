@@ -179,7 +179,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
-        player_details: [],
+        player_details: [{ player_name: "player1" }],
         players: 1,
       }),
     };
@@ -229,7 +229,7 @@ describe("GamePage", () => {
       data: JSON.stringify({
         turn: "player1", // Assuming "player1" is the current player
         board: [],
-        player_details: [],
+        player_details: [{ player_name: "player1" }],
         players: 1,
       }),
     };
