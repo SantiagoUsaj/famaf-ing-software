@@ -61,7 +61,7 @@ const LobbyPage = () => {
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl relative">
         LobbyPage
       </h1>
       <TableGames gamesList={partidas} />
