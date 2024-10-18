@@ -29,6 +29,7 @@ const GamePage = () => {
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
+  const [winnerPlayer, setWinnerPlayer] = useState(null);
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
@@ -148,16 +149,24 @@ const GamePage = () => {
 
     try {
       console.log("Game ID:", game_id);
-      // Esperamos la resolución de la promesa de LeaveGame
-      const response = await DeleteGame(game_id);
 
-      if (response) {
-        console.log("New Game Info:", response);
-        // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby`);
+      if (playersList.length === 1) {
+        // If the player is the last one in the game, delete the game
+        const response = await DeleteGame(game_id);
+        if (response) {
+          console.log("Game Deleted:", response);
+          navigate(`/lobby`);
+        }
+      } else {
+        // Otherwise, just leave the game
+        const response = await LeaveGame(playerID, game_id);
+        if (response) {
+          console.log("Left Game:", response);
+          navigate(`/lobby`);
+        }
       }
     } catch (error) {
-      console.error("Error getting new game data", error);
+      console.error("Error finishing the game", error);
     }
   };
 
@@ -368,6 +377,15 @@ const GamePage = () => {
       if (data.players === 1) {
         showModal();
       }
+
+      const winnerPlayer = data.player_details.find(
+        (player) => player.number_of_figure_card === 0
+      );
+
+      if (winnerPlayer) {
+        setWinnerPlayer(winnerPlayer.player_name);
+        showModal();
+      }
     };
 
     // Manejar el cierre de la conexión
@@ -519,7 +537,9 @@ const GamePage = () => {
           className="text-center"
           closable={false}
         >
-          <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
+          <p className="text-negrofondo text-lg ">
+            {winnerPlayer} ha ganado la partida
+          </p>
           <Button
             className="mt-5 text-blancofondo"
             type="primary"
