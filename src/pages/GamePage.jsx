@@ -12,6 +12,7 @@ import {
   SwapTiles,
   UndoMovement,
   UndoAllMovements,
+  UseFigureCard,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
@@ -329,6 +330,29 @@ const GamePage = () => {
     }
   };
 
+  const useFigure = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de PossiblesMoves
+      const response = await UseFigureCard(
+        playerID,
+        game_id,
+        SelectFigCard,
+        SelectFirstTitle
+      );
+
+      if (response) {
+        console.log("Figure use:", response);
+        resetSelect();
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
   const getGameInfo = async (game_id) => {
     console.log("LLame a GAMEINFO");
 
@@ -403,7 +427,11 @@ const GamePage = () => {
     if (SelectFirstTitle !== null && SelectSecondTitle !== null) {
       swap();
     }
-  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard]);
+
+    if (SelectFigCard !== null && SelectFirstTitle !== null) {
+      useFigure();
+    }
+  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
 
   return (
     <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
