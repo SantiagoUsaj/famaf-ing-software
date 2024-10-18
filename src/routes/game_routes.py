@@ -235,10 +235,9 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all())
-            session.commit()
-            Tile.swap_tiles_color(tile_id1, tile_id2)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
+            session.commit()
             return {"message": "Tiles swapped"}
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
