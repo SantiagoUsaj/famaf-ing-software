@@ -115,12 +115,12 @@ const GamePage = () => {
     }
   };
 
-  const undoMov = async (game_id) => {
+  const undoMov = async (playerID, game_id) => {
     console.log("Success");
 
     try {
       // Esperamos la resolución de la promesa de UndoMovement
-      const response = await UndoMovement(game_id);
+      const response = await UndoMovement(playerID, game_id);
 
       if (response) {
         console.log("Undo Mov:", response);
@@ -130,12 +130,12 @@ const GamePage = () => {
     }
   };
 
-  const undoallMov = async (game_id) => {
+  const undoallMov = async (playerID, game_id) => {
     console.log("Success");
 
     try {
       // Esperamos la resolución de la promesa de UndoAllMovements
-      const response = await UndoAllMovements(game_id);
+      const response = await UndoAllMovements(playerID, game_id);
 
       if (response) {
         console.log("Undo All Mov:", response);
@@ -503,7 +503,7 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoMov(game_id)}
+          onClick={() => undoMov(playerID, game_id)}
           icon={
             <UndoOutlined
               style={{
@@ -523,7 +523,7 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoallMov(game_id)}
+          onClick={() => undoallMov(playerID, game_id)}
           icon={
             <UndoOutlined
               style={{
