@@ -1,28 +1,33 @@
-import React from "react";
-import { Space, Table, Tag } from "antd";
+import React, { useEffect } from "react";
+import { Table, Tag } from "antd";
+import { usePlayerColor } from "../context/PlayerColorContext.jsx";
 
 const TablePlayers = ({ playersList, isCreator }) => {
-  const getRandomColor = () => {
-    const colors = ["red", "blue", "green", "yellow"];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
+  const { playerColors, assignColorToPlayer } = usePlayerColor();
+
+  useEffect(() => {
+    playersList.forEach((player) => {
+      assignColorToPlayer(player.player_id);
+    });
+  }, [playersList, assignColorToPlayer]);
 
   const columns = [
     {
       title: "Jugadores",
       dataIndex: "player_name",
       key: "player_name",
-      render: (text) => <a>{text}</a>,
+      align: "center",
+      render: (text) => <span>{text}</span>,
     },
     {
       title: "Tags",
       key: "tags",
       dataIndex: "tags",
       align: "center",
-      render: (_, { tags }) => (
+      render: (_, { tags, player_id }) => (
         <>
           {tags.map((tag) => {
-            const color = getRandomColor();
+            const color = playerColors[player_id]; // Usar el color del contexto
             return (
               <Tag color={color} key={tag}>
                 {tag.toUpperCase()}
@@ -42,14 +47,14 @@ const TablePlayers = ({ playersList, isCreator }) => {
   return (
     <>
       <Table
-        className="w-1/4  my-8"
+        className="w-1/4 m-auto my-2 rounded-lg"
         pagination={false}
         columns={columns}
         align="center"
         dataSource={data}
       />
-      <div data-testid="table-players"></div>
     </>
   );
 };
+
 export default TablePlayers;

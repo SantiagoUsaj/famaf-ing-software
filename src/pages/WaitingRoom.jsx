@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
 import { GameData, LeaveGame, StartGame } from "../services/GameServices";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
 const WaitingRoom = ({
-  game_id,
-  playerID,
   initialGameName = "",
   initialIsCreator = false,
   initialNumberOfPlayers = 0,
@@ -22,7 +22,11 @@ const WaitingRoom = ({
   const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [partidas, setPartidas] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Obtener playerID desde el contexto
+  const { playerID } = usePlayerContext();
+  // Obtener game_id desde el contexto
+  const { game_id } = useGameContext();
 
   const getGameInfo = async (game_id) => {
     console.log("Success");
@@ -52,7 +56,7 @@ const WaitingRoom = ({
         console.log("New Game Info:", response);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${playerID}`);
+        navigate(`/lobby`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -70,7 +74,7 @@ const WaitingRoom = ({
         console.log("Info:", response);
 
         // Navegamos solo cuando la respuesta está lista
-        navigate(`/${playerID}/${game_id}/game`);
+        navigate(`/game`);
       }
     } catch (error) {
       console.error("Error getting data", error);
@@ -78,18 +82,20 @@ const WaitingRoom = ({
   };
 
   useEffect(() => {
-    // Llamamos a la función getGameInfo
-    getGameInfo(game_id).then((response) => {
-      if (response) {
-        setGameName(response.game_name);
-        setGamestate(response.state);
-        setIsCreator(response.host_id);
-        setNumberOfPlayers(response.players);
-        setMaxNumberOfPlayers(response.game_size);
-        setPlayersList(response.player_details);
-      }
-    });
+    if (!gamestate) {
+      getGameInfo(game_id).then((response) => {
+        if (response) {
+          setGameName(response.game_name);
+          setGamestate(response.state);
+          setIsCreator(response.host_id);
+          setNumberOfPlayers(response.players);
+          setMaxNumberOfPlayers(response.game_size);
+        }
+      });
+    }
+  }, []);
 
+  useEffect(() => {
     // Crear la conexión WebSocket al backend
     const ws = new WebSocket(`http://127.0.0.1:8000/ws/game/${game_id}`);
 
@@ -103,13 +109,25 @@ const WaitingRoom = ({
       const data = JSON.parse(event.data);
 
       console.log("Mensaje recibido:", data);
-
-      setNumberOfPlayers(data.players);
-      setPlayersList(data.player_details);
+      console.log("Player_id:", playerID);
 
       if (data.state === "playing") {
-        navigate(`/${playerID}/${game_id}/game`);
+        navigate(`/game`);
       }
+
+      if (data.error === "Game not found") {
+        setIsModalOpen(true);
+      }
+
+      setNumberOfPlayers(data.players);
+
+      // Agregar la clave 'key' a cada objeto en data.player_details
+      const playersWithKeys = data.player_details.map((player, index) => ({
+        ...player,
+        key: index,
+      }));
+
+      setPlayersList(playersWithKeys);
     };
 
     // Manejar el cierre de la conexión
@@ -127,15 +145,16 @@ const WaitingRoom = ({
   }, []);
 
   return (
-    <div className="pt-2 flex justify-center flex-col items-center">
+    <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto text-center  text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         {gameName}
       </h1>
       <TablePlayers playersList={playersList} isCreator={isCreator} />
-      <div className="flex gap-24 ">
+      <div className="flex flex-col">
         {playerID === isCreator && numberOfPlayers === maxNumberOfPlayers && (
           <Button
+            className="flex m-auto my-3 text-blancofondo"
             type="primary"
             disabled={!isCreator}
             onClick={() => start(game_id)}
@@ -143,11 +162,32 @@ const WaitingRoom = ({
             Iniciar Partida
           </Button>
         )}
-        {playerID !== isCreator && (
-          <Button danger ghost onClick={() => quitRoom(game_id)}>
-            Abandonar
+        <Button
+          className="flex m-auto my-3"
+          danger
+          ghost
+          onClick={() => quitRoom(game_id)}
+        >
+          Abandonar
+        </Button>
+      </div>
+      <div>
+        <Modal
+          title="Oops!"
+          open={isModalOpen}
+          footer={null}
+          className="text-center"
+          closable={false}
+        >
+          <p className="text-negrofondo text-lg ">El creador decidio irse</p>
+          <Button
+            className="mt-5 text-blancofondo"
+            type="primary"
+            onClick={() => navigate(`/lobby`)}
+          >
+            Volver al Lobby
           </Button>
-        )}
+        </Modal>
       </div>
     </div>
   );

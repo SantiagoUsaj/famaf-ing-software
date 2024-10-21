@@ -3,9 +3,15 @@ import { Form, Button, Select, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import { CreateAGame } from "../services/CreateGameServices";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
-const CreateGame = ({ playerID }) => {
+const CreateGame = () => {
   const navigate = useNavigate();
+  // Obtener playerID desde el contexto
+  const { playerID } = usePlayerContext();
+  // Obtener game_id desde el contexto
+  const { setGameID } = useGameContext();
 
   const onFinish = async (values) => {
     console.log("Success:", values);
@@ -21,14 +27,20 @@ const CreateGame = ({ playerID }) => {
       if (response) {
         console.log("Lobby response:", response);
 
-        // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby/${response}`);
+        // Actualizar el gameID en el contexto
+        setGameID(response.game_id);
 
-        navigate(`/${playerID}/${response.game_id}/waitingRoom`);
+        navigate(`/waitingRoom`);
       }
     } catch (error) {
       console.error("Error joining lobby:", error);
     }
+  };
+
+  const goBack = () => {
+    console.log("Success");
+
+    navigate(`/lobby`);
   };
 
   const onFinishFailed = (errorInfo) => {
@@ -36,33 +48,28 @@ const CreateGame = ({ playerID }) => {
   };
 
   return (
-    <div className="pt-2">
+    <div>
       <LobbySquares />
-      <h1 className="text-white font-sans uppercase m-auto mt-40 text-center  text-4xl">
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
         Crear partida
       </h1>
       <Form
-        className="bg-black p-2 rounded-lg shadow-lg m-auto"
+        className="bg-negrofondo p-2"
         name="Crear Partida"
-        labelCol={{
-          span: 4,
-        }}
-        wrapperCol={{
-          span: 16,
-        }}
         style={{
-          maxWidth: 400,
-        }}
-        initialValues={{
-          remember: true,
+          maxWidth: 280,
+          margin: "0 auto", // Center the form horizontally
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center", // Center the form items horizontally
         }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
         <Form.Item
-          label={<span style={{ color: "black" }}>Nombre de la Partida</span>}
           name="nombre"
+          style={{ width: "100%" }}
           rules={[
             {
               validator: (_, value) => {
@@ -92,14 +99,15 @@ const CreateGame = ({ playerID }) => {
             },
           ]}
         >
-          <Input placeholder="Ingresar nombre partida" />
+          <Input
+            className="bg-blancofondo"
+            placeholder="Ingresar nombre partida"
+          />
         </Form.Item>
 
         <Form.Item
           name="jugadores"
-          label={
-            <span style={{ color: "black" }}>Cantidad máxima de Jugadores</span>
-          }
+          style={{ width: "100%" }}
           rules={[
             { required: true, message: "Por favor selecciona una opción" },
           ]}
@@ -111,14 +119,15 @@ const CreateGame = ({ playerID }) => {
           </Select>
         </Form.Item>
 
-        <Form.Item name="boton" wrapperCol={{ span: 24, offset: 0 }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button type="primary" htmlType="submit">
-              Crear
-            </Button>
-          </div>
+        <Form.Item name="boton">
+          <Button className="text-blancofondo" type="primary" htmlType="submit">
+            Crear
+          </Button>
         </Form.Item>
       </Form>
+      <Button className="flex m-auto" danger ghost onClick={() => goBack()}>
+        Atras
+      </Button>
     </div>
   );
 };

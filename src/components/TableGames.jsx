@@ -1,48 +1,148 @@
-import React from "react";
-import { Space, Table, Tag } from "antd";
-const { Column, ColumnGroup } = Table;
+import React, { useRef, useState } from "react";
+import { Space, Table, Button, Input } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import Highlighter from "react-highlight-words";
 import { JoinGame } from "../services/LobbyServices";
 import { useNavigate } from "react-router-dom";
+import { usePlayerContext } from "../context/PlayerContext.jsx";
+import { useGameContext } from "../context/GameContext.jsx";
 
-const TableGames = ({ gamesList, playerID }) => {
+const { Column } = Table;
+
+const TableGames = ({ gamesList }) => {
   const navigate = useNavigate();
+  const { playerID } = usePlayerContext();
+  const { setGameID } = useGameContext();
 
-  const data = [
-    {
-      key: "1",
-      game_name: "Juego1",
-      game_id: "1",
-      game_size: "4",
-      players: "3",
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
+
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const handleReset = (clearFilters, confirm) => {
+    clearFilters();
+    setSearchText("");
+    confirm();
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Buscar ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: "block",
+          }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Buscar
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters, confirm)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Limpiar
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              confirm({
+                closeDropdown: false,
+              });
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndex);
+            }}
+          >
+            Filtrar
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            Cerrar
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? "#1677ff" : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
     },
-    {
-      key: "2",
-      game_name: "Juego2",
-      game_id: "2",
-      game_size: "2",
-      players: "3",
-    },
-    {
-      key: "3",
-      game_name: "Juego3",
-      game_id: "3",
-      game_size: "4",
-      players: "3",
-    },
-  ];
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: "#ffc069",
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
 
   const join = async (game_id) => {
     console.log("Success");
 
     try {
-      // Esperamos la resolución de la promesa de LeaveGame
       const response = await JoinGame(playerID, game_id);
 
       if (response) {
         console.log("New Game Info:", response);
-
-        // Navegamos solo cuando la respuesta está lista
-        navigate(`/${playerID}/${game_id}/waitingRoom`);
+        setGameID(game_id);
+        navigate(`/waitingRoom`);
       }
     } catch (error) {
       console.error("Error getting new game data", error);
@@ -52,14 +152,22 @@ const TableGames = ({ gamesList, playerID }) => {
   return (
     <>
       <Table
-        className="w-1/4"
+        className="w-1/4 m-auto my-2 rounded-lg"
         dataSource={gamesList}
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 5, size: "small" }}
+        style={{ backgroundColor: "#FAFAFA", minWidth: "350px", position: "relative" }}
       >
-        <Column title="Nombre Partida" dataIndex="game_name" key="game_name" />
         <Column
-          title="Jugadores"
+          title={<div style={{ textAlign: "center" }}>Nombre Partida</div>}
+          dataIndex="game_name"
+          key="game_name"
+          {...getColumnSearchProps("game_name")}
+        />
+        <Column
+          title={<div style={{ textAlign: "center" }}>Jugadores</div>}
+          dataIndex="players"
           key="players"
+          {...getColumnSearchProps("players")}
           render={(_, record) =>
             record.state === "playing"
               ? `${record.game_size} / ${record.game_size}`
@@ -67,7 +175,7 @@ const TableGames = ({ gamesList, playerID }) => {
           }
         />
         <Column
-          title="Action"
+          title={<div style={{ textAlign: "center" }}>Estado</div>}
           dataIndex="game_id"
           key="game_id"
           align="center"
@@ -76,15 +184,15 @@ const TableGames = ({ gamesList, playerID }) => {
               {record.state === "waiting" &&
               record.players < record.game_size ? (
                 <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded"
+                  className="bg-blue-500 hover:bg-blue-700 text-blancofondo font-bold py-2 px-2 rounded"
                   onClick={() => join(record.game_id)}
                 >
                   Unirme
                 </button>
               ) : record.state === "playing" ? (
-                <span className="text-green-500 font-bold">Jugando</span>
+                <span className="text-verdeficha font-bold">Jugando</span>
               ) : (
-                <span className="text-red-500 font-bold">Sala llena</span>
+                <span className="text-rojoficha font-bold">Sala llena</span>
               )}
             </Space>
           )}
@@ -93,4 +201,5 @@ const TableGames = ({ gamesList, playerID }) => {
     </>
   );
 };
+
 export default TableGames;
