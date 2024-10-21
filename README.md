@@ -55,7 +55,7 @@ Ahora para ver la documentacion del mismo con ir a la pagina
 
 ## Runear los test
 
-Primero hay que descargar las dependencias
+Primero hay que descargar las dependencias.
 
 ```bash
 pip install httpx
