@@ -39,7 +39,8 @@ async def player_movement_charts(player_id: str, game_id: str):
         raise HTTPException(status_code=404, detail="Player not found")
     elif game is None:
         raise HTTPException(status_code=404, detail="Game not found")
-    return {"ids_of_movement_charts": HandMovements.get_movements_charts_by_player_id(player_id, game_id)}
+    movement_chart_ids = HandMovements.get_movements_charts_by_player_id(player_id, game_id)
+    return {"ids_of_movement_charts": [int(id) for id in movement_chart_ids]}
 
 @router.post("/use_figure_chart/{player_id}/{game_id}/{figure_id}/{tile_id}")
 async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id: int):
