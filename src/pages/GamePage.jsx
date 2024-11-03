@@ -32,12 +32,17 @@ const GamePage = () => {
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
+  const [SelectPlayer, setSelectPlayer] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
   const [PossibleTiles1, setPossibleTiles1] = useState();
   const [PossibleTiles2, setPossibleTiles2] = useState();
   const [PossibleTiles3, setPossibleTiles3] = useState();
   const [PossibleTiles4, setPossibleTiles4] = useState();
+  const [Player1, setPlayer1] = useState(null);
+  const [Player2, setPlayer2] = useState(null);
+  const [Player3, setPlayer3] = useState(null);
+  const [Player4, setPlayer4] = useState(null);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -365,6 +370,18 @@ const GamePage = () => {
       setBoard(data.board);
       setPlayersList(data.player_details);
 
+      const player1 = data.player_details.find(
+        (player) => player.player_id === playerID
+      );
+      const otherPlayers = data.player_details.filter(
+        (player) => player.player_id !== playerID
+      );
+
+      setPlayer1(player1);
+      setPlayer2(otherPlayers[0]);
+      setPlayer3(otherPlayers[1]);
+      setPlayer4(otherPlayers[2]);
+
       if (data.players === 1) {
         showModal();
       }
@@ -419,10 +436,11 @@ const GamePage = () => {
       >
         {gameBoard(board)}
       </div>
-      <div className="Cards">
+      <div className="Cards_Bottom_Player  w-80">
         <FigureCard
-          playersList={playersList}
+          playersList={Player1}
           onSelectFigCard={(title) => setSelectFigCard(title)}
+          onSelectPlayer={(player) => setSelectPlayer(player)}
           updateboard={board}
         />
         <MovementCard
@@ -430,6 +448,7 @@ const GamePage = () => {
           updateboard={board}
         />
       </div>
+
       <div className="turn text-blancofondo font-sans uppercase">
         <h3>Turno de:</h3>
         {playersList.map((player) => (
