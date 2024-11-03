@@ -9,8 +9,6 @@ from models.game_models import Game, session
 from models.player_models import PlayerGame, Player
 from models.handMovements_models import HandMovements
 from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
-from models.handMovements_models import HandMovements
-from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.partialMovements_models import PartialMovements
 from models.figure_card_models import Figure_card
 
@@ -90,13 +88,15 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 break
 
             players_in_game = session.query(PlayerGame).filter_by(gameid=game_id).all()
+            table = session.query(Table).filter_by(gameid=game_id).first()
             player_details = [
                 {
                     "player_id": pg.playerid,
                     "player_name": session.query(Player).filter_by(playerid=pg.playerid).first().name,
                     "number_of_figure_card": session.query(Figure_card).filter_by(playerid=pg.playerid, gameid=game_id).count(),  
                     "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count(),
-                    "figure_cards": [{"card_id": fc.id, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()]
+                    "figure_cards": [{"card_id": fc.id, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()],
+                    "prohibited_color": table.get_prohibited_color() if table else None
                 }
                 for pg in players_in_game
             ]

@@ -38,5 +38,5 @@ class Game(Base):
         return self.host
     
     def get_game_size(self):
-        return self.size   
+        return self.size
     
