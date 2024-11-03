@@ -27,13 +27,19 @@ import fige05 from "../assets/images/fige05.svg";
 import fige06 from "../assets/images/fige06.svg";
 import fige07 from "../assets/images/fige07.svg";
 
-const FigureCard = ({ onSelectFigCard, playersList, updateboard }) => {
-  const { playerID } = usePlayerContext();
+const FigureCard = ({
+  onSelectFigCard,
+
+  playersList,
+  updateboard,
+  vertical,
+}) => {
   const [data, setData] = useState([]);
 
   const handleCardClick = (figureNum) => {
-    console.log(`Figure with title ${figureNum} clicked`);
     onSelectFigCard(figureNum);
+    console.log(`Figure with title ${figureNum} clicked`);
+    console.log(`Player with id ${playersList.player_id} clicked`);
   };
 
   const getImageForCard = (id) => {
@@ -95,9 +101,8 @@ const FigureCard = ({ onSelectFigCard, playersList, updateboard }) => {
 
   useEffect(() => {
     console.log("Player List:", playersList);
-    const player = playersList.find((player) => player.player_id === playerID);
-    if (player) {
-      setData(player.figure_cards);
+    if (playersList !== null) {
+      setData(playersList.figure_cards);
     }
     console.log("Figure cards:", data);
   }, [updateboard]);
@@ -105,8 +110,8 @@ const FigureCard = ({ onSelectFigCard, playersList, updateboard }) => {
   return (
     <List
       grid={{
-        gutter: 0,
-        column: 3,
+        gutter: 10,
+        column: vertical ? 1 : 3,
       }}
       dataSource={data}
       renderItem={(item) => (

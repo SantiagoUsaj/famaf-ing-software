@@ -208,8 +208,8 @@ const GamePage = () => {
         disabled={playerID !== turn}
         onClick={() => handleSquareClick(item.id)}
         style={{
-          width: "40px",
-          height: "40px",
+          width: "60px",
+          height: "60px",
           backgroundColor:
             item.color === "red"
               ? "#FF5959"
@@ -420,21 +420,75 @@ const GamePage = () => {
     if (SelectFirstTitle !== null && SelectSecondTitle !== null) {
       swap();
     }
-  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard]);
+
+    if (SelectFigCard !== null && SelectFirstTitle !== null) {
+      useFigure();
+    }
+  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
 
   return (
-    <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
-      <div
-        className="container"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(6, 40px)",
-          gap: "5px",
-          justifyContent: "center",
-          marginBottom: "20px",
-        }}
-      >
-        {gameBoard(board)}
+    <div className="m-auto flex flex-col items-center justify-center min-h-screen">
+      <div className="Cards_Top_Player  w-80">
+        {Player2 && (
+          <>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              {Player2.player_name}
+            </h2>
+            <FigureCard
+              playersList={Player2}
+              onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectPlayer={(player) => setSelectPlayer(player)}
+              updateboard={board}
+            />
+          </>
+        )}
+      </div>
+      <div className="flex">
+        <div className="Cards_Left_Player w-80 flex items-center">
+          {Player3 && (
+            <>
+              <h2 className=" text-blancofondo text-center font-sans uppercase">
+                {Player3.player_name}
+              </h2>
+              <FigureCard
+                playersList={Player3}
+                onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectPlayer={(player) => setSelectPlayer(player)}
+                updateboard={board}
+                vertical={true}
+              />
+            </>
+          )}
+        </div>
+        <div
+          className="container"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 60px)", // Increased size
+            gap: "10px", // Increased gap
+            justifyContent: "center",
+            marginBottom: "20px",
+            marginTop: "20px",
+          }}
+        >
+          {gameBoard(board)}
+        </div>
+        <div className="Cards_Right_Player w-80 flex items-center">
+          {Player4 && (
+            <>
+              <FigureCard
+                playersList={Player4}
+                onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectPlayer={(player) => setSelectPlayer(player)}
+                updateboard={board}
+                vertical={true}
+              />
+              <h2 className=" text-blancofondo text-center font-sans uppercase">
+                {Player4.player_name}
+              </h2>
+            </>
+          )}
+        </div>
       </div>
       <div className="Cards_Bottom_Player  w-80">
         <FigureCard
