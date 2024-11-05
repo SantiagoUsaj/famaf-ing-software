@@ -123,7 +123,8 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "turn": turnos,
                 "board": board,
                 "round": round,
-                "prohibited_color": table.get_prohibited_color() if table else None
+                "prohibited_color": table.get_prohibited_color() if table else None,
+                "timestamp": game.timestamp
             }
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages

@@ -7,6 +7,7 @@ from models.movementChart_models import MovementChart
 from models.partialMovements_models import PartialMovements
 from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
+import time
     
 router = APIRouter()
 
@@ -160,6 +161,9 @@ async def start_game(player_id: str, game_id: str):
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
+
+            game.timestamp = time.time()
+            session.commit()
             return {"message": "Game started"}
 
 @router.put("/next_turn/{player_id}/{game_id}")
@@ -197,6 +201,10 @@ async def next_turn(player_id: str, game_id: str):
             match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             update = True
+
+            game.timestamp = time.time()
+            session.commit()
+
             return {"message": "Next turn"}
 
 

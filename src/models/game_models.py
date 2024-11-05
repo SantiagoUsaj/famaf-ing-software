@@ -24,12 +24,16 @@ class Game(Base):
     size = Column(Integer, nullable=False)
     host = Column(String, nullable=True)
     turn = Column(String, nullable=True)
+    timestamp = Column(Integer, nullable=True)
 
     def __init__(self, name: str, size: int, host: str):
         self.gameid = str(uuid.uuid4())
         self.name = name
         self.size = size
         self.host = host
+        self.state = "waiting"
+        self.turn = None
+        self.timestamp = 0
 
     def start_game(self):
         self.state = "playing"
