@@ -40,6 +40,7 @@ const GamePage = () => {
   const [PossibleTiles2, setPossibleTiles2] = useState();
   const [PossibleTiles3, setPossibleTiles3] = useState();
   const [PossibleTiles4, setPossibleTiles4] = useState();
+  const [blockColor, setBlockColor] = useState();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -397,6 +398,7 @@ const GamePage = () => {
       setTurn(data.turn);
       setBoard(data.board);
       setPlayersList(data.player_details);
+      setBlockColor(data.prohibited_color);
 
       if (data.players === 1) {
         showModal();
@@ -483,6 +485,13 @@ const GamePage = () => {
             {player.player_id === turn && <h2>{player.player_name}</h2>}
           </div>
         ))}
+      </div>
+      <div className="blockColor text-blancofondo text-center font-sans uppercase">
+        <h3>Color Bloqueado:</h3>
+        <div
+          className="littleSquare h-8 rounded-xl"
+          style={{ backgroundColor: blockColor }}
+        ></div>
       </div>
       <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
         <Button
