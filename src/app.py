@@ -96,7 +96,6 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                     "number_of_figure_card": session.query(Figure_card).filter_by(playerid=pg.playerid, gameid=game_id).count(),  
                     "number_of_movement_charts": session.query(HandMovements).filter_by(playerid=pg.playerid, gameid=game_id).count(),
                     "figure_cards": [{"card_id": fc.id, "figure": fc.figure} for fc in session.query(Figure_card).filter_by(playerid=pg.playerid, in_hand=True).all()],
-                    "prohibited_color": table.get_prohibited_color() if table else None
                 }
                 for pg in players_in_game
             ]
@@ -123,7 +122,8 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "player_details": player_details,
                 "turn": turnos,
                 "board": board,
-                "round": round  
+                "round": round,
+                "prohibited_color": table.get_prohibited_color() if table else None
             }
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
