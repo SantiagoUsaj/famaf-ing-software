@@ -490,7 +490,18 @@ const GamePage = () => {
         <h3>Color Bloqueado:</h3>
         <div
           className="littleSquare h-8 rounded-xl"
-          style={{ backgroundColor: blockColor }}
+          style={{
+            backgroundColor:
+              blockColor === "blue"
+                ? "#45B3EB"
+                : blockColor === "red"
+                ? "#FF5959"
+                : blockColor === "green"
+                ? "#4ade80"
+                : blockColor === "yellow"
+                ? "#FAD05A"
+                : "#FAFAFA",
+          }}
         ></div>
       </div>
       <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
