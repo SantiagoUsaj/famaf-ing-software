@@ -38,7 +38,7 @@ async def get_game(game_id: str):
         "turn": game.turn
     }
 
-@router.post("/create_game/{player_id}/{game_name}/{game_size}")
+@router.post("/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
 async def create_game(player_id: str, game_name: str, game_size: int):
     try:
         if len(game_name) > 20 or not game_name.isalnum():
@@ -53,6 +53,8 @@ async def create_game(player_id: str, game_name: str, game_size: int):
             player = session.query(Player).filter_by(playerid=player_id).first()
             game = Game(game_name, game_size, player.playerid)
             playergame = PlayerGame(player.playerid, game.gameid)
+            if game_password != "None":
+                game.set_game_password(game_password)
             session.add(game)
             session.add(playergame)
             session.commit()
@@ -62,7 +64,7 @@ async def create_game(player_id: str, game_name: str, game_size: int):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.put("/join_game/{player_id}/{game_id}")
+@router.put("/join_game/{player_id}/{game_id}/{game_password}")
 async def join_game(player_id: str, game_id: str):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
@@ -78,6 +80,8 @@ async def join_game(player_id: str, game_id: str):
         raise HTTPException(status_code=409, detail="Player is already in another game")
     elif session.query(PlayerGame).filter_by(gameid=game_id).count() == game.size:
         raise HTTPException(status_code=409, detail="Game is full")
+    elif game.get_game_password() is not None and game_password != game.get_game_password():
+        raise HTTPException(status_code=409, detail="Incorrect password")
     else:
         playergame = PlayerGame(player_id, game_id)
         session.add(playergame)
