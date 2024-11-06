@@ -1,10 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, Boolean
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from models.game_models import engine, Base, session
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
+from models.game_models import  Base, session
 import random
-import uuid
-import os
+
 
 
 class Table(Base):
