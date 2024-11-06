@@ -55,8 +55,7 @@ async def create_game(player_id: str, game_name: str, game_size: int, game_passw
             player = session.query(Player).filter_by(playerid=player_id).first()
             game = Game(game_name, game_size, player.playerid)
             playergame = PlayerGame(player.playerid, game.gameid)
-            if game_password:
-                game.set_game_password(game_password)
+            game.set_game_password(game_password)
             session.add(game)
             session.add(playergame)
             session.commit()
