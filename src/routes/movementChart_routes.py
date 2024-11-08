@@ -66,8 +66,11 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
             for movimiento in movimientos_parciales:
                 session.delete(movimiento)
             session.delete(figure_card)
-            session.commit()
             
+            if has_blocked_card(game_id, player_id) and (session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, in_hand=True).count()==1):
+                card_to_unblock = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, in_hand=True).first()
+                card_to_unblock.unblock_card()
+            session.commit()
             return {"message": "Figure card used and removed from hand"}
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
