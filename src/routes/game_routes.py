@@ -49,8 +49,6 @@ async def create_game(player_id: str, game_name: str, game_size: int, game_passw
             raise ValueError("Game password must be between 4 and 20 characters and alphanumeric")
         elif (session.query(Player).filter_by(playerid=player_id).first()) is None:
             raise HTTPException(status_code=404, detail="Player not found")
-        elif session.query(PlayerGame).filter_by(playerid=player_id).count() > 0:
-            raise HTTPException(status_code=409, detail="Player is already in a game")
         else:
             player = session.query(Player).filter_by(playerid=player_id).first()
             game = Game(game_name, game_size, player.playerid)
