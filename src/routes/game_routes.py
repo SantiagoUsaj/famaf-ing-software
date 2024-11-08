@@ -38,14 +38,14 @@ async def get_game(game_id: str):
         "turn": game.turn
     }
 
-@router.post("/create_game/{player_id}/{game_name}/{game_size}")
-async def create_game(player_id: str, game_name: str, game_size: int, game_password: str = None):
+@router.post("/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+async def create_game(player_id: str, game_name: str, game_size: int, game_password: str = "CAB"):
     try:
         if len(game_name) > 20 or not game_name.isalnum():
             raise ValueError("Game name must be less than 20 characters or alphanumeric")
         elif game_size < 2 or game_size > 4:
             raise ValueError("Game size must be between 2 and 4")
-        elif game_password and (len(game_password) > 20 or len(game_password) < 4 or not game_password.isalnum()):
+        elif not game_password == "CAB" and game_password and (len(game_password) > 20 or len(game_password) < 4 or not game_password.isalnum()):
             raise ValueError("Game password must be between 4 and 20 characters and alphanumeric")
         elif (session.query(Player).filter_by(playerid=player_id).first()) is None:
             raise HTTPException(status_code=404, detail="Player not found")
@@ -66,7 +66,7 @@ async def create_game(player_id: str, game_name: str, game_size: int, game_passw
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/join_game/{player_id}/{game_id}/{game_password}")
-async def join_game(player_id: str, game_id: str, game_password: str = None):
+async def join_game(player_id: str, game_id: str, game_password: str = "CAB"):
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     if game_password == " ":
@@ -81,7 +81,7 @@ async def join_game(player_id: str, game_id: str, game_password: str = None):
         raise HTTPException(status_code=409, detail="Player is already in the game")
     elif session.query(PlayerGame).filter_by(gameid=game_id).count() == game.size:
         raise HTTPException(status_code=409, detail="Game is full")
-    elif game.get_game_password() is not None and game_password != game.get_game_password():
+    elif game.password != "CAB" and game_password != game.get_game_password():
         raise HTTPException(status_code=409, detail="Incorrect password")
     else:
         playergame = PlayerGame(player_id, game_id)
