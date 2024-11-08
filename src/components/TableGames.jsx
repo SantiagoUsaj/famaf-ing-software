@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
-import { Space, Table, Button, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Space, Table, Button, Input, Modal, message } from "antd";
+import { SearchOutlined, LockOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 import { JoinGame } from "../services/LobbyServices";
 import { useNavigate } from "react-router-dom";
@@ -13,10 +13,27 @@ const TableGames = ({ gamesList }) => {
   const navigate = useNavigate();
   const { playerID } = usePlayerContext();
   const { setGameID } = useGameContext();
-
   const [searchText, setSearchText] = useState("");
   const [searchedColumn, setSearchedColumn] = useState("");
   const searchInput = useRef(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedGameId, setSelectedGameId] = useState(null);
+  const [password, setPassword] = useState("");
+
+  const showModal = (game_id) => {
+    setSelectedGameId(game_id);
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    join(selectedGameId, password);
+    setPassword("");
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setPassword("");
+  };
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
@@ -24,10 +41,9 @@ const TableGames = ({ gamesList }) => {
     setSearchedColumn(dataIndex);
   };
 
-  const handleReset = (clearFilters, confirm) => {
+  const handleReset = (clearFilters) => {
     clearFilters();
     setSearchText("");
-    confirm();
   };
 
   const getColumnSearchProps = (dataIndex) => ({
@@ -70,7 +86,7 @@ const TableGames = ({ gamesList }) => {
             Buscar
           </Button>
           <Button
-            onClick={() => clearFilters && handleReset(clearFilters, confirm)}
+            onClick={() => clearFilters && handleReset(clearFilters)}
             size="small"
             style={{
               width: 90,
@@ -133,20 +149,30 @@ const TableGames = ({ gamesList }) => {
       ),
   });
 
-  const join = async (game_id) => {
+  const join = async (game_id, game_password) => {
     console.log("Success");
 
     try {
-      const response = await JoinGame(playerID, game_id);
+      const response = await JoinGame(playerID, game_id, game_password);
 
       if (response) {
         console.log("New Game Info:", response);
+        setIsModalVisible(false);
         setGameID(game_id);
         navigate(`/waitingRoom`);
+      } else {
+        message.error("Incorrect password. Please try again.");
       }
     } catch (error) {
       console.error("Error getting new game data", error);
+      message.error("Incorrect password. Please try again.");
     }
+  };
+
+  const rejoin = async (game_id) => {
+    console.log("Success");
+    setGameID(game_id);
+    navigate(`/game`);
   };
 
   return (
@@ -155,13 +181,21 @@ const TableGames = ({ gamesList }) => {
         className="w-1/4 m-auto my-2 rounded-lg"
         dataSource={gamesList}
         pagination={{ pageSize: 5, size: "small" }}
-        style={{ backgroundColor: "#FAFAFA", minWidth: "350px", position: "relative" }}
+        style={{ backgroundColor: "#FAFAFA" }}
       >
         <Column
           title={<div style={{ textAlign: "center" }}>Nombre Partida</div>}
           dataIndex="game_name"
           key="game_name"
           {...getColumnSearchProps("game_name")}
+          render={(text, record) => (
+            <span>
+              {record.type === "Private" && (
+                <LockOutlined style={{ marginRight: 8 }} />
+              )}
+              {text}
+            </span>
+          )}
         />
         <Column
           title={<div style={{ textAlign: "center" }}>Jugadores</div>}
@@ -181,16 +215,45 @@ const TableGames = ({ gamesList }) => {
           align="center"
           render={(_, record) => (
             <Space size="middle">
-              {record.state === "waiting" &&
-              record.players < record.game_size ? (
+              {record.type === "Private" ? (
+                record.player_details.some(
+                  (player) => player.player_id === playerID
+                ) ? (
+                  <button
+                    className="bg-green-500 hover:bg-green-700 text-blancofondo font-bold py-2 px-2 rounded"
+                    onClick={() => rejoin(record.game_id)}
+                  >
+                    Reunirme
+                  </button>
+                ) : (
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-blancofondo font-bold py-2 px-2 rounded"
+                    onClick={() => showModal(record.game_id)}
+                  >
+                    Unirme
+                  </button>
+                )
+              ) : record.state === "waiting" &&
+                record.players < record.game_size ? (
                 <button
                   className="bg-blue-500 hover:bg-blue-700 text-blancofondo font-bold py-2 px-2 rounded"
-                  onClick={() => join(record.game_id)}
+                  onClick={() => join(record.game_id, "CAB")}
                 >
                   Unirme
                 </button>
               ) : record.state === "playing" ? (
-                <span className="text-verdeficha font-bold">Jugando</span>
+                record.player_details.some(
+                  (player) => player.player_id === playerID
+                ) ? (
+                  <button
+                    className="bg-green-500 hover:bg-green-700 text-blancofondo font-bold py-2 px-2 rounded"
+                    onClick={() => rejoin(record.game_id)}
+                  >
+                    Reunirme
+                  </button>
+                ) : (
+                  <span className="text-verdeficha font-bold">Jugando</span>
+                )
               ) : (
                 <span className="text-rojoficha font-bold">Sala llena</span>
               )}
@@ -198,6 +261,18 @@ const TableGames = ({ gamesList }) => {
           )}
         />
       </Table>
+      <Modal
+        title="Ingresar contraseña"
+        open={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+      >
+        <Input.Password
+          placeholder=""
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </Modal>
     </>
   );
 };
