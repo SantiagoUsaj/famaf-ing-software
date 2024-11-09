@@ -47,6 +47,7 @@ const GamePage = () => {
   const [Player2, setPlayer2] = useState(null);
   const [Player3, setPlayer3] = useState(null);
   const [Player4, setPlayer4] = useState(null);
+  const [blockColor, setBlockColor] = useState();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -415,6 +416,7 @@ const GamePage = () => {
       setTurn(data.turn);
       setBoard(data.board);
       setPlayersList(data.player_details);
+      setBlockColor(data.prohibited_color);
 
       const player1 = data.player_details.find(
         (player) => player.player_id === playerID
@@ -610,6 +612,25 @@ const GamePage = () => {
               {player.player_id === turn && <h2>{player.player_name}</h2>}
             </div>
           ))}
+        </div>
+
+        <div className="blockColor text-blancofondo text-center font-sans uppercase">
+          <h3>Color Bloqueado:</h3>
+          <div
+            className="littleSquare h-8 rounded-xl"
+            style={{
+              backgroundColor:
+                blockColor === "blue"
+                  ? "#45B3EB"
+                  : blockColor === "red"
+                  ? "#FF5959"
+                  : blockColor === "green"
+                  ? "#4ade80"
+                  : blockColor === "yellow"
+                  ? "#FAD05A"
+                  : "#FAFAFA",
+            }}
+          ></div>
         </div>
 
         <Button
