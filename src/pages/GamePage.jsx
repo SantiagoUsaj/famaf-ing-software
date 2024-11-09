@@ -523,15 +523,16 @@ const GamePage = () => {
         )}
       </div>
 
-      <div className="turn text-blancofondo font-sans uppercase">
-        <h3>Turno de:</h3>
-        {playersList.map((player) => (
-          <div key={player.player_id}>
-            {player.player_id === turn && <h2>{player.player_name}</h2>}
-          </div>
-        ))}
-      </div>
-      <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
+      <div className="botones flex flex-col gap-4 fixed bottom-20 right-20 ">
+        <div className="turn text-blancofondo font-sans uppercase">
+          <h3>Turno de:</h3>
+          {playersList.map((player) => (
+            <div key={player.player_id}>
+              {player.player_id === turn && <h2>{player.player_name}</h2>}
+            </div>
+          ))}
+        </div>
+
         <Button
           className="text-blancofondo"
           type="primary"
@@ -603,25 +604,26 @@ const GamePage = () => {
         >
           Abandonar
         </Button>
-      </div>
-      <div>
-        <Modal
-          title="¡Felicidades!"
-          open={isModalOpen}
-          footer={null}
-          className="text-center"
-          closable={false}
-        >
-          <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
-          <Button
-            className="mt-5 text-blancofondo"
-            type="primary"
-            onClick={() => finishGame(game_id)}
+
+        <div>
+          <Modal
+            title="¡Felicidades!"
+            open={isModalOpen}
+            footer={null}
+            className="text-center"
+            closable={false}
           >
-            Volver al Lobby
-          </Button>
-        </Modal>
-        {isModalOpen && winner()}
+            <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
+            <Button
+              className="mt-5 text-blancofondo"
+              type="primary"
+              onClick={() => finishGame(game_id)}
+            >
+              Volver al Lobby
+            </Button>
+          </Modal>
+          {isModalOpen && winner()}
+        </div>
       </div>
     </div>
   );
