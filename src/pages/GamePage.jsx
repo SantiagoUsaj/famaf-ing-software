@@ -640,17 +640,6 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => resetSelect()}
-        >
-          Resetear Seleccion
-        </Button>
-        <Button
-          className="text-blancofondo"
-          type="primary"
-          disabled={playerID !== turn}
-          style={{
-            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
-          }}
           onClick={() => undoMov(playerID, game_id)}
           icon={
             <UndoOutlined
