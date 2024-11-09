@@ -178,11 +178,6 @@ async def next_turn(player_id: str, game_id: str):
             # Tomar cartas si no una tengo carta bloqueada or "marcada"
             if (has_blocked_card(game_id, player_id) or has_marked_card(game_id, player_id)) == False:
                 take_cards(game_id, player_id)
-            # Desbloquear carta "marcandola" cuanco solo tengo la carta bloqueada en mano
-            if (has_blocked_card(game_id, player_id) and (session.query(Figure_card).filter_by(gameid=game_id, in_hand=True, playerid=player_id).count() == 1)):
-                card = session.query(Figure_card).filter_by(gameid=game_id, in_hand=True, playerid=player_id).first()
-                card.unblock_card()
-            session.commit()
 
             # Devuelvo las cartas si tengo movimientos parciales y no descarte niguna figura
             if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) > 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
