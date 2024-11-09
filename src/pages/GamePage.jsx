@@ -427,12 +427,12 @@ const GamePage = () => {
   }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
 
   return (
-    <div className="m-auto flex flex-col items-center justify-center min-h-screen">
+    <div className="m-auto flex flex-col items-center justify-center min-h-screen text-center">
       <div className="Cards_Top_Player  w-80">
         {Player2 && (
           <>
             <h2 className=" text-blancofondo text-center font-sans uppercase">
-              {Player2.player_name}
+              <b>{Player2.player_name}</b>
             </h2>
             <h2 className=" text-blancofondo text-center font-sans uppercase">
               Cartas de Figuras Restantes: {Player2.number_of_figure_card}
@@ -450,12 +450,14 @@ const GamePage = () => {
         <div className="Cards_Left_Player w-80 flex items-center">
           {Player3 && (
             <>
-              <h2 className=" text-blancofondo text-center font-sans uppercase">
-                {Player3.player_name}
-              </h2>
-              <h2 className=" text-blancofondo text-center font-sans uppercase">
-                Cartas de Figuras Restantes: {Player3.number_of_figure_card}
-              </h2>
+              <div>
+                <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
+                  <b>{Player3.player_name}</b>
+                </h2>
+                <h2 className=" text-blancofondo text-center font-sans uppercase">
+                  Cartas de Figuras Restantes: {Player3.number_of_figure_card}
+                </h2>
+              </div>
               <FigureCard
                 playersList={Player3}
                 onSelectFigCard={(title) => setSelectFigCard(title)}
@@ -489,12 +491,14 @@ const GamePage = () => {
                 updateboard={board}
                 vertical={true}
               />
-              <h2 className=" text-blancofondo text-center font-sans uppercase">
-                {Player4.player_name}
-              </h2>
-              <h2 className=" text-blancofondo text-center font-sans uppercase">
-                Cartas de Figuras Restantes: {Player4.number_of_figure_card}
-              </h2>
+              <div>
+                <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
+                  <b>{Player4.player_name}</b>
+                </h2>
+                <h2 className=" text-blancofondo text-center font-sans uppercase">
+                  Cartas de Figuras Restantes: {Player4.number_of_figure_card}
+                </h2>
+              </div>
             </>
           )}
         </div>
