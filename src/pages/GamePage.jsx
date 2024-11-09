@@ -34,6 +34,7 @@ const GamePage = () => {
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
+  const [SelectPlayer, setSelectPlayer] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
   const [PossibleTiles1, setPossibleTiles1] = useState();
@@ -42,6 +43,10 @@ const GamePage = () => {
   const [PossibleTiles4, setPossibleTiles4] = useState();
   const [secondsLeft, setSecondsLeft] = useState(120);
   const [isRunning, setIsRunning] = useState(false);
+  const [Player1, setPlayer1] = useState(null);
+  const [Player2, setPlayer2] = useState(null);
+  const [Player3, setPlayer3] = useState(null);
+  const [Player4, setPlayer4] = useState(null);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -223,8 +228,8 @@ const GamePage = () => {
         disabled={playerID !== turn}
         onClick={() => handleSquareClick(item.id)}
         style={{
-          width: "40px",
-          height: "40px",
+          width: "60px",
+          height: "60px",
           backgroundColor:
             item.color === "red"
               ? "#FF5959"
@@ -411,6 +416,18 @@ const GamePage = () => {
       setBoard(data.board);
       setPlayersList(data.player_details);
 
+      const player1 = data.player_details.find(
+        (player) => player.player_id === playerID
+      );
+      const otherPlayers = data.player_details.filter(
+        (player) => player.player_id !== playerID
+      );
+
+      setPlayer1(player1);
+      setPlayer2(otherPlayers[0]);
+      setPlayer3(otherPlayers[1]);
+      setPlayer4(otherPlayers[2]);
+
       if (data.players === 1) {
         showModal();
       }
@@ -489,39 +506,112 @@ const GamePage = () => {
   }, [isRunning, secondsLeft]);
 
   return (
-    <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
-      <div
-        className="container"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(6, 40px)",
-          gap: "5px",
-          justifyContent: "center",
-          marginBottom: "20px",
-        }}
-      >
-        {gameBoard(board)}
+    <div className="m-auto flex flex-col items-center justify-center min-h-screen text-center">
+      <div className="Cards_Top_Player  w-80">
+        {Player2 && (
+          <>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              <b>{Player2.player_name}</b>
+            </h2>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              Cartas de Figuras Restantes: {Player2.number_of_figure_card}
+            </h2>
+            <FigureCard
+              playersList={Player2}
+              onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectPlayer={(player) => setSelectPlayer(player)}
+              updateboard={board}
+            />
+          </>
+        )}
       </div>
-      <div className="Cards">
-        <FigureCard
-          playersList={playersList}
-          onSelectFigCard={(title) => setSelectFigCard(title)}
-          updateboard={board}
-        />
-        <MovementCard
-          onSelectMovCard={(title) => setSelectMovCard(title)}
-          updateboard={board}
-        />
+      <div className="flex">
+        <div className="Cards_Left_Player w-80 flex items-center">
+          {Player3 && (
+            <>
+              <div>
+                <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
+                  <b>{Player3.player_name}</b>
+                </h2>
+                <h2 className=" text-blancofondo text-center font-sans uppercase">
+                  Cartas de Figuras Restantes: {Player3.number_of_figure_card}
+                </h2>
+              </div>
+              <FigureCard
+                playersList={Player3}
+                onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectPlayer={(player) => setSelectPlayer(player)}
+                updateboard={board}
+                vertical={true}
+              />
+            </>
+          )}
+        </div>
+        <div
+          className="container"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 60px)", // Increased size
+            gap: "10px", // Increased gap
+            justifyContent: "center",
+            marginBottom: "20px",
+            marginTop: "20px",
+          }}
+        >
+          {gameBoard(board)}
+        </div>
+        <div className="Cards_Right_Player w-80 flex items-center">
+          {Player4 && (
+            <>
+              <FigureCard
+                playersList={Player4}
+                onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectPlayer={(player) => setSelectPlayer(player)}
+                updateboard={board}
+                vertical={true}
+              />
+              <div>
+                <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
+                  <b>{Player4.player_name}</b>
+                </h2>
+                <h2 className=" text-blancofondo text-center font-sans uppercase">
+                  Cartas de Figuras Restantes: {Player4.number_of_figure_card}
+                </h2>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <div className="turn text-blancofondo font-sans uppercase">
-        <h3>Turno de:</h3>
-        {playersList.map((player) => (
-          <div key={player.player_id}>
-            {player.player_id === turn && <h2>{player.player_name}</h2>}
-          </div>
-        ))}
+      <div className="Cards_Bottom_Player  w-80">
+        {Player1 && (
+          <>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              Cartas de Figuras Restantes: {Player1.number_of_figure_card}
+            </h2>
+            <FigureCard
+              playersList={Player1}
+              onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectPlayer={(player) => setSelectPlayer(player)}
+              updateboard={board}
+            />
+            <MovementCard
+              onSelectMovCard={(title) => setSelectMovCard(title)}
+              updateboard={board}
+            />
+          </>
+        )}
       </div>
-      <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
+
+      <div className="botones flex flex-col gap-4 fixed bottom-20 right-20 ">
+        <div className="turn text-blancofondo font-sans uppercase">
+          <h3>Turno de:</h3>
+          {playersList.map((player) => (
+            <div key={player.player_id}>
+              {player.player_id === turn && <h2>{player.player_name}</h2>}
+            </div>
+          ))}
+        </div>
+
         <Button
           className="text-blancofondo"
           type="primary"
