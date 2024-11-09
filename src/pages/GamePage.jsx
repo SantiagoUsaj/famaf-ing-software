@@ -434,6 +434,9 @@ const GamePage = () => {
             <h2 className=" text-blancofondo text-center font-sans uppercase">
               {Player2.player_name}
             </h2>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              Cartas de Figuras Restantes: {Player2.number_of_figure_card}
+            </h2>
             <FigureCard
               playersList={Player2}
               onSelectFigCard={(title) => setSelectFigCard(title)}
@@ -449,6 +452,9 @@ const GamePage = () => {
             <>
               <h2 className=" text-blancofondo text-center font-sans uppercase">
                 {Player3.player_name}
+              </h2>
+              <h2 className=" text-blancofondo text-center font-sans uppercase">
+                Cartas de Figuras Restantes: {Player3.number_of_figure_card}
               </h2>
               <FigureCard
                 playersList={Player3}
@@ -486,21 +492,31 @@ const GamePage = () => {
               <h2 className=" text-blancofondo text-center font-sans uppercase">
                 {Player4.player_name}
               </h2>
+              <h2 className=" text-blancofondo text-center font-sans uppercase">
+                Cartas de Figuras Restantes: {Player4.number_of_figure_card}
+              </h2>
             </>
           )}
         </div>
       </div>
       <div className="Cards_Bottom_Player  w-80">
-        <FigureCard
-          playersList={Player1}
-          onSelectFigCard={(title) => setSelectFigCard(title)}
-          onSelectPlayer={(player) => setSelectPlayer(player)}
-          updateboard={board}
-        />
-        <MovementCard
-          onSelectMovCard={(title) => setSelectMovCard(title)}
-          updateboard={board}
-        />
+        {Player1 && (
+          <>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              Cartas de Figuras Restantes: {Player1.number_of_figure_card}
+            </h2>
+            <FigureCard
+              playersList={Player1}
+              onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectPlayer={(player) => setSelectPlayer(player)}
+              updateboard={board}
+            />
+            <MovementCard
+              onSelectMovCard={(title) => setSelectMovCard(title)}
+              updateboard={board}
+            />
+          </>
+        )}
       </div>
 
       <div className="turn text-blancofondo font-sans uppercase">
