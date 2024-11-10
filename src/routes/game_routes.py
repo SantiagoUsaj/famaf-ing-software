@@ -5,7 +5,6 @@ from models.board_models import  Table, Tile, Figures, find_connected_components
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.partialMovements_models import PartialMovements
-from models.board_models import Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.figure_card_models import Figure_card, shuffle, take_cards
 import random
     
@@ -162,7 +161,7 @@ async def start_game(player_id: str, game_id: str):
 
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
-            match_figures(connected_components, session.query(Figures).all())
+            match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             return {"message": "Game started"}
 
@@ -194,10 +193,11 @@ async def next_turn(player_id: str, game_id: str):
             if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 HandMovements.deals_moves(player_id, game.gameid, 3 - HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id))
                 take_cards(game_id, player_id)
-                
+            
+            table = session.query(Table).filter_by(gameid=game_id).first()
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
-            match_figures(connected_components, session.query(Figures).all())
+            match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             update = True
             return {"message": "Next turn"}
@@ -235,9 +235,10 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
         
         if rot0 == tile2.number or rot90 == tile2.number or rot180 == tile2.number or rot270 == tile2.number:
             Tile.swap_tiles_color(tile1.id, tile2.id)
+            table = session.query(Table).filter_by(gameid=game_id).first()
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
-            match_figures(connected_components, session.query(Figures).all())
+            match_figures(connected_components, session.query(Figures).all(), table)
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
             session.commit()
@@ -263,9 +264,10 @@ async def undo_a_movement(player_id: str, game_id: str):
             raise HTTPException(status_code=404, detail="No movements to undo")
         else:
             Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+            table = session.query(Table).filter_by(gameid=game_id).first()
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
-            match_figures(connected_components, session.query(Figures).all())
+            match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
             PartialMovements.delete_partial_movement(partial_movement.partialid)
@@ -291,9 +293,10 @@ async def undo_all_movements(player_id: str, game_id: str):
             partial_movements = sorted(partial_movements, key=lambda x: x.orden, reverse=True)
             for partial_movement in partial_movements:
                 Tile.swap_tiles_color(partial_movement.tileid1, partial_movement.tileid2)
+                table = session.query(Table).filter_by(gameid=game_id).first()
                 tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
                 connected_components = find_connected_components(tiles)
-                match_figures(connected_components, session.query(Figures).all())
+                match_figures(connected_components, session.query(Figures).all(), table)
                 session.commit()
                 HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                 PartialMovements.delete_partial_movement(partial_movement.partialid)
