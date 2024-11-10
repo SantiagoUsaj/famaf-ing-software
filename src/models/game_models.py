@@ -24,6 +24,8 @@ class Game(Base):
     size = Column(Integer, nullable=False)
     host = Column(String, nullable=True)
     turn = Column(String, nullable=True)
+    timestamp = Column(Integer, nullable=True)
+    password = Column(String, nullable=True)
 
     def __init__(self, name: str, size: int, host: str):
         self.gameid = str(uuid.uuid4())
@@ -38,5 +40,10 @@ class Game(Base):
         return self.host
     
     def get_game_size(self):
-        return self.size   
+        return self.size
     
+    def set_game_password(self, password):
+        self.password = password
+    
+    def get_game_password(self):
+        return self.password

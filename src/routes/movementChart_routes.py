@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
-from models.board_models import Tile,get_connected_component_for_tile_by_number,match_figures,Table,Figures,normalize_points
+from models.board_models import Tile,get_connected_component_for_tile_by_number, match_figures, find_connected_components, Table,Figures,normalize_points
 from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
@@ -63,6 +63,10 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
         if check_tile_coordinates_with_rotations(figure, components):
             movimientos_parciales = PartialMovements.get_all_partial_movements_by_gameid(game_id)
+            if table.get_prohibited_color() == tile.color:
+                raise HTTPException(status_code=409, detail="The tile has a prohibited color")
+            else:
+                table.set_prohibited_color(tile.color)
             for movimiento in movimientos_parciales:
                 session.delete(movimiento)
             session.delete(figure_card)
@@ -70,6 +74,9 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
             if has_blocked_card(game_id, player_id) and (session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, in_hand=True).count()==1):
                 card_to_unblock = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, in_hand=True).first()
                 card_to_unblock.unblock_card()
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             return {"message": "Figure card used and removed from hand"}
         else:

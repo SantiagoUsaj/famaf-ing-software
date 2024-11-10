@@ -5,10 +5,14 @@ from models.game_models import Base, Game, engine, session
 from models.player_models import PlayerGame
 from models.figure_card_models import Figure_card
 from models.handMovements_models import HandMovements
+from models.movementChart_models import MovementChart
 from GameFactory import GameFactory
 
 # Crea todas las tablas
+Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
+MovementChart.game_movement()
+
 
 client = TestClient(app)
 
@@ -36,7 +40,8 @@ def test_get_games():
   player_id = response_player.json()["player_id"]
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   turn = None
   game_state = "waiting"
@@ -54,7 +59,8 @@ def test_get_game_for_id():
   player_id = response_player.json()["player_id"]
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   game_state = "waiting"
   current_player = 1
@@ -97,7 +103,8 @@ def test_create_game():
 
   game_name = "ValidGame"
   game_size = 3
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response.json()["game_id"]
 
   assert response.status_code == 200
@@ -110,7 +117,8 @@ def test_create_game_invalid_name():
 
   game_name = "In val!d G@me"
   game_size = 3
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
 
   assert response.status_code == 400
   assert response.json() == {"detail": "Game name must be less than 20 characters or alphanumeric"}
@@ -122,7 +130,8 @@ def test_create_game_name_too_long():
 
   game_name = "a" * 21
   game_size = 3
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
 
   assert response.status_code == 400
   assert response.json() == {"detail": "Game name must be less than 20 characters or alphanumeric"}
@@ -134,7 +143,8 @@ def test_create_game_invalid_size():
   
   game_name = "ValidGame"
   game_size = 1
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
 
   assert response.status_code == 400
   assert response.json() == {"detail": "Game size must be between 2 and 4"}
@@ -146,8 +156,9 @@ def test_create_game_size_too_big():
   
   game_name = "ValidGame"
   game_size = 10
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-
+  game_password = "1234"
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+  
   assert response.status_code == 400
   assert response.json() == {"detail": "Game size must be between 2 and 4"}
   
@@ -156,99 +167,102 @@ def test_create_game_player_not_found():
   
   game_name = "ValidGame"
   game_size = 3
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
 
   assert response.status_code == 404
   assert response.json() == {"detail": "Player not found"}
-
-def test_create_game_player_already_in_game(): 
-  player_name = "Player1"
+  
+def test_create_game_password_too_long():
+  player_name = "ValidPlayer"
   response_player = client.post(f"/create_player/{player_name}")
   player_id = response_player.json()["player_id"]
- 
-  game_name1 = "Game1"
-  game_size1 = 3
-  client.post(f"/create_game/{player_id}/{game_name1}/{game_size1}")
-  
-  game_name = "Game2"
+
+  game_name = "ValidGame"
   game_size = 3
-  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  assert response.status_code == 409
-  assert response.json() == {"detail": "Player is already in a game"}
+  game_password = "a" * 21
+  response = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+
+  assert response.status_code == 400
+  assert response.json() == {"detail": "Game password must be between 4 and 20 characters and alphanumeric"}
 
 # Test join game
 def test_join_game():
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  
-  player_name2 = "ValidPlayer2"
-  response_player2 = client.post(f"/create_player/{player_name2}")
-  player_id2 = response_player2.json()["player_id"]
-  
-  game_name = "ValidGame"
-  game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
-  assert response.status_code == 200
-  assert response.json() == {"message": player_name2 + " joined the game " + game_name}
-  
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+    
+    player_name2 = "ValidPlayer2"
+    response_player2 = client.post(f"/create_player/{player_name2}")
+    player_id2 = response_player2.json()["player_id"]
+    
+    game_name = "ValidGame"
+    game_size = 3
+    game_password = "1234"
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+    game_id = response_game.json()["game_id"]
+    
+    response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
+    assert response.status_code == 200
+    assert response.json() == {"message": player_name2 + " joined the game " + game_name}
+
 def test_join_game_not_found():
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  game_id = "1234"
-  
-  response = client.put(f"/join_game/{player_id}/{game_id}")
-  assert response.status_code == 404
-  assert response.json() == {"detail": "Game not found"}
-  
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+    game_id = "1234"
+    game_password = "1234"
+    
+    response = client.put(f"/join_game/{player_id}/{game_id}/{game_password}")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Game not found"}
+
 def test_join_game_player_not_found():
-  player_name = "ValidPlayer"
-  player_id2 = "1234"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  game_name = "ValidGame"
-  game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
-  assert response.status_code == 404
-  assert response.json() == {"detail": "Player not found"}
-  
+    player_name = "ValidPlayer"
+    player_id2 = "1234"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+    game_name = "ValidGame"
+    game_size = 3
+    game_password = "1234"
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+    game_id = response_game.json()["game_id"]
+    
+    response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Player not found"}
+
 def test_join_game_game_is_already_playing():
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  
-  player_name2 = "ValidPlayer2"
-  response_player2 = client.post(f"/create_player/{player_name2}")
-  player_id2 = response_player2.json()["player_id"]
-  
-  player_name3 = "ValidPlayer3"
-  response_player3 = client.post(f"/create_player/{player_name3}")
-  player_id3 = response_player3.json()["player_id"]
-  
-  game_name = "ValidGame"
-  game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
-  assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
-  
-  response_start = client.put(f"/start_game/{player_id}/{game_id}")
-  assert response_start.json() == {"message": "Game started"}
-  
-  response_leave = client.put(f"/leave_game/{player_id2}/{game_id}")
-  assert response_leave.json() == {"message": player_name2 + " left the game " + game_name}
-  
-  response = client.put(f"/join_game/{player_id3}/{game_id}")
-  assert response.status_code == 409
-  assert response.json() == {"detail": "Game is already playing"}
+    player_name = "ValidPlayer"
+    response_player = client.post(f"/create_player/{player_name}")
+    player_id = response_player.json()["player_id"]
+    
+    player_name2 = "ValidPlayer2"
+    response_player2 = client.post(f"/create_player/{player_name2}")
+    player_id2 = response_player2.json()["player_id"]
+    
+    player_name3 = "ValidPlayer3"
+    response_player3 = client.post(f"/create_player/{player_name3}")
+    player_id3 = response_player3.json()["player_id"]
+    
+    game_name = "ValidGame"
+    game_size = 2
+    game_password = "1234"
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+    game_id = response_game.json()["game_id"]
+    
+    response_join = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
+    assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
+    
+    response_start = client.put(f"/start_game/{player_id}/{game_id}")
+    assert response_start.json() == {"message": "Game started"}
+    
+    response_leave = client.put(f"/leave_game/{player_id2}/{game_id}")
+    assert response_leave.json() == {"message": player_name2 + " left the game " + game_name}
+    
+    response = client.put(f"/join_game/{player_id3}/{game_id}/{game_password}")
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Game is already playing"}
   
 def test_join_game_player_is_in_game():
   player_name = "ValidPlayer"
@@ -261,36 +275,14 @@ def test_join_game_player_is_in_game():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
-  client.put(f"/join_game/{player_id2}/{game_id}")
+  client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.status_code == 409
   assert response.json() == {"detail": "Player is already in the game"}
-  
-def test_join_game_player_is_in_another_game():
-  player_name = "ValidPlayer"
-  response_player = client.post(f"/create_player/{player_name}")
-  player_id = response_player.json()["player_id"]
-  
-  player_name2 = "ValidPlayer2"
-  response_player2 = client.post(f"/create_player/{player_name2}")
-  player_id2 = response_player2.json()["player_id"]
-  
-  game_name = "ValidGame"
-  game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  game_name2 = "ValidGame2"
-  game_size2 = 3
-  response_game2 = client.post(f"/create_game/{player_id2}/{game_name2}/{game_size2}")
-  game_id2 = response_game2.json()["game_id"]
-  
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
-  assert response.status_code == 409
-  assert response.json() == {"detail": "Player is already in another game"}
 
 def test_join_game_is_full():
   player_name = "ValidPlayer"
@@ -307,14 +299,34 @@ def test_join_game_is_full():
   
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  client.put(f"/join_game/{player_id2}/{game_id}")
+  client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   
-  response = client.put(f"/join_game/{player_id3}/{game_id}")
+  response = client.put(f"/join_game/{player_id3}/{game_id}/{game_password}")
   assert response.status_code == 409
   assert response.json() == {"detail": "Game is full"}
+  
+def test_join_game_password_not_match():
+  player_name = "ValidPlayer"
+  response_player = client.post(f"/create_player/{player_name}")
+  player_id = response_player.json()["player_id"]
+  
+  player_name2 = "ValidPlayer2"
+  response_player2 = client.post(f"/create_player/{player_name2}")
+  player_id2 = response_player2.json()["player_id"]
+  
+  game_name = "ValidGame"
+  game_size = 3
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+  game_id = response_game.json()["game_id"]
+  
+  response = client.put(f"/join_game/{player_id2}/{game_id}/12345")
+  assert response.status_code == 409
+  assert response.json() == {"detail": "Incorrect password"}
 
 # Test de shuffle
 def test_shuffle():
@@ -323,17 +335,18 @@ def test_shuffle():
   player_id = response_player.json()["player_id"]
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
   player_name3 = "ValidPlayer3"
   response_player3 = client.post(f"/create_player/{player_name3}")
   player_id3 = response_player3.json()["player_id"]
-  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}")
+  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}/{game_password}")
   assert response_join2.json() == {"message": player_name3 + " joined the game " + game_name}
 
 
@@ -360,10 +373,11 @@ def test_leave_game():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
   
   response = client.put(f"/leave_game/{player_id2}/{game_id}")
@@ -388,7 +402,8 @@ def test_leave_game_player_not_found():
   player_id2 = "1234"
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/leave_game/{player_id2}/{game_id}")
@@ -402,7 +417,8 @@ def test_leave_game_host_cancelled_game():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/leave_game/{player_id}/{game_id}")
@@ -420,7 +436,8 @@ def test_leave_game_player_is_not_in_game():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/leave_game/{player_id2}/{game_id}")
@@ -444,13 +461,14 @@ def test_start_game():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
   
-  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}")
+  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}/{game_password}")
   assert response_join2.json() == {"message": player_name3 + " joined the game " + game_name}
   
   response = client.put(f"/start_game/{player_id}/{game_id}")
@@ -480,7 +498,8 @@ def test_start_game_player_not_found():
   
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/start_game/{player_id3}/{game_id}")
@@ -502,10 +521,11 @@ def test_start_game_player_not_in_game():
   
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
   
   response = client.put(f"/start_game/{player_id3}/{game_id}")
@@ -527,13 +547,14 @@ def test_start_game_already_playing():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  response_join = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response_join.json() == {"message": player_name2 + " joined the game " + game_name}
   
-  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}")
+  response_join2 = client.put(f"/join_game/{player_id3}/{game_id}/{game_password}")
   assert response_join2.json() == {"message": player_name3 + " joined the game " + game_name}
   
   response_start = client.put(f"/start_game/{player_id}/{game_id}")
@@ -555,10 +576,11 @@ def test_start_game_not_host():
   
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id2}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id2}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  response_join = client.put(f"/join_game/{player_id}/{game_id}")
+  response_join = client.put(f"/join_game/{player_id}/{game_id}/{game_password}")
   assert response_join.json() == {"message": player_name + " joined the game " + game_name}
   
   response = client.put(f"/start_game/{player_id}/{game_id}")
@@ -572,7 +594,8 @@ def test_start_game_is_not_full():
   
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/start_game/{player_id}/{game_id}")
@@ -600,7 +623,8 @@ def test_next_turn_player_not_found():
   player_id2 = "1234"
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/next_turn/{player_id2}/{game_id}")
@@ -622,10 +646,11 @@ def test_next_turn_not_your_turn():
   
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
-  client.put(f"/join_game/{player_id2}/{game_id}")
+  client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   client.put(f"/start_game/{player_id}/{game_id}")
   
   response = client.put(f"/next_turn/{player_id3}/{game_id}")
@@ -640,14 +665,15 @@ def test_swap_tiles():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -678,14 +704,15 @@ def test_swap_tiles_player_not_found():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -712,14 +739,15 @@ def test_swap_tiles_player_is_not_in_game():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -749,14 +777,15 @@ def test_swap_tiles_tile_1_not_found():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -782,14 +811,15 @@ def test_swap_tiles_tile_2_not_found():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -815,14 +845,15 @@ def test_swap_tiles_movement_has_not_this_movement():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
-  player_id2 = response_player2.json()["player_id"]  # Corrección aquí
+  player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -853,14 +884,15 @@ def test_swap_tiles_not_your_turn():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -891,14 +923,15 @@ def test_swap_tiles_invalid_movement():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -932,14 +965,15 @@ def test_undo_a_movement():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -983,7 +1017,8 @@ def test_undo_a_movement_player_not_found():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   movement_id = "1"
   player_id2 = "1234"
@@ -999,7 +1034,8 @@ def test_undo_a_movement_game_is_not_playing():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   movement_id = "1"
@@ -1015,14 +1051,15 @@ def test_undo_a_movement_not_your_turn():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -1047,16 +1084,19 @@ def test_undo_a_movement_no_movements_to_undo():
   player_name = "ValidPlayer"
   response_player = client.post(f"/create_player/{player_name}")
   player_id = response_player.json()["player_id"]
+
+  game_name = "ValidGame"
+  game_size = 2
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
+  game_id = response_game.json()["game_id"]
+
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  game_name = "ValidGame"
-  game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
-  game_id = response_game.json()["game_id"]
-  
-  response_join = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
+  assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
   
@@ -1081,14 +1121,15 @@ def test_undo_all_movements():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -1122,7 +1163,8 @@ def test_undo_all_movement_player_not_found():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   movement_id = "1"
   player_id2 = "1234"
@@ -1138,7 +1180,8 @@ def test_undo_all_movement_game_is_not_playing():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.put(f"/undo_all_movements/{player_id}/{game_id}")
@@ -1152,14 +1195,15 @@ def test_undo_all_movement_not_your_turn():
 
   game_name = "ValidGame"
   game_size = 2
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
 
   player_name2 = "ValidPlayer2"
   response_player2 = client.post(f"/create_player/{player_name2}")
   player_id2 = response_player2.json()["player_id"]
 
-  response = client.put(f"/join_game/{player_id2}/{game_id}")
+  response = client.put(f"/join_game/{player_id2}/{game_id}/{game_password}")
   assert response.json() == {"message": player_name2 + " joined the game " + game_name}
   response = client.put(f"/start_game/{player_id}/{game_id}")
   assert response.json() == {"message": "Game started"}
@@ -1188,7 +1232,8 @@ def test_delete_game():
 
     game_name = "ValidGame"
     game_size = 3
-    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+    game_password = "1234"
+    response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
     game_id = response_game.json()["game_id"]
 
     response = client.delete(f"/delete_game/{game_id}")

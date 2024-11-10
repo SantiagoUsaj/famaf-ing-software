@@ -11,11 +11,27 @@ class Table(Base):
     id = Column(Integer, primary_key=True)
     gameid = Column(String, ForeignKey('games.gameid'), nullable=False)
     tiles = relationship("Tile", backref="table")
+    prohibited_color = Column(String, default="white")
     
 
     def __init__(self, gameid: str):
         self.gameid = gameid
+        
+    def get_table_id(self):
+        return self.id
+        
+    def get_prohibited_color(self):
+        return self.prohibited_color
+    
+    def set_prohibited_color(self, color):
+        self.prohibited_color = color
+        session.commit()
 
+    @staticmethod
+    def get_table_by_game_id(game_id: str):
+        return session.query(Table).filter_by(gameid=game_id).first()
+    
+    
 class Tile(Base):
     __tablename__ = 'tiles'
     id = Column(Integer, primary_key=True)
@@ -56,6 +72,10 @@ class Tile(Base):
         if tile1 and tile2:
             tile1.color, tile2.color = tile2.color, tile1.color
             session.commit()
+            
+    @staticmethod
+    def get_tiles_by_table_id(table_id: int):
+        return session.query(Tile).filter_by(table_id=table_id).all()
 
 class TableGame(Base):
     __tablename__ = 'tablegames'
@@ -185,7 +205,7 @@ def normalize_points(points):
     normalized_points = {(x - min_x, y - min_y) for x, y in points}
     return normalized_points
 
-def match_figures(connected_components, figures):
+def match_figures(connected_components, figures, table: Table):
     matching_tiles = {}
     for component in connected_components:
         component_points = {f"{tile.x}{tile.y}" for tile in component}
@@ -200,7 +220,7 @@ def match_figures(connected_components, figures):
             ]
             for figure_points in figure_points_variants:
                 normalized_figure_points = normalize_points(figure_points)
-                if normalized_component_points == normalized_figure_points:
+                if normalized_component_points == normalized_figure_points and table.prohibited_color != component[0].color:
                     for tile in component:
                         tile.highlight = True
                         matching_tiles[f"{tile.x}{tile.y}"] = figure.id

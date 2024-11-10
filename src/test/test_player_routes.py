@@ -66,7 +66,8 @@ def test_get_players_in_game():
   player_id = response_player.json()["player_id"]
   game_name = "ValidGame"
   game_size = 3
-  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}")
+  game_password = "1234"
+  response_game = client.post(f"/create_game/{player_id}/{game_name}/{game_size}/{game_password}")
   game_id = response_game.json()["game_id"]
   
   response = client.get(f"/players_in_game/{game_id}")

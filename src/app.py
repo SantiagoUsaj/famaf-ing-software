@@ -9,8 +9,6 @@ from models.game_models import Game, session
 from models.player_models import PlayerGame, Player
 from models.handMovements_models import HandMovements
 from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
-from models.handMovements_models import HandMovements
-from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.partialMovements_models import PartialMovements
 from models.figure_card_models import Figure_card
 
@@ -68,6 +66,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
                     "game_name": game.name,
                     "game_id": game.gameid,
                     "state": game.state,
+                    "type": "Public" if game.password == "CAB" else "Private",
                     "game_size": game.size,
                     "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                     "player_details": player_details
@@ -90,6 +89,7 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 break
 
             players_in_game = session.query(PlayerGame).filter_by(gameid=game_id).all()
+            table = session.query(Table).filter_by(gameid=game_id).first()
             player_details = [
                 {
                     "player_id": pg.playerid,
@@ -123,7 +123,9 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
                 "player_details": player_details,
                 "turn": turnos,
                 "board": board,
-                "round": round  
+                "round": round,
+                "prohibited_color": table.get_prohibited_color() if table else None,
+                "timestamp": game.timestamp
             }
             await websocket.send_json(game_details)
             await asyncio.sleep(1)  # Delay to avoid flooding the client with messages
