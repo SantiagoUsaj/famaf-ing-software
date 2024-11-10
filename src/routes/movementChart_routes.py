@@ -73,7 +73,7 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
             match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             
-            return {"message": "Figure card used and removed from hand. The prohibited color is now " + tile.color}
+            return {"message": "Figure card used and removed from hand"}
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 

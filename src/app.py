@@ -66,6 +66,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: str):
                     "game_name": game.name,
                     "game_id": game.gameid,
                     "state": game.state,
+                    "type": "Public" if game.password == "CAB" else "Private",
                     "game_size": game.size,
                     "players": PlayerGame.get_count_of_players_in_game(session, game.gameid),
                     "player_details": player_details
