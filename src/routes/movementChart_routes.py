@@ -101,10 +101,14 @@ async def block_figure_chart(current_player_id: str,targeted_player_id: str, gam
         tile = session.query(Tile).filter_by(id=tile_id).first()
         components = get_connected_component_for_tile_by_number(tile)
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
-        if check_tile_coordinates_with_rotations(figure, components):
+        table = session.query(Table).filter_by(gameid=game_id).first()
+        if table.get_prohibited_color() == tile.color:
+                raise HTTPException(status_code=409, detail="The tile has a prohibited color")
+        elif check_tile_coordinates_with_rotations(figure, components):
             movimientos_parciales = PartialMovements.get_all_partial_movements_by_gameid(game_id)
             for movimiento in movimientos_parciales:
                 session.delete(movimiento)
+            table.set_prohibited_color(tile.color)
             figure_card.block_card()
             session.commit()
             return {"message": "Figure card blocked"}
