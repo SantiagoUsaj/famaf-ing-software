@@ -33,7 +33,7 @@ class Game(Base):
         self.host = host
         self.state = "waiting"
         self.turn = None
-        self.timestamp = 0
+        self.timestamp = 1
 
     def start_game(self):
         self.state = "playing"

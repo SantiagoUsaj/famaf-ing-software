@@ -162,7 +162,7 @@ async def start_game(player_id: str, game_id: str):
             match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
 
-            game.timestamp = time.time()
+            game.timestamp = int(time.time())
             session.commit()
             return {"message": "Game started"}
 
@@ -202,7 +202,7 @@ async def next_turn(player_id: str, game_id: str):
             session.commit()
             update = True
 
-            game.timestamp = time.time()
+            game.timestamp = int(time.time())
             session.commit()
 
             return {"message": "Next turn"}
