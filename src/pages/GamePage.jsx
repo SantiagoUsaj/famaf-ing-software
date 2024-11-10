@@ -12,6 +12,7 @@ import {
   SwapTiles,
   UndoMovement,
   UndoAllMovements,
+  UseFigureCard,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
@@ -29,15 +30,24 @@ const GamePage = () => {
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
+  const [winnerPlayer, setWinnerPlayer] = useState(null);
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
+  const [SelectPlayer, setSelectPlayer] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
   const [PossibleTiles1, setPossibleTiles1] = useState();
   const [PossibleTiles2, setPossibleTiles2] = useState();
   const [PossibleTiles3, setPossibleTiles3] = useState();
   const [PossibleTiles4, setPossibleTiles4] = useState();
+  const [secondsLeft, setSecondsLeft] = useState(120);
+  const [isRunning, setIsRunning] = useState(false);
+  const [Player1, setPlayer1] = useState(null);
+  const [Player2, setPlayer2] = useState(null);
+  const [Player3, setPlayer3] = useState(null);
+  const [Player4, setPlayer4] = useState(null);
+  const [blockColor, setBlockColor] = useState();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -68,6 +78,14 @@ const GamePage = () => {
         requestAnimationFrame(frame);
       }
     })();
+  };
+
+  const formatTime = (sec) => {
+    const minutes = Math.floor(sec / 60);
+    const remainingSeconds = sec % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(
+      remainingSeconds
+    ).padStart(2, "0")}`;
   };
 
   const quitRoom = async (game_id) => {
@@ -113,7 +131,7 @@ const GamePage = () => {
     }
   };
 
-  const undoMov = async (game_id) => {
+  const undoMov = async (playerID, game_id) => {
     console.log("Success");
 
     try {
@@ -128,7 +146,7 @@ const GamePage = () => {
     }
   };
 
-  const undoallMov = async (game_id) => {
+  const undoallMov = async (playerID, game_id) => {
     console.log("Success");
 
     try {
@@ -148,16 +166,24 @@ const GamePage = () => {
 
     try {
       console.log("Game ID:", game_id);
-      // Esperamos la resolución de la promesa de LeaveGame
-      const response = await DeleteGame(game_id);
 
-      if (response) {
-        console.log("New Game Info:", response);
-        // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby`);
+      if (playersList.length === 1) {
+        // If the player is the last one in the game, delete the game
+        const response = await DeleteGame(game_id);
+        if (response) {
+          console.log("Game Deleted:", response);
+          navigate(`/lobby`);
+        }
+      } else {
+        // Otherwise, just leave the game
+        const response = await LeaveGame(playerID, game_id);
+        if (response) {
+          console.log("Left Game:", response);
+          navigate(`/lobby`);
+        }
       }
     } catch (error) {
-      console.error("Error getting new game data", error);
+      console.error("Error finishing the game", error);
     }
   };
 
@@ -203,8 +229,8 @@ const GamePage = () => {
         disabled={playerID !== turn}
         onClick={() => handleSquareClick(item.id)}
         style={{
-          width: "40px",
-          height: "40px",
+          width: "60px",
+          height: "60px",
           backgroundColor:
             item.color === "red"
               ? "#FF5959"
@@ -329,6 +355,29 @@ const GamePage = () => {
     }
   };
 
+  const useFigure = async () => {
+    console.log("Success");
+
+    try {
+      // Esperamos la resolución de la promesa de PossiblesMoves
+      const response = await UseFigureCard(
+        playerID,
+        game_id,
+        SelectFigCard,
+        SelectFirstTitle
+      );
+
+      if (response) {
+        console.log("Figure use:", response);
+        resetSelect();
+
+        return response;
+      }
+    } catch (error) {
+      console.error("Error getting game data", error);
+    }
+  };
+
   const getGameInfo = async (game_id) => {
     console.log("LLame a GAMEINFO");
 
@@ -358,15 +407,48 @@ const GamePage = () => {
     // Manejar los mensajes recibidos
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      const startTimestamp = parseInt(data.timestamp, 10); // Timestamp de inicio en segundos
+      const currentTimestamp = Math.floor(Date.now() / 1000); // Timestamp actual en segundos
+      const elapsed = currentTimestamp - startTimestamp; // Tiempo transcurrido desde el inicio
 
       console.log("Mensaje recibido:", data);
 
       setTurn(data.turn);
       setBoard(data.board);
       setPlayersList(data.player_details);
+      setBlockColor(data.prohibited_color);
+
+      const player1 = data.player_details.find(
+        (player) => player.player_id === playerID
+      );
+      const otherPlayers = data.player_details.filter(
+        (player) => player.player_id !== playerID
+      );
+
+      setPlayer1(player1);
+      setPlayer2(otherPlayers[0]);
+      setPlayer3(otherPlayers[1]);
+      setPlayer4(otherPlayers[2]);
 
       if (data.players === 1) {
         showModal();
+      }
+
+      const winnerPlayer = data.player_details.find(
+        (player) => player.number_of_figure_card === 0
+      );
+
+      if (winnerPlayer) {
+        setWinnerPlayer(winnerPlayer.player_name);
+        showModal();
+      }
+
+      if (elapsed < 120) {
+        setSecondsLeft(120 - elapsed); // Calcula el tiempo restante
+        setIsRunning(true);
+      } else {
+        setSecondsLeft(0); // Si ya pasaron 2 minutos, el temporizador llega a cero
+        setIsRunning(false);
       }
     };
 
@@ -403,42 +485,154 @@ const GamePage = () => {
     if (SelectFirstTitle !== null && SelectSecondTitle !== null) {
       swap();
     }
-  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard]);
+
+    if (SelectFigCard !== null && SelectFirstTitle !== null) {
+      useFigure();
+    }
+  }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
+
+  useEffect(() => {
+    if (isRunning && secondsLeft > 0) {
+      const interval = setInterval(() => {
+        setSecondsLeft((prevSeconds) => prevSeconds - 1);
+      }, 1000);
+
+      return () => clearInterval(interval); // Limpia el intervalo cuando el temporizador se detiene
+    } else {
+      if (turn != null) {
+        passTurn(game_id).then(() => {
+          console.log("Turno pasado");
+        });
+      }
+    }
+  }, [isRunning, secondsLeft]);
 
   return (
-    <div className="text-blancofondo text-center m-auto flex flex-col items-center justify-center min-h-screen">
-      <div
-        className="container"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(6, 40px)",
-          gap: "5px",
-          justifyContent: "center",
-          marginBottom: "20px",
-        }}
-      >
-        {gameBoard(board)}
+    <div className="m-auto flex flex-col items-center justify-center min-h-screen text-center">
+      <div className="Cards_Top_Player  w-80">
+        {Player2 && (
+          <>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              <b>{Player2.player_name}</b>
+            </h2>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              Cartas de Figuras Restantes: {Player2.number_of_figure_card}
+            </h2>
+            <FigureCard
+              playersList={Player2}
+              onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectPlayer={(player) => setSelectPlayer(player)}
+              updateboard={board}
+            />
+          </>
+        )}
       </div>
-      <div className="Cards">
-        <FigureCard
-          playersList={playersList}
-          onSelectFigCard={(title) => setSelectFigCard(title)}
-          updateboard={board}
-        />
-        <MovementCard
-          onSelectMovCard={(title) => setSelectMovCard(title)}
-          updateboard={board}
-        />
+      <div className="flex">
+        <div className="Cards_Left_Player w-80 flex items-center">
+          {Player3 && (
+            <>
+              <div>
+                <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
+                  <b>{Player3.player_name}</b>
+                </h2>
+                <h2 className=" text-blancofondo text-center font-sans uppercase">
+                  Cartas de Figuras Restantes: {Player3.number_of_figure_card}
+                </h2>
+              </div>
+              <FigureCard
+                playersList={Player3}
+                onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectPlayer={(player) => setSelectPlayer(player)}
+                updateboard={board}
+                vertical={true}
+              />
+            </>
+          )}
+        </div>
+        <div
+          className="container"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 60px)", // Increased size
+            gap: "10px", // Increased gap
+            justifyContent: "center",
+            marginBottom: "20px",
+            marginTop: "20px",
+          }}
+        >
+          {gameBoard(board)}
+        </div>
+        <div className="Cards_Right_Player w-80 flex items-center">
+          {Player4 && (
+            <>
+              <FigureCard
+                playersList={Player4}
+                onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectPlayer={(player) => setSelectPlayer(player)}
+                updateboard={board}
+                vertical={true}
+              />
+              <div>
+                <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
+                  <b>{Player4.player_name}</b>
+                </h2>
+                <h2 className=" text-blancofondo text-center font-sans uppercase">
+                  Cartas de Figuras Restantes: {Player4.number_of_figure_card}
+                </h2>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <div className="turn text-blancofondo font-sans uppercase">
-        <h3>Turno de:</h3>
-        {playersList.map((player) => (
-          <div key={player.player_id}>
-            {player.player_id === turn && <h2>{player.player_name}</h2>}
-          </div>
-        ))}
+      <div className="Cards_Bottom_Player  w-80">
+        {Player1 && (
+          <>
+            <h2 className=" text-blancofondo text-center font-sans uppercase">
+              Cartas de Figuras Restantes: {Player1.number_of_figure_card}
+            </h2>
+            <FigureCard
+              playersList={Player1}
+              onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectPlayer={(player) => setSelectPlayer(player)}
+              updateboard={board}
+            />
+            <MovementCard
+              onSelectMovCard={(title) => setSelectMovCard(title)}
+              updateboard={board}
+            />
+          </>
+        )}
       </div>
-      <div className="botones flex flex-col gap-4 fixed bottom-32 right-1/4 ">
+
+      <div className="botones flex flex-col gap-4 fixed bottom-20 right-20 ">
+        <div className="turn text-blancofondo font-sans uppercase">
+          <h3>Turno de:</h3>
+          {playersList.map((player) => (
+            <div key={player.player_id}>
+              {player.player_id === turn && <h2>{player.player_name}</h2>}
+            </div>
+          ))}
+        </div>
+
+        <div className="blockColor text-blancofondo text-center font-sans uppercase">
+          <h3>Color Bloqueado:</h3>
+          <div
+            className="littleSquare h-8 rounded-xl"
+            style={{
+              backgroundColor:
+                blockColor === "blue"
+                  ? "#45B3EB"
+                  : blockColor === "red"
+                  ? "#FF5959"
+                  : blockColor === "green"
+                  ? "#4ade80"
+                  : blockColor === "yellow"
+                  ? "#FAD05A"
+                  : "#FAFAFA",
+            }}
+          ></div>
+        </div>
+
         <Button
           className="text-blancofondo"
           type="primary"
@@ -446,7 +640,18 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoMov(game_id)}
+          onClick={() => resetSelect()}
+        >
+          Resetear Seleccion
+        </Button>
+        <Button
+          className="text-blancofondo"
+          type="primary"
+          disabled={playerID !== turn}
+          style={{
+            backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
+          }}
+          onClick={() => undoMov(playerID, game_id)}
           icon={
             <UndoOutlined
               style={{
@@ -466,7 +671,7 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoallMov(game_id)}
+          onClick={() => undoallMov(playerID, game_id)}
           icon={
             <UndoOutlined
               style={{
@@ -500,6 +705,11 @@ const GamePage = () => {
           Abandonar
         </Button>
       </div>
+      <div className="chat flex flex-col gap-4 fixed bottom-20 left-20 text-blancofondo">
+        <h1>Temporizador</h1>
+        <h2>{formatTime(secondsLeft)}</h2>
+        {secondsLeft === 0 && <h3>¡Tiempo terminado!</h3>}
+      </div>
       <div>
         <Modal
           title="¡Felicidades!"
@@ -508,7 +718,9 @@ const GamePage = () => {
           className="text-center"
           closable={false}
         >
-          <p className="text-negrofondo text-lg ">Has ganado la partida.</p>
+          <p className="text-negrofondo text-lg ">
+            {winnerPlayer} ha ganado la partida
+          </p>
           <Button
             className="mt-5 text-blancofondo"
             type="primary"

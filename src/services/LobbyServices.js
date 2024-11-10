@@ -14,10 +14,10 @@ export const JoinLobby = async (playerName) => {
   }
 };
 
-export const JoinGame = async (playerName, game_id) => {
+export const JoinGame = async (playerName, game_id, game_password) => {
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/join_game/${playerName}/${game_id}`
+      `http://127.0.0.1:8000/join_game/${playerName}/${game_id}/${game_password}`
     );
 
     console.log(response.data);

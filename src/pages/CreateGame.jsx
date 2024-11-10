@@ -24,7 +24,8 @@ const CreateGame = () => {
         const response = await CreateAGame(
           playerID,
           values.nombre,
-          values.jugadores
+          values.jugadores,
+          values.password
         );
 
         if (response) {
@@ -106,6 +107,44 @@ const CreateGame = () => {
           <Input
             className="bg-blancofondo"
             placeholder="Ingresar nombre partida"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          style={{ width: "100%" }}
+          rules={[
+            {
+              validator: (_, value) => {
+                if (value && !/^[a-zA-Z0-9]+$/.test(value)) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡Solo caracteres alfanuméricos!
+                    </span>
+                  );
+                }
+                if (value && value.length < 4) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡Deben ser por lo menos 4 caracteres!
+                    </span>
+                  );
+                }
+                if (value && value.length > 20) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡No más de 20 caracteres!
+                    </span>
+                  );
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <Input
+            className="bg-blancofondo"
+            placeholder="Ingresar contraseña (opcional)"
           />
         </Form.Item>
 
