@@ -132,3 +132,16 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
     except WebSocketDisconnect:
         await game_managers[game_id].disconnect(websocket)
         await game_managers[game_id].broadcast(f"Client #{game_id} left the chat")
+
+@app.websocket("/ws/chat/{game_id}/{player_id}")
+async def chat_websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
+    try:
+        if game_id not in game_managers:
+            game_managers[game_id] = ConnectionManager()
+        await game_managers[game_id].connect(websocket)
+        while True:
+            data = await websocket.receive_text()
+            await game_managers[game_id].broadcast(f"{player_id}: {data}")
+    except WebSocketDisconnect:
+        await game_managers[game_id].disconnect(websocket)
+        await game_managers[game_id].broadcast(f"{player_id} left the chat")
