@@ -408,8 +408,7 @@ const GamePage = () => {
 
   const sendMessage = () => {
     if (message.trim() && chat_socket) {
-      const msgData = JSON.stringify({ text: message });
-      chat_socket.send(msgData); // Enviar el mensaje al servidor WebSocket
+      chat_socket.send(message); // Enviar el mensaje al servidor WebSocket
       setMessage("");
     }
   };
@@ -544,11 +543,11 @@ const GamePage = () => {
 
       console.log("Chat:", data);
 
-      // Parsear el mensaje anidado
-      const messageData = JSON.parse(data.message);
+      /* // Parsear el mensaje anidado
+      const messageData = JSON.parse(data.message); */
 
       // Formatear el mensaje en el formato deseado
-      const formattedMessage = `${data.player_name} : ${messageData.text}`;
+      const formattedMessage = `${data.player_name} : ${data.message}`;
 
       // Actualizar la lista de mensajes
       setMessages((prevMessages) => [...prevMessages, formattedMessage]);
@@ -761,10 +760,9 @@ const GamePage = () => {
 
       <div className="chat flex flex-col gap-4 fixed bottom-20 left-20 text-blancofondo">
         <div className="App">
-          <h2>Chat en tiempo real</h2>
           <div
             style={{
-              maxHeight: "300px",
+              maxHeight: "200px",
               overflowY: "auto",
               border: "background-color: #FAFAFA",
               padding: "10px",
@@ -774,10 +772,9 @@ const GamePage = () => {
               <div key={index}>{msg}</div>
             ))}
             <div ref={messagesEndRef} />{" "}
-            {/* Referencia para desplazamiento automático */}
           </div>
           <input
-            className="text-negrofondo"
+            className="text-negrofondo p-3 rounded-xl"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Escribe tu mensaje..."
@@ -787,7 +784,13 @@ const GamePage = () => {
               }
             }}
           />
-          <button onClick={sendMessage}>Enviar</button>
+          <Button
+            className="text-blancofondo ml-4"
+            type="primary"
+            onClick={sendMessage}
+          >
+            Enviar
+          </Button>
         </div>
         <div>
           <h1>Temporizador</h1>
