@@ -13,6 +13,7 @@ import {
   UndoMovement,
   UndoAllMovements,
   UseFigureCard,
+  BlockFigureCard,
 } from "../services/GameServices";
 import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
@@ -34,6 +35,7 @@ const GamePage = () => {
   // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
+  const [SelectFigCardId, setSelectFigCardId] = useState(null);
   const [SelectPlayer, setSelectPlayer] = useState(null);
   const [SelectFirstTitle, setSelectFirstTitle] = useState(null);
   const [SelectSecondTitle, setSelectSecondTitle] = useState(null);
@@ -357,24 +359,46 @@ const GamePage = () => {
 
   const useFigure = async () => {
     console.log("Success");
-
-    try {
-      // Esperamos la resolución de la promesa de PossiblesMoves
-      const response = await UseFigureCard(
-        playerID,
-        game_id,
-        SelectFigCard,
-        SelectFirstTitle
-      );
-
-      if (response) {
-        console.log("Figure use:", response);
-        resetSelect();
-
-        return response;
+  
+    if (SelectPlayer && SelectPlayer !== playerID) {
+      try {
+        // Esperamos la resolución de la promesa de BlockFigureCard
+        const response = await BlockFigureCard(
+          playerID,
+          SelectPlayer,
+          game_id,
+          SelectFigCardId,
+          SelectFirstTitle,
+        );
+  
+        if (response) {
+          console.log("Figure block:", response);
+          resetSelect();
+  
+          return response;
+        }
+      } catch (error) {
+        console.error("Error getting game data", error);
       }
-    } catch (error) {
-      console.error("Error getting game data", error);
+    } else {
+      try {
+        // Esperamos la resolución de la promesa de UseFigureCard
+        const response = await UseFigureCard(
+          playerID,
+          game_id,
+          SelectFigCard,
+          SelectFirstTitle
+        );
+  
+        if (response) {
+          console.log("Figure use:", response);
+          resetSelect();
+  
+          return response;
+        }
+      } catch (error) {
+        console.error("Error getting game data", error);
+      }
     }
   };
 
@@ -487,7 +511,7 @@ const GamePage = () => {
     }
 
     if (SelectFigCard !== null && SelectFirstTitle !== null) {
-      useFigure();
+        useFigure();
     }
   }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
 
@@ -521,6 +545,7 @@ const GamePage = () => {
             <FigureCard
               playersList={Player2}
               onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectFigCardId={(id) => setSelectFigCardId(id)}
               onSelectPlayer={(player) => setSelectPlayer(player)}
               updateboard={board}
             />
@@ -542,6 +567,7 @@ const GamePage = () => {
               <FigureCard
                 playersList={Player3}
                 onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectFigCardId={(id) => setSelectFigCardId(id)}
                 onSelectPlayer={(player) => setSelectPlayer(player)}
                 updateboard={board}
                 vertical={true}
@@ -568,6 +594,7 @@ const GamePage = () => {
               <FigureCard
                 playersList={Player4}
                 onSelectFigCard={(title) => setSelectFigCard(title)}
+                onSelectFigCardId={(id) => setSelectFigCardId(id)}
                 onSelectPlayer={(player) => setSelectPlayer(player)}
                 updateboard={board}
                 vertical={true}
@@ -593,6 +620,7 @@ const GamePage = () => {
             <FigureCard
               playersList={Player1}
               onSelectFigCard={(title) => setSelectFigCard(title)}
+              onSelectFigCardId={(id) => setSelectFigCardId(id)}
               onSelectPlayer={(player) => setSelectPlayer(player)}
               updateboard={board}
             />
