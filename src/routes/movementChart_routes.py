@@ -47,7 +47,6 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     table = session.query(Table).filter_by(gameid=game_id).first()
-    tile = session.query(Tile).filter_by(number=tile_id, table_id=table.id).first() if table else None
     figures_card = session.query(Figure_card).filter_by(playerid=player_id, in_hand=1).all()
     figure_card = session.query(Figure_card).filter_by(playerid=player_id, in_hand=1, figure=figure_id).first()
     if player is None:
@@ -55,10 +54,11 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
     elif game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     elif not any(figure.figure == figure_id for figure in figures_card):
-        raise HTTPException(status_code=409, detail="Player has not this figure")
+        raise HTTPException(status_code=409, detail="Player doesn't have this figure")
     elif figure_card.get_state() == "blocked":
         raise HTTPException(status_code=409, detail="Figure card is blocked")
     else:
+        tile = session.query(Tile).filter_by(number=tile_id, table_id=table.id).first()
         components = get_connected_component_for_tile_by_number(tile)
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
         if check_tile_coordinates_with_rotations(figure, components):
@@ -82,22 +82,22 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 
-@router.post("/block_figure_chart/{current_player_id}/{targeted_player_id}/{game_id}/{figure_card_id}/{tile}")
-async def block_figure_chart(current_player_id: str,targeted_player_id: str, game_id: str, figure_card_id: str, tile_id: int):
+@router.post("/block_figure_chart/{current_player_id}/{targeted_player_id}/{game_id}/{figure_card_id}/{tile_id}")
+async def block_figure_chart(current_player_id: str, targeted_player_id: str, game_id: str, figure_card_id: str, tile_id: int):
     game = session.query(Game).filter_by(gameid=game_id).first()
     target_player = session.query(PlayerGame).filter_by(playerid=targeted_player_id, gameid=game_id).first()
     figure_card = session.query(Figure_card).filter_by(playerid=targeted_player_id, id=figure_card_id, in_hand=True).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     elif current_player_id != game.turn.split(",")[0]:
-            raise HTTPException(status_code=409, detail="It's not your turn")
+        raise HTTPException(status_code=409, detail="It's not your turn")
     elif target_player not in session.query(PlayerGame).filter_by(gameid=game_id).all():
         raise HTTPException(status_code=404, detail="Player not in game")
     elif has_blocked_card(game_id, targeted_player_id):
         raise HTTPException(status_code=409, detail="Player has blocked cards")
     elif figure_card is None:
         raise HTTPException(status_code=404, detail="Figure card not found")
-    else:
+    else: 
         tile = session.query(Tile).filter_by(id=tile_id).first()
         components = get_connected_component_for_tile_by_number(tile)
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
@@ -112,6 +112,7 @@ async def block_figure_chart(current_player_id: str,targeted_player_id: str, gam
             figure_card.block_card()
             session.commit()
             return {"message": "Figure card blocked"}
+
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 
