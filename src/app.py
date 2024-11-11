@@ -11,11 +11,19 @@ from models.handMovements_models import HandMovements
 from models.board_models import  Table, Tile, Figures, find_connected_components, match_figures, TableGame
 from models.partialMovements_models import PartialMovements
 from models.figure_card_models import Figure_card
+from globals import game_managers, manager  # Import from globals
 
 app = FastAPI()
 
-manager = ConnectionManager()
-game_managers = {}
+# Configuración de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Permitir solicitudes desde esta URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Permitir todos los métodos (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Permitir todos los encabezados
+)
+
 Figures.create_figures()
 
 @app.get("/figures/{game_id}")
@@ -26,14 +34,6 @@ async def get_figures(game_id: str):
     session.commit()
     return match_figures(connected_components, session.query(Figures).all())
     
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 app.include_router(player_router, tags=["player"])
 app.include_router(game_router, tags=["game"])
 app.include_router(movementChart_router, tags=["movementChart"])
@@ -133,3 +133,23 @@ async def game_websocket_endpoint(websocket: WebSocket, game_id: str):
     except WebSocketDisconnect:
         await game_managers[game_id].disconnect(websocket)
         await game_managers[game_id].broadcast(f"Client #{game_id} left the chat")
+
+@app.websocket("/ws/chat/{game_id}/{player_id}")
+async def chat_websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
+    try:
+        if game_id not in game_managers:
+            game_managers[game_id] = ConnectionManager()
+        await game_managers[game_id].connect(websocket)
+        player = session.query(Player).filter_by(playerid=player_id).first()
+        player_name = player.name if player else "Unknown"
+        while True:
+            data = await websocket.receive_text()
+            message = {
+                "player_name": player_name,
+                "message": data
+            }
+            await game_managers[game_id].broadcast(message)
+    except WebSocketDisconnect:
+        if game_id in game_managers:
+            await game_managers[game_id].disconnect(websocket)
+            await game_managers[game_id].broadcast(f"{player_name} left the chat")

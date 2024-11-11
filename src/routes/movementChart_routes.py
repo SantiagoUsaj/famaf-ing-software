@@ -6,6 +6,8 @@ from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.figure_card_models import Figure_card, has_blocked_card 
 from models.partialMovements_models import PartialMovements
+from globals import game_managers, manager  # Import from globals
+
 router = APIRouter()
 
 @router.get("/possible_movements/{player_id}/{game_id}/{movement_id}/{tile_id}")
@@ -78,7 +80,15 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
+            
+            # Enviar mensaje por WebSocket
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            message = {"message":player.name+" "+"descarto una figura", "player_name": "sistema"}
+            if game_id in game_managers:
+                await game_managers[game_id].broadcast(message)
+
             return {"message": "Figure card used and removed from hand"}
+        
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 
@@ -121,6 +131,7 @@ async def block_figure_chart(current_player_id: str, targeted_player_id: str, ga
 
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
+
 
 @router.delete("/delete_hand_movements")
 async def delete_all():

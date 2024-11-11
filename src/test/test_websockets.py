@@ -61,3 +61,40 @@ async def test_game_websocket_connection():
             assert "player_details" in response_data
             assert isinstance(response_data["player_details"], list)
             assert "turn" in response_data
+
+            @pytest.mark.asyncio
+            async def test_chat_websocket_broadcast():
+                async with connect("ws://127.0.0.1:8000/ws/chat/test_game/test_player1") as websocket1, \
+                           connect("ws://127.0.0.1:8000/ws/chat/test_game/test_player2") as websocket2:
+                    await websocket1.send(json.dumps({"message": "Hello from Player 1"}))
+                    response1 = await websocket1.recv()
+                    response2 = await websocket2.recv()
+                    response_data1 = json.loads(response1)
+                    response_data2 = json.loads(response2)
+
+                    # Verificar que ambos jugadores reciban el mensaje
+                    assert response_data1["message"] == "Hello from Player 1"
+                    assert response_data2["message"] == "Hello from Player 1"
+                    assert response_data1["player_name"] == response_data2["player_name"]
+
+            @pytest.mark.asyncio
+            async def test_chat_websocket_disconnect():
+                async with connect("ws://127.0.0.1:8000/ws/chat/test_game/test_player") as websocket:
+                    await websocket.send(json.dumps({"message": "Hello Chat WebSocket"}))
+                    response = await websocket.recv()
+                    response_data = json.loads(response)
+
+                    # Verificar que la respuesta contenga el nombre del jugador y el mensaje
+                    assert "player_name" in response_data
+                    assert "message" in response_data
+                    assert response_data["message"] == "Hello Chat WebSocket"
+
+                    # Simular desconexión
+                    await websocket.close()
+                    try:
+                        response = await websocket.recv()
+                    except Exception as e:
+                        response = str(e)
+
+                    # Verificar que se haya enviado el mensaje de desconexión
+                    assert "left the chat" in response
