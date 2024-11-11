@@ -330,11 +330,11 @@ async def undo_all_movements(player_id: str, game_id: str):
                 session.commit()
                 HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                 PartialMovements.delete_partial_movement(partial_movement.partialid)
-                # Enviar mensaje por WebSocket
-                player = session.query(Player).filter_by(playerid=player_id).first()
-                message = {"message":player.name+" "+"deshizo todos sus movimientos", "player_name": "sistema"}
-                if game_id in game_managers:
-                    await game_managers[game_id].broadcast(message)
+            # Enviar mensaje por WebSocket
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            message = {"message":player.name+" "+"deshizo todos sus movimientos", "player_name": "sistema"}
+            if game_id in game_managers:
+                await game_managers[game_id].broadcast(message)
             return {"message": "All movements undone"}
 
 @router.delete("/delete_game/{game_id}")
