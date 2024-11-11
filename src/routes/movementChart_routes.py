@@ -77,7 +77,7 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
             
             # Enviar mensaje por WebSocket
             player = session.query(Player).filter_by(playerid=player_id).first()
-            message = {"message": "used a face card", "player_name": player.name}
+            message = {"message":player.name+" "+"descarto una figura", "player_name": "sistema"}
             if game_id in game_managers:
                 await game_managers[game_id].broadcast(message)
 

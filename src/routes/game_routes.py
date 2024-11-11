@@ -212,7 +212,7 @@ async def next_turn(player_id: str, game_id: str):
 
             # Enviar mensaje por WebSocket
             player = session.query(Player).filter_by(playerid=player_id).first()
-            message = {"message": "took turn", "player_name": player.name}
+            message = {"message":"finalizo el turno de"+" "+player.name, "player_name": "sistema"}
             if game_id in game_managers:
                 await game_managers[game_id].broadcast(message)
 
@@ -257,8 +257,9 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
             session.commit()
+            # Enviar mensaje por WebSocket
             player = session.query(Player).filter_by(playerid=player_id).first()
-            message = {"message": "exchanged 2 tokens", "player_name": player.name}
+            message = {"message":player.name+" "+"realizó un movimiento", "player_name": "sistema"}
             if game_id in game_managers:
                 await game_managers[game_id].broadcast(message)
             return {"message": "Tiles swapped"}
@@ -295,7 +296,9 @@ async def undo_a_movement(player_id: str, game_id: str):
             HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
             PartialMovements.delete_partial_movement(partial_movement.partialid)
             player = session.query(Player).filter_by(playerid=player_id).first()
-            message = {"message": "turned back in one movement", "player_name": player.name}
+            # Enviar mensaje por WebSocket
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            message = {"message":player.name+" "+"deshizo un movimiento", "player_name": "sistema"}
             if game_id in game_managers:
                 await game_managers[game_id].broadcast(message)
             return {"message": "Movement undone"}
@@ -327,8 +330,9 @@ async def undo_all_movements(player_id: str, game_id: str):
                 session.commit()
                 HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                 PartialMovements.delete_partial_movement(partial_movement.partialid)
+                # Enviar mensaje por WebSocket
                 player = session.query(Player).filter_by(playerid=player_id).first()
-                message = {"message": "reversed all the movements", "player_name": player.name}
+                message = {"message":player.name+" "+"deshizo todos sus movimientos", "player_name": "sistema"}
                 if game_id in game_managers:
                     await game_managers[game_id].broadcast(message)
             return {"message": "All movements undone"}
