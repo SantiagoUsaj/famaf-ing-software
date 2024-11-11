@@ -19,9 +19,12 @@ import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
 import { UndoOutlined } from "@ant-design/icons";
+import music from "../assets/sounds/musicaMario.mp3";
+import mario from "../assets/images/iconoMario.png";
 
 const GamePage = () => {
   const navigate = useNavigate();
+  const audioRef = useRef(null); // Referencia para el elemento <audio>
   const [turn, setTurn] = useState(null);
   const [socket, setSocket] = useState(null);
   const [gamestate, setGamestate] = useState();
@@ -370,7 +373,7 @@ const GamePage = () => {
 
   const useFigure = async () => {
     console.log("Success");
-  
+
     if (SelectPlayer && SelectPlayer !== playerID) {
       try {
         // Esperamos la resolución de la promesa de BlockFigureCard
@@ -379,13 +382,13 @@ const GamePage = () => {
           SelectPlayer,
           game_id,
           SelectFigCardId,
-          SelectFirstTitle,
+          SelectFirstTitle
         );
-  
+
         if (response) {
           console.log("Figure block:", response);
           resetSelect();
-  
+
           return response;
         }
       } catch (error) {
@@ -400,11 +403,11 @@ const GamePage = () => {
           SelectFigCard,
           SelectFirstTitle
         );
-  
+
         if (response) {
           console.log("Figure use:", response);
           resetSelect();
-  
+
           return response;
         }
       } catch (error) {
@@ -530,7 +533,7 @@ const GamePage = () => {
     }
 
     if (SelectFigCard !== null && SelectFirstTitle !== null) {
-        useFigure();
+      useFigure();
     }
   }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
 
@@ -591,7 +594,6 @@ const GamePage = () => {
     };
   }, [game_id, playerID]);
 
-  // Desplazar automáticamente el contenedor de mensajes
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -829,6 +831,49 @@ const GamePage = () => {
           {secondsLeft === 0 && <h3>¡Tiempo terminado!</h3>}
         </div>
       </div>
+
+      <audio ref={audioRef} src={music} loop />
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          margin: "10px",
+        }}
+      >
+        <Button
+          className="bg-negrofondo"
+          icon={<img src={mario} alt="Age Icon" />}
+          onClick={() => {
+            if (audioRef.current.paused) {
+              audioRef.current.play();
+            } else {
+              audioRef.current.pause();
+            }
+          }}
+        ></Button>
+        {!audioRef.current?.paused && (
+          <div
+            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
+          >
+            <span role="img" aria-label="music-note">
+              🎵
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              defaultValue="1"
+              onChange={(e) => {
+                audioRef.current.volume = e.target.value;
+              }}
+              style={{ width: "100px", marginLeft: "10px" }}
+            />
+          </div>
+        )}
+      </div>
+
       <div className="modal_confirmacion">
         <Modal
           title="Salir de la Partida"

@@ -11,7 +11,7 @@ import mov5 from "../assets/images/mov5.svg"; // Add your image path here
 import mov6 from "../assets/images/mov6.svg"; // Add your image path here
 import mov7 from "../assets/images/mov7.svg"; // Add your image path here
 
-const MovementCard = ({ onSelectMovCard, updateboard }) => {
+const MovementCard = ({ onSelectMovCard, updateboard, vertical }) => {
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [data, setData] = useState([]);
@@ -69,17 +69,22 @@ const MovementCard = ({ onSelectMovCard, updateboard }) => {
   return (
     <List
       grid={{
-        gutter: 0,
-        column: 3,
+        gutter: 10,
+        column: vertical ? 1 : 3,
       }}
       dataSource={data}
       renderItem={(item) => (
         <List.Item style={{ display: "flex", justifyContent: "center" }}>
           <Card
-            onClick={() => handleCardClick(item)}
+            className="bg-negrofondo hover:bg-blancofondo"
+            bordered={false}
             hoverable
-            style={{ width: 284 / 3, height: 425 / 3 }} // Adjust the width and height as needed
-            cover={<img alt={item} src={getImageForTitle(item)} />} // Add your image path here
+            style={{
+              width: 284 / 3,
+              height: 425 / 3,
+            }}
+            cover={<img alt={item} src={getImageForTitle(item)} />}
+            onClick={() => handleCardClick(item)}
           />
         </List.Item>
       )}
