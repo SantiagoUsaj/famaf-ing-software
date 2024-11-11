@@ -570,14 +570,14 @@ const GamePage = () => {
 
       console.log("Chat:", data);
 
-      /* // Parsear el mensaje anidado
-      const messageData = JSON.parse(data.message); */
-
       // Formatear el mensaje en el formato deseado
-      const formattedMessage = `${data.player_name} : ${data.message}`;
-
-      // Actualizar la lista de mensajes
-      setMessages((prevMessages) => [...prevMessages, formattedMessage]);
+      if (data.player_name === "sistema") {
+        const formattedMessage = `${data.message.toUpperCase()}`;
+        setMessages((prevMessages) => [...prevMessages, formattedMessage]);
+      } else {
+        const formattedMessage = `${data.player_name} : ${data.message}`;
+        setMessages((prevMessages) => [...prevMessages, formattedMessage]);
+      }
     };
 
     // Manejar el cierre de la conexión
