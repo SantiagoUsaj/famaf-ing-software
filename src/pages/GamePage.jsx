@@ -50,7 +50,7 @@ const GamePage = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [chat_socket, setChat_Socket] = useState(null);
-  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -567,9 +567,12 @@ const GamePage = () => {
     };
   }, [game_id, playerID]);
 
-  // Desplazar automáticamente al último mensaje
+  // Desplazar automáticamente el contenedor de mensajes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   return (
@@ -761,6 +764,7 @@ const GamePage = () => {
       <div className="chat flex flex-col gap-4 fixed bottom-20 left-20 text-blancofondo">
         <div className="App">
           <div
+            ref={chatContainerRef}
             style={{
               maxHeight: "200px",
               overflowY: "auto",
@@ -771,7 +775,6 @@ const GamePage = () => {
             {messages.map((msg, index) => (
               <div key={index}>{msg}</div>
             ))}
-            <div ref={messagesEndRef} />{" "}
           </div>
           <input
             className="text-negrofondo p-3 rounded-xl"
