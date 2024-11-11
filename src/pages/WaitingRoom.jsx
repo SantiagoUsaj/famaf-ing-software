@@ -3,7 +3,12 @@ import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import TablePlayers from "../components/TablePlayers";
 import LobbySquares from "../components/LobbySquares";
-import { GameData, LeaveGame, StartGame } from "../services/GameServices";
+import {
+  GameData,
+  LeaveGame,
+  StartGame,
+  DeleteGame,
+} from "../services/GameServices";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
 
@@ -46,20 +51,36 @@ const WaitingRoom = ({
   };
 
   const quitRoom = async (game_id) => {
-    console.log("Success");
+    if (playerID !== isCreator) {
+      console.log("Success");
+      try {
+        // Esperamos la resolución de la promesa de LeaveGame
+        const response = await LeaveGame(playerID, game_id);
 
-    try {
-      // Esperamos la resolución de la promesa de LeaveGame
-      const response = await LeaveGame(playerID, game_id);
+        if (response) {
+          console.log("New Game Info:", response);
 
-      if (response) {
-        console.log("New Game Info:", response);
-
-        // Navegamos solo cuando la respuesta está lista
-        navigate(`/lobby`);
+          // Navegamos solo cuando la respuesta está lista
+          navigate(`/lobby`);
+        }
+      } catch (error) {
+        console.error("Error getting new game data", error);
       }
-    } catch (error) {
-      console.error("Error getting new game data", error);
+    } else if (playerID === isCreator) {
+      console.log("Success");
+      try {
+        // Esperamos la resolución de la promesa de DeleteGame
+        const response = await DeleteGame(game_id);
+
+        if (response) {
+          console.log("Game Deleted:", response);
+
+          // Navegamos solo cuando la respuesta está lista
+          navigate(`/lobby`);
+        }
+      } catch (error) {
+        console.error("Error deleting game", error);
+      }
     }
   };
 

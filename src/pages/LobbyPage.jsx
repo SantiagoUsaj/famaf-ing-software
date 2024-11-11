@@ -1,12 +1,11 @@
 import React from "react";
 import { useEffect, useState, useRef } from "react";
-import { Button, Dropdown, Space } from "antd";
+import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import music from "../assets/sounds/musicaMenuAgeII.mp3";
-import { PlayCircleOutlined, PauseCircleOutlined } from "@ant-design/icons";
 import age from "../assets/images/iconoAge.jpeg";
 
 const LobbyPage = () => {
@@ -66,8 +65,8 @@ const LobbyPage = () => {
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl relative">
-        LobbyPage
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
+        Lobby
       </h1>
       <TableGames gamesList={partidas} />
       <Button
@@ -80,7 +79,6 @@ const LobbyPage = () => {
         Crear Partida
       </Button>
 
-      {/* Control de volumen vertical en la esquina inferior izquierda */}
       <audio ref={audioRef} src={music} loop />
       <div
         style={{

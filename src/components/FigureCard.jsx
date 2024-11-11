@@ -42,7 +42,6 @@ const FigureCard = ({
     onSelectFigCard(item.figure);
     onSelectFigCardId(item.card_id);
     onSelectPlayer(playersList.player_id);
-    console.log(`Figure with title ${figureNum} clicked`);
     console.log(`Figure with id ${item.card_id} clicked`);
     console.log(`Player with id ${playersList.player_id} clicked`);
   };
@@ -50,8 +49,7 @@ const FigureCard = ({
   const getImageForCard = (item) => {
     if (item.state === "blocked") {
       return back;
-    }
-    else{
+    } else {
       switch (item.figure) {
         case 1:
           return fige01;
@@ -111,9 +109,11 @@ const FigureCard = ({
 
   useEffect(() => {
     console.log("Player List:", playersList);
+
     if (playersList !== null) {
       setData(playersList.figure_cards);
     }
+
     console.log("Figure cards:", data);
   }, [updateboard]);
 
@@ -127,10 +127,15 @@ const FigureCard = ({
       renderItem={(item) => (
         <List.Item style={{ display: "flex", justifyContent: "center" }}>
           <Card
-            onClick={() => handleCardClick(item)}
+            className="bg-negrofondo hover:bg-blancofondo"
+            bordered={false}
             hoverable
-            style={{ width: 284 / 3, height: 284 / 3 }} // Adjust the width and height as needed
-            cover={<img alt={item} src={getImageForCard(item)} />} // Add your image path here
+            style={{
+              width: 284 / 3,
+              height: 284 / 3,
+            }}
+            cover={<img alt={item} src={getImageForCard(item)} />}
+            onClick={() => handleCardClick(item)}
           />
         </List.Item>
       )}

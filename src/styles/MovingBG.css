@@ -29,7 +29,7 @@
   width: 20px;
   height: 20px;
   background: rgba(255, 255, 255, 0.2);
-  animation: animate 14s linear infinite;
+  animation: animate 10s linear infinite;
   background: rgba(255, 255, 255, 0.2);
   background: var(--random-color);
 }

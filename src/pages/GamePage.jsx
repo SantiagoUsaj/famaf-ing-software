@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import MovementCard from "../components/MovementCard";
@@ -15,24 +15,26 @@ import {
   UseFigureCard,
   BlockFigureCard,
 } from "../services/GameServices";
-import "../styles/GamePage.css";
 import confetti from "canvas-confetti";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
 import { useGameContext } from "../context/GameContext.jsx";
 import { UndoOutlined } from "@ant-design/icons";
+import music from "../assets/sounds/musicaMario.mp3";
+import mario from "../assets/images/iconoMario.png";
 
 const GamePage = () => {
   const navigate = useNavigate();
-  const [turn, setTurn] = useState();
+  const audioRef = useRef(null); // Referencia para el elemento <audio>
+  const [turn, setTurn] = useState(null);
   const [socket, setSocket] = useState(null);
   const [gamestate, setGamestate] = useState();
   const [playersList, setPlayersList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalQuit, setModalQuit] = useState(false);
   const { playerID } = usePlayerContext();
   const { game_id } = useGameContext();
   const [board, setBoard] = useState([]);
   const [winnerPlayer, setWinnerPlayer] = useState(null);
-  // Variables para el movimiento de las fichas
   const [SelectMovCard, setSelectMovCard] = useState(null);
   const [SelectFigCard, setSelectFigCard] = useState(null);
   const [SelectFigCardId, setSelectFigCardId] = useState(null);
@@ -43,16 +45,28 @@ const GamePage = () => {
   const [PossibleTiles2, setPossibleTiles2] = useState();
   const [PossibleTiles3, setPossibleTiles3] = useState();
   const [PossibleTiles4, setPossibleTiles4] = useState();
-  const [secondsLeft, setSecondsLeft] = useState(120);
-  const [isRunning, setIsRunning] = useState(false);
   const [Player1, setPlayer1] = useState(null);
   const [Player2, setPlayer2] = useState(null);
   const [Player3, setPlayer3] = useState(null);
   const [Player4, setPlayer4] = useState(null);
   const [blockColor, setBlockColor] = useState();
+  const [secondsLeft, setSecondsLeft] = useState(120);
+  const [isRunning, setIsRunning] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
+  const [chat_socket, setChat_Socket] = useState(null);
+  const chatContainerRef = useRef(null);
 
   const showModal = () => {
     setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setModalQuit(false);
+  };
+
+  const handleCancel = () => {
+    setModalQuit(false);
   };
 
   const winner = () => {
@@ -133,7 +147,7 @@ const GamePage = () => {
     }
   };
 
-  const undoMov = async (playerID, game_id) => {
+  const undoMov = async (game_id) => {
     console.log("Success");
 
     try {
@@ -148,7 +162,7 @@ const GamePage = () => {
     }
   };
 
-  const undoallMov = async (playerID, game_id) => {
+  const undoallMov = async (game_id) => {
     console.log("Success");
 
     try {
@@ -359,7 +373,7 @@ const GamePage = () => {
 
   const useFigure = async () => {
     console.log("Success");
-  
+
     if (SelectPlayer && SelectPlayer !== playerID) {
       try {
         // Esperamos la resolución de la promesa de BlockFigureCard
@@ -368,13 +382,13 @@ const GamePage = () => {
           SelectPlayer,
           game_id,
           SelectFigCardId,
-          SelectFirstTitle,
+          SelectFirstTitle
         );
-  
+
         if (response) {
           console.log("Figure block:", response);
           resetSelect();
-  
+
           return response;
         }
       } catch (error) {
@@ -389,11 +403,11 @@ const GamePage = () => {
           SelectFigCard,
           SelectFirstTitle
         );
-  
+
         if (response) {
           console.log("Figure use:", response);
           resetSelect();
-  
+
           return response;
         }
       } catch (error) {
@@ -416,6 +430,13 @@ const GamePage = () => {
       }
     } catch (error) {
       console.error("Error getting game data", error);
+    }
+  };
+
+  const sendMessage = () => {
+    if (message.trim() && chat_socket) {
+      chat_socket.send(message); // Enviar el mensaje al servidor WebSocket
+      setMessage("");
     }
   };
 
@@ -455,6 +476,7 @@ const GamePage = () => {
       setPlayer4(otherPlayers[2]);
 
       if (data.players === 1) {
+        setWinnerPlayer(data.player_details[0].player_name);
         showModal();
       }
 
@@ -511,7 +533,7 @@ const GamePage = () => {
     }
 
     if (SelectFigCard !== null && SelectFirstTitle !== null) {
-        useFigure();
+      useFigure();
     }
   }, [SelectFirstTitle, SelectSecondTitle, SelectMovCard, SelectFigCard]);
 
@@ -531,13 +553,61 @@ const GamePage = () => {
     }
   }, [isRunning, secondsLeft]);
 
+  useEffect(() => {
+    // Crear la conexión WebSocket al backend
+    const chat_ws = new WebSocket(
+      `http://127.0.0.1:8000/ws/chat/${game_id}/${playerID}`
+    );
+
+    // Manejar la apertura de la conexión
+    chat_ws.onopen = () => {
+      console.log("Conectado al WebSocket del chat");
+    };
+
+    // Manejar los mensajes recibidos
+    chat_ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      console.log("Chat:", data);
+
+      /* // Parsear el mensaje anidado
+      const messageData = JSON.parse(data.message); */
+
+      // Formatear el mensaje en el formato deseado
+      const formattedMessage = `${data.player_name} : ${data.message}`;
+
+      // Actualizar la lista de mensajes
+      setMessages((prevMessages) => [...prevMessages, formattedMessage]);
+    };
+
+    // Manejar el cierre de la conexión
+    chat_ws.onclose = () => {
+      console.log("Conexión WebSocket cerrada");
+    };
+
+    // Guardar el WebSocket en el estado para usarlo después
+    setChat_Socket(chat_ws);
+
+    // Limpiar el WebSocket al desmontar el componente
+    return () => {
+      chat_ws.close();
+    };
+  }, [game_id, playerID]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <div className="m-auto flex flex-col items-center justify-center min-h-screen text-center">
+    <div className="m-auto flex flex-col items-center justify-center min-h-screen">
       <div className="Cards_Top_Player  w-80">
         {Player2 && (
           <>
             <h2 className=" text-blancofondo text-center font-sans uppercase">
-              <b>{Player2.player_name}</b>
+              {Player2.player_name}
             </h2>
             <h2 className=" text-blancofondo text-center font-sans uppercase">
               Cartas de Figuras Restantes: {Player2.number_of_figure_card}
@@ -558,7 +628,7 @@ const GamePage = () => {
             <>
               <div>
                 <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
-                  <b>{Player3.player_name}</b>
+                  {Player3.player_name}
                 </h2>
                 <h2 className=" text-blancofondo text-center font-sans uppercase">
                   Cartas de Figuras Restantes: {Player3.number_of_figure_card}
@@ -601,7 +671,7 @@ const GamePage = () => {
               />
               <div>
                 <h2 className=" text-blancofondo text-center font-sans uppercase m-4">
-                  <b>{Player4.player_name}</b>
+                  {Player4.player_name}
                 </h2>
                 <h2 className=" text-blancofondo text-center font-sans uppercase">
                   Cartas de Figuras Restantes: {Player4.number_of_figure_card}
@@ -633,7 +703,7 @@ const GamePage = () => {
       </div>
 
       <div className="botones flex flex-col gap-4 fixed bottom-20 right-20 ">
-        <div className="turn text-blancofondo font-sans uppercase">
+        <div className="turn text-blancofondo text-center font-sans uppercase">
           <h3>Turno de:</h3>
           {playersList.map((player) => (
             <div key={player.player_id}>
@@ -641,7 +711,6 @@ const GamePage = () => {
             </div>
           ))}
         </div>
-
         <div className="blockColor text-blancofondo text-center font-sans uppercase">
           <h3>Color Bloqueado:</h3>
           <div
@@ -660,7 +729,6 @@ const GamePage = () => {
             }}
           ></div>
         </div>
-
         <Button
           className="text-blancofondo"
           type="primary"
@@ -668,7 +736,7 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoMov(playerID, game_id)}
+          onClick={() => undoMov(game_id)}
           icon={
             <UndoOutlined
               style={{
@@ -688,7 +756,7 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoallMov(playerID, game_id)}
+          onClick={() => undoallMov(game_id)}
           icon={
             <UndoOutlined
               style={{
@@ -717,17 +785,127 @@ const GamePage = () => {
           className="flex flex-col gap-4"
           danger
           ghost
-          onClick={() => quitRoom(game_id)}
+          onClick={() => setModalQuit(true)}
         >
-          Abandonar
+          Salir
         </Button>
       </div>
+
       <div className="chat flex flex-col gap-4 fixed bottom-20 left-20 text-blancofondo">
-        <h1>Temporizador</h1>
-        <h2>{formatTime(secondsLeft)}</h2>
-        {secondsLeft === 0 && <h3>¡Tiempo terminado!</h3>}
+        <div className="App">
+          <div
+            ref={chatContainerRef}
+            style={{
+              maxHeight: "200px",
+              overflowY: "auto",
+              border: "background-color: #FAFAFA",
+              padding: "10px",
+            }}
+          >
+            {messages.map((msg, index) => (
+              <div key={index}>{msg}</div>
+            ))}
+          </div>
+          <input
+            className="text-negrofondo p-3 rounded-xl"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Escribe tu mensaje..."
+            onKeyUp={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
+          />
+          <Button
+            className="text-blancofondo ml-4"
+            type="primary"
+            onClick={sendMessage}
+          >
+            Enviar
+          </Button>
+        </div>
+        <div>
+          <h1>Temporizador</h1>
+          <h2>{formatTime(secondsLeft)}</h2>
+          {secondsLeft === 0 && <h3>¡Tiempo terminado!</h3>}
+        </div>
       </div>
-      <div>
+
+      <audio ref={audioRef} src={music} loop />
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          margin: "10px",
+        }}
+      >
+        <Button
+          className="bg-negrofondo"
+          icon={<img src={mario} alt="Age Icon" />}
+          onClick={() => {
+            if (audioRef.current.paused) {
+              audioRef.current.play();
+            } else {
+              audioRef.current.pause();
+            }
+          }}
+        ></Button>
+        {!audioRef.current?.paused && (
+          <div
+            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
+          >
+            <span role="img" aria-label="music-note">
+              🎵
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              defaultValue="1"
+              onChange={(e) => {
+                audioRef.current.volume = e.target.value;
+              }}
+              style={{ width: "100px", marginLeft: "10px" }}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="modal_confirmacion">
+        <Modal
+          title="Salir de la Partida"
+          open={modalQuit}
+          footer={null}
+          className="text-center"
+          onOk={handleOk}
+          onCancel={handleCancel}
+        >
+          <p className="text-negrofondo text-lg ">
+            Te gustaria volver al lobby o abandonar la partida?
+          </p>
+          <div className="flex gap-4 align-middle justify-center">
+            <Button
+              className="mt-5 text-blancofondo"
+              type="primary"
+              onClick={() => navigate(`/lobby`)}
+            >
+              Volver al Lobby
+            </Button>
+            <Button
+              className="mt-5 text-blancofondo"
+              type="primary"
+              onClick={() => quitRoom(game_id)}
+            >
+              Abandonar
+            </Button>
+          </div>
+        </Modal>
+      </div>
+
+      <div className="modal_victoria">
         <Modal
           title="¡Felicidades!"
           open={isModalOpen}

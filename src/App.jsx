@@ -8,11 +8,11 @@ import LobbyPage from "./pages/LobbyPage";
 import GamePage from "./pages/GamePage";
 import CreateGame from "./pages/CreateGame";
 import CreditsPage from "./pages/CreditsPage.jsx";
+import "./styles/Styles.css";
 
 function App() {
   return (
-    <div className="bg-negrofondo min-h-screen min-w-screen">
-      {/* Envuelve la aplicación con PlayerProvider */}
+    <div>
       <PlayerProvider>
         <GameProvider>
           <PlayerColorProvider>
