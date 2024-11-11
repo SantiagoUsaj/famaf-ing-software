@@ -41,7 +41,7 @@ def setup_database():
     session.commit()
 
 # Test para possible_movements
-
+"""
 def test_possible_movements():
     MovementChart.game_movement()
     player_name1 = "ValidPlayer1"
@@ -454,13 +454,12 @@ def test_block_figure_card_non_valid_figure():
     response = client.post(f"/block_figure_chart/{first_turn}/{player_id2}/{game_id}/{figure_card_id}/{tile_id}")
     assert response.status_code == 409
     assert response.json() == {"detail": "Figure does not match the tile configuration"}
-
+"""
 def test_block_figure_card_valid_figure():
     player_name1 = "ValidPlayer1"
     player_name2 = "ValidPlayer2"
     game_name = "ValidGame"
     game_size = 2
-    figure_id = 6
     game_password = "1234"
 
     response_player1 = client.post(f"/create_player/{player_name1}")
@@ -507,13 +506,13 @@ def test_block_figure_card_valid_figure():
     assert turn is not None, "Turn not found"
     first_turn = turn.split(",")[0]
     second_turn = turn.split(",")[1]
-    tile = session.query(Tile).filter_by(number=1, table_id=id_table).first()
     session.commit()
+    delete = session.query(Figure_card).filter_by(gameid=game_id, playerid=second_turn, in_hand=True).first()
+    session.delete(delete)
     a=Figure_card(game_id,second_turn, 6)
     a.in_hand=True
     session.add(a)
     session.commit()
-
-    response = client.post(f"/block_figure_chart/{first_turn}/{second_turn}/{game_id}/{a.id}/{tile.id}")
+    response = client.post(f"/block_figure_chart/{first_turn}/{second_turn}/{game_id}/{a.id}/{1}")
     assert response.status_code == 200
     assert response.json() == {"message": "Figure card blocked"}

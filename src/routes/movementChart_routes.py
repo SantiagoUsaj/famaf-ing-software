@@ -86,7 +86,7 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
 async def block_figure_chart(current_player_id: str, targeted_player_id: str, game_id: str, figure_card_id: str, tile_id: int):
     game = session.query(Game).filter_by(gameid=game_id).first()
     target_player = session.query(PlayerGame).filter_by(playerid=targeted_player_id, gameid=game_id).first()
-    figure_card = session.query(Figure_card).filter_by(playerid=targeted_player_id, id=figure_card_id, in_hand=True).first()
+    figure_card = session.query(Figure_card).filter_by(playerid=targeted_player_id, gameid=game_id, id=figure_card_id, in_hand=True).first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     elif current_player_id != game.turn.split(",")[0]:
@@ -95,13 +95,15 @@ async def block_figure_chart(current_player_id: str, targeted_player_id: str, ga
         raise HTTPException(status_code=404, detail="Player not in game")
     elif has_blocked_card(game_id, targeted_player_id):
         raise HTTPException(status_code=409, detail="Player has blocked cards")
+    elif session.query(Figure_card).filter_by(playerid=targeted_player_id, gameid=game_id, in_hand=True).count() != 3:
+        raise HTTPException(status_code=409, detail="Player can't be blocked")
     elif figure_card is None:
         raise HTTPException(status_code=404, detail="Figure card not found")
     else: 
-        tile = session.query(Tile).filter_by(id=tile_id).first()
+        table = session.query(Table).filter_by(gameid=game_id).first()
+        tile = session.query(Tile).filter_by(number=tile_id, table_id=table.id).first()
         components = get_connected_component_for_tile_by_number(tile)
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
-        table = session.query(Table).filter_by(gameid=game_id).first()
         if table.get_prohibited_color() == tile.color:
                 raise HTTPException(status_code=409, detail="The tile has a prohibited color")
         elif check_tile_coordinates_with_rotations(figure, components):
@@ -110,6 +112,10 @@ async def block_figure_chart(current_player_id: str, targeted_player_id: str, ga
                 session.delete(movimiento)
             table.set_prohibited_color(tile.color)
             figure_card.block_card()
+            session.commit()
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
             return {"message": "Figure card blocked"}
 
