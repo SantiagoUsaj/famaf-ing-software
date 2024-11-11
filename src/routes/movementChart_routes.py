@@ -121,6 +121,10 @@ async def block_figure_chart(current_player_id: str, targeted_player_id: str, ga
             table.set_prohibited_color(tile.color)
             figure_card.block_card()
             session.commit()
+            tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
+            connected_components = find_connected_components(tiles)
+            match_figures(connected_components, session.query(Figures).all(), table)
+            session.commit()
             return {"message": "Figure card blocked"}
 
         else:
