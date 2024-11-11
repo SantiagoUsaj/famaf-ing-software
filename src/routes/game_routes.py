@@ -9,7 +9,8 @@ from models.board_models import Table, Tile, Figures, find_connected_components,
 from models.figure_card_models import Figure_card, shuffle, take_cards, has_blocked_card, has_marked_card
 import random
 import time
-    
+from globals import game_managers, manager  # Import from globals
+
 router = APIRouter()
 
 @router.get("/games")
@@ -172,6 +173,7 @@ async def start_game(player_id: str, game_id: str):
 
 @router.put("/next_turn/{player_id}/{game_id}")
 async def next_turn(player_id: str, game_id: str):
+    from globals import manager  # Ensure manager is imported
     if session.query(Game).filter_by(gameid=game_id).count() == 0:
         raise HTTPException(status_code=404, detail="Game not found")
     elif session.query(Player).filter_by(playerid=player_id).count() == 0:
@@ -210,8 +212,13 @@ async def next_turn(player_id: str, game_id: str):
             game.timestamp = int(time.time())
             session.commit()
 
-            return {"message": "Next turn"}
+            # Enviar mensaje por WebSocket
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            message = {"message":"finalizo el turno de"+" "+player.name, "player_name": "sistema"}
+            if game_id in game_managers:
+                await game_managers[game_id].broadcast(message)
 
+            return {"message": "Next turn"}
 
 @router.put("/swap_tiles/{player_id}/{game_id}/{movement_id}/{tile_id1}/{tile_id2}")
 async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: str, tile_id2: str):
@@ -252,7 +259,16 @@ async def swap_tiles(player_id: str, game_id: str, movement_id: str, tile_id1: s
             HandMovements.delete_hand_movements(player_id, game_id, movement_id)
             PartialMovements.create_partial_movement(player_id, game_id, movement_id, tile1.id, tile2.id)
             session.commit()
+            # Enviar mensaje por WebSocket
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            message = {"message":player.name+" "+"realizó un movimiento", "player_name": "sistema"}
+            if game_id in game_managers:
+                await game_managers[game_id].broadcast(message)
             return {"message": "Tiles swapped"}
+            # Enviar mensaje por WebSocket
+
+
+
         else:
             raise HTTPException(status_code=409, detail="Invalid movement")
         
@@ -281,6 +297,12 @@ async def undo_a_movement(player_id: str, game_id: str):
             session.commit()
             HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
             PartialMovements.delete_partial_movement(partial_movement.partialid)
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            # Enviar mensaje por WebSocket
+            player = session.query(Player).filter_by(playerid=player_id).first()
+            message = {"message":player.name+" "+"deshizo un movimiento", "player_name": "sistema"}
+            if game_id in game_managers:
+                await game_managers[game_id].broadcast(message)
             return {"message": "Movement undone"}
         
 @router.put("/undo_all_movements/{player_id}/{game_id}")
@@ -310,6 +332,12 @@ async def undo_all_movements(player_id: str, game_id: str):
                 session.commit()
                 HandMovements.create_hand_movement(partial_movement.movementid, partial_movement.playerid, game_id)
                 PartialMovements.delete_partial_movement(partial_movement.partialid)
+            if len(partial_movements) >= 1:
+                # Enviar mensaje por WebSocket
+                player = session.query(Player).filter_by(playerid=player_id).first()
+                message = {"message": player.name + " " + "deshizo todos sus movimientos", "player_name": "sistema"}
+                if game_id in game_managers:
+                    await game_managers[game_id].broadcast(message)
             return {"message": "All movements undone"}
 
 @router.delete("/delete_game/{game_id}")
