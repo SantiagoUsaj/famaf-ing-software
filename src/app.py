@@ -142,15 +142,14 @@ async def chat_websocket_endpoint(websocket: WebSocket, game_id: str, player_id:
         await game_managers[game_id].connect(websocket)
         player = session.query(Player).filter_by(playerid=player_id).first()
         player_name = player.name if player else "Unknown"
-        
         while True:
             data = await websocket.receive_text()
             message = {
                 "player_name": player_name,
-                "message": data           
+                "message": data
             }
-
             await game_managers[game_id].broadcast(message)
     except WebSocketDisconnect:
-        await game_managers[game_id].disconnect(websocket)
-        await game_managers[game_id].broadcast(f"{player_name} left the chat")
+        if game_id in game_managers:
+            await game_managers[game_id].disconnect(websocket)
+            await game_managers[game_id].broadcast(f"{player_name} left the chat")
