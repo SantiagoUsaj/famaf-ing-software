@@ -5,7 +5,8 @@ from models.board_models import  Table, Tile, Figures, find_connected_components
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
 from models.partialMovements_models import PartialMovements
-from models.figure_card_models import Figure_card, shuffle, take_cards
+from models.board_models import Table, Tile, Figures, find_connected_components, match_figures, TableGame
+from models.figure_card_models import Figure_card, shuffle, take_cards, has_blocked_card, has_marked_card
 import random
 import time
 from globals import game_managers, manager  # Import from globals
@@ -183,9 +184,10 @@ async def next_turn(player_id: str, game_id: str):
             raise HTTPException(status_code=409, detail="It's not your turn")
         else:
             game.turn = ",".join(game.turn.split(",")[1:] + game.turn.split(",")[:1])
-            take_cards(game_id, player_id)
-            session.commit()
-            
+            # Tomar cartas si no una tengo carta bloqueada or "marcada"
+            if (has_blocked_card(game_id, player_id) or has_marked_card(game_id, player_id)) == False:
+                take_cards(game_id, player_id)
+
             # Devuelvo las cartas si tengo movimientos parciales y no descarte niguna figura
             if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) > 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 partial_movements = PartialMovements.get_all_partial_movements_by_gameid(game_id)
@@ -198,7 +200,7 @@ async def next_turn(player_id: str, game_id: str):
             # Si descarte una figura y no tengo movimientos parciales reparto cartas nuevas
             if len(PartialMovements.get_all_partial_movements_by_gameid(game_id)) == 0 and HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id) < 3:
                 HandMovements.deals_moves(player_id, game.gameid, 3 - HandMovements.count_movements_charts_by_gameid_and_playerid(game.gameid, player_id))
-                take_cards(game_id, player_id)
+                
             
             table = session.query(Table).filter_by(gameid=game_id).first()
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()

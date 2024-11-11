@@ -13,7 +13,7 @@ class Figure_card(Base):
     playerid = Column(String, ForeignKey('players.playerid'), nullable=False)
     figure = Column(Integer, primary_key=True, nullable=False)
     in_hand = Column(Boolean, default=False)
-    blocked = Column(Boolean, default=False)
+    state = Column(String, default="active")
 
     def __init__(self,game_id,player_id,figure):
         self.id = str(uuid.uuid4())
@@ -28,10 +28,20 @@ class Figure_card(Base):
         session.delete(self)
 
     def block_card(self):
-        self.blocked = True
+        self.state = "blocked"
     
+    def get_state(self):
+        return self.state
+
     def unblock_card(self):
-        self.blocked = False
+        self.state = "marked"
+
+
+def has_blocked_card(game, player):
+    return session.query(Figure_card).filter_by(gameid=game, playerid=player, state="blocked").count() > 0
+
+def has_marked_card(game, player):
+    return session.query(Figure_card).filter_by(gameid=game, playerid=player, state="marked").count() > 0
 
 def shuffle(game):
     easy_figures = list(range(1, 8))*2
