@@ -41,7 +41,7 @@ def setup_database():
     session.commit()
 
 # Test para possible_movements
-"""
+
 def test_possible_movements():
     MovementChart.game_movement()
     player_name1 = "ValidPlayer1"
@@ -454,7 +454,7 @@ def test_block_figure_card_non_valid_figure():
     response = client.post(f"/block_figure_chart/{first_turn}/{player_id2}/{game_id}/{figure_card_id}/{tile_id}")
     assert response.status_code == 409
     assert response.json() == {"detail": "Figure does not match the tile configuration"}
-"""
+
 def test_block_figure_card_valid_figure():
     player_name1 = "ValidPlayer1"
     player_name2 = "ValidPlayer2"
@@ -501,12 +501,9 @@ def test_block_figure_card_valid_figure():
         Tile(table_id=id_table, color="blue", number=12, x=1, y=5, highlight=False),
     ])
     game = session.query(Game).filter_by(gameid=game_id).first()
-    assert game is not None, "Game not found"
     turn = game.turn
-    assert turn is not None, "Turn not found"
     first_turn = turn.split(",")[0]
     second_turn = turn.split(",")[1]
-    session.commit()
     delete = session.query(Figure_card).filter_by(gameid=game_id, playerid=second_turn, in_hand=True).first()
     session.delete(delete)
     a=Figure_card(game_id,second_turn, 6)
