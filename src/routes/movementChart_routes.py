@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from models.game_models import Game, session
 from models.board_models import Tile,get_connected_component_for_tile_by_number, match_figures, find_connected_components, Table,Figures,normalize_points
-from models.player_models import Player
+from models.player_models import Player, PlayerGame
 from models.handMovements_models import HandMovements
 from models.movementChart_models import MovementChart
-from models.figure_card_models import Figure_card
+from models.figure_card_models import Figure_card, has_blocked_card 
 from models.partialMovements_models import PartialMovements
 router = APIRouter()
 
@@ -47,7 +47,6 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
     game = session.query(Game).filter_by(gameid=game_id).first()
     player = session.query(Player).filter_by(playerid=player_id).first()
     table = session.query(Table).filter_by(gameid=game_id).first()
-    tile = session.query(Tile).filter_by(number=tile_id, table_id=table.id).first() if table else None
     figures_card = session.query(Figure_card).filter_by(playerid=player_id, in_hand=1).all()
     figure_card = session.query(Figure_card).filter_by(playerid=player_id, in_hand=1, figure=figure_id).first()
     if player is None:
@@ -55,8 +54,11 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
     elif game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     elif not any(figure.figure == figure_id for figure in figures_card):
-        raise HTTPException(status_code=409, detail="Player has not this figure")
+        raise HTTPException(status_code=409, detail="Player doesn't have this figure")
+    elif figure_card.get_state() == "blocked":
+        raise HTTPException(status_code=409, detail="Figure card is blocked")
     else:
+        tile = session.query(Tile).filter_by(number=tile_id, table_id=table.id).first()
         components = get_connected_component_for_tile_by_number(tile)
         figure = session.query(Figures).filter_by(id=figure_card.figure).first()
         if check_tile_coordinates_with_rotations(figure, components):
@@ -68,12 +70,49 @@ async def use_figure_chart(player_id: str, game_id: str, figure_id: int, tile_id
             for movimiento in movimientos_parciales:
                 session.delete(movimiento)
             session.delete(figure_card)
+            
+            if has_blocked_card(game_id, player_id) and (session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, in_hand=True).count()==1):
+                card_to_unblock = session.query(Figure_card).filter_by(playerid=player_id, gameid=game_id, in_hand=True).first()
+                card_to_unblock.unblock_card()
             tiles = session.query(Tile).join(Table).filter(Table.gameid == game_id).all()
             connected_components = find_connected_components(tiles)
             match_figures(connected_components, session.query(Figures).all(), table)
             session.commit()
-            
             return {"message": "Figure card used and removed from hand"}
+        else:
+            raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
+
+@router.post("/block_figure_chart/{current_player_id}/{targeted_player_id}/{game_id}/{figure_card_id}/{tile_id}")
+async def block_figure_chart(current_player_id: str, targeted_player_id: str, game_id: str, figure_card_id: str, tile_id: int):
+    game = session.query(Game).filter_by(gameid=game_id).first()
+    target_player = session.query(PlayerGame).filter_by(playerid=targeted_player_id, gameid=game_id).first()
+    figure_card = session.query(Figure_card).filter_by(playerid=targeted_player_id, id=figure_card_id, in_hand=True).first()
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    elif current_player_id != game.turn.split(",")[0]:
+        raise HTTPException(status_code=409, detail="It's not your turn")
+    elif target_player not in session.query(PlayerGame).filter_by(gameid=game_id).all():
+        raise HTTPException(status_code=404, detail="Player not in game")
+    elif has_blocked_card(game_id, targeted_player_id):
+        raise HTTPException(status_code=409, detail="Player has blocked cards")
+    elif figure_card is None:
+        raise HTTPException(status_code=404, detail="Figure card not found")
+    else: 
+        tile = session.query(Tile).filter_by(id=tile_id).first()
+        components = get_connected_component_for_tile_by_number(tile)
+        figure = session.query(Figures).filter_by(id=figure_card.figure).first()
+        table = session.query(Table).filter_by(gameid=game_id).first()
+        if table.get_prohibited_color() == tile.color:
+                raise HTTPException(status_code=409, detail="The tile has a prohibited color")
+        elif check_tile_coordinates_with_rotations(figure, components):
+            movimientos_parciales = PartialMovements.get_all_partial_movements_by_gameid(game_id)
+            for movimiento in movimientos_parciales:
+                session.delete(movimiento)
+            table.set_prohibited_color(tile.color)
+            figure_card.block_card()
+            session.commit()
+            return {"message": "Figure card blocked"}
+
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 
