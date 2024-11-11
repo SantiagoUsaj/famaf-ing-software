@@ -706,7 +706,7 @@ const GamePage = () => {
           style={{
             backgroundColor: playerID !== turn ? "#eeecec" : "#1677ff",
           }}
-          onClick={() => undoMov(playerID, game_id)}
+          onClick={() => undoMov(game_id)}
           icon={
             <UndoOutlined
               style={{
