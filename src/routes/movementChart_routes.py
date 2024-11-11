@@ -126,39 +126,6 @@ async def block_figure_chart(current_player_id: str, targeted_player_id: str, ga
         else:
             raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 
-@router.post("/block_figure_chart/{current_player_id}/{targeted_player_id}/{game_id}/{figure_card_id}/{tile_id}")
-async def block_figure_chart(current_player_id: str, targeted_player_id: str, game_id: str, figure_card_id: str, tile_id: int):
-    game = session.query(Game).filter_by(gameid=game_id).first()
-    target_player = session.query(PlayerGame).filter_by(playerid=targeted_player_id, gameid=game_id).first()
-    figure_card = session.query(Figure_card).filter_by(playerid=targeted_player_id, id=figure_card_id, in_hand=True).first()
-    if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
-    elif current_player_id != game.turn.split(",")[0]:
-        raise HTTPException(status_code=409, detail="It's not your turn")
-    elif target_player not in session.query(PlayerGame).filter_by(gameid=game_id).all():
-        raise HTTPException(status_code=404, detail="Player not in game")
-    elif has_blocked_card(game_id, targeted_player_id):
-        raise HTTPException(status_code=409, detail="Player has blocked cards")
-    elif figure_card is None:
-        raise HTTPException(status_code=404, detail="Figure card not found")
-    else: 
-        tile = session.query(Tile).filter_by(id=tile_id).first()
-        components = get_connected_component_for_tile_by_number(tile)
-        figure = session.query(Figures).filter_by(id=figure_card.figure).first()
-        table = session.query(Table).filter_by(gameid=game_id).first()
-        if table.get_prohibited_color() == tile.color:
-                raise HTTPException(status_code=409, detail="The tile has a prohibited color")
-        elif check_tile_coordinates_with_rotations(figure, components):
-            movimientos_parciales = PartialMovements.get_all_partial_movements_by_gameid(game_id)
-            for movimiento in movimientos_parciales:
-                session.delete(movimiento)
-            table.set_prohibited_color(tile.color)
-            figure_card.block_card()
-            session.commit()
-            return {"message": "Figure card blocked"}
-
-        else:
-            raise HTTPException(status_code=409, detail="Figure does not match the tile configuration")
 
 @router.delete("/delete_hand_movements")
 async def delete_all():
