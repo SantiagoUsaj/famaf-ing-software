@@ -1,6 +1,5 @@
 import axios from "axios";
 
-
 export const GameData = async (game_id) => {
   try {
     const response = await axios.get(`http://127.0.0.1:8000/game/${game_id}`);
@@ -158,6 +157,20 @@ export const UseFigureCard = async (player_id, game_id, figure_id, tile_id) => {
   try {
     const response = await axios.post(
       `http://127.0.0.1:8000/use_figure_chart/${player_id}/${game_id}/${figure_id}/${tile_id}`
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+  }
+};
+
+export const BlockFigureCard = async (player_id, targeted_player_id, game_id, figure_id, tile_id) => {
+  try {
+    const response = await axios.post(
+      `http://127.0.0.1:8000/block_figure_chart/${player_id}/${targeted_player_id}/${game_id}/${figure_id}/${tile_id}`
     );
 
     console.log(response.data);

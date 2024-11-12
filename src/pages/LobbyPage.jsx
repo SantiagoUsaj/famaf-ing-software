@@ -1,10 +1,12 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import LobbySquares from "../components/LobbySquares";
 import TableGames from "../components/TableGames";
 import { usePlayerContext } from "../context/PlayerContext.jsx";
+import music from "../assets/sounds/musicaMenuAgeII.mp3";
+import age from "../assets/images/iconoAge.jpeg";
 
 const LobbyPage = () => {
   const navigate = useNavigate();
@@ -12,6 +14,8 @@ const LobbyPage = () => {
   const [partidas, setPartidas] = useState([]);
   // Obtener playerID desde el contexto
   const { playerID } = usePlayerContext();
+
+  const audioRef = useRef(null); // Referencia para el elemento <audio>
 
   console.log("playerID", playerID);
 
@@ -61,8 +65,8 @@ const LobbyPage = () => {
   return (
     <div>
       <LobbySquares />
-      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl relative">
-        LobbyPage
+      <h1 className="text-blancofondo font-sans uppercase m-auto pt-40 text-center text-4xl">
+        Lobby
       </h1>
       <TableGames gamesList={partidas} />
       <Button
@@ -74,6 +78,52 @@ const LobbyPage = () => {
       >
         Crear Partida
       </Button>
+
+      <audio ref={audioRef} src={music} loop />
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          margin: "10px",
+          opacity: 0,
+          transition: "opacity 0.3s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0)}
+      >
+        <Button
+          className="bg-negrofondo"
+          icon={<img src={age} alt="Age Icon" />}
+          onClick={() => {
+            if (audioRef.current.paused) {
+              audioRef.current.play();
+            } else {
+              audioRef.current.pause();
+            }
+          }}
+        ></Button>
+        {!audioRef.current?.paused && (
+          <div
+            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
+          >
+            <span role="img" aria-label="music-note">
+              🎵
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              defaultValue="1"
+              onChange={(e) => {
+                audioRef.current.volume = e.target.value;
+              }}
+              style={{ width: "100px", marginLeft: "10px" }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

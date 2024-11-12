@@ -16,24 +16,29 @@ const CreateGame = () => {
   const onFinish = async (values) => {
     console.log("Success:", values);
 
-    try {
-      // Esperamos la resolución de la promesa de JoinLobby
-      const response = await CreateAGame(
-        playerID,
-        values.nombre,
-        values.jugadores
-      );
+    if (values.nombre.toLowerCase() === "becarefuleense") {
+      navigate(`/credits`);
+    } else {
+      try {
+        // Esperamos la resolución de la promesa de JoinLobby
+        const response = await CreateAGame(
+          playerID,
+          values.nombre,
+          values.jugadores,
+          values.password
+        );
 
-      if (response) {
-        console.log("Lobby response:", response);
+        if (response) {
+          console.log("Lobby response:", response);
 
-        // Actualizar el gameID en el contexto
-        setGameID(response.game_id);
+          // Actualizar el gameID en el contexto
+          setGameID(response.game_id);
 
-        navigate(`/waitingRoom`);
+          navigate(`/waitingRoom`);
+        }
+      } catch (error) {
+        console.error("Error joining lobby:", error);
       }
-    } catch (error) {
-      console.error("Error joining lobby:", error);
     }
   };
 
@@ -102,6 +107,44 @@ const CreateGame = () => {
           <Input
             className="bg-blancofondo"
             placeholder="Ingresar nombre partida"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          style={{ width: "100%" }}
+          rules={[
+            {
+              validator: (_, value) => {
+                if (value && !/^[a-zA-Z0-9]+$/.test(value)) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡Solo caracteres alfanuméricos!
+                    </span>
+                  );
+                }
+                if (value && value.length < 4) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡Deben ser por lo menos 4 caracteres!
+                    </span>
+                  );
+                }
+                if (value && value.length > 20) {
+                  return Promise.reject(
+                    <span style={{ fontSize: 13 }}>
+                      ¡No más de 20 caracteres!
+                    </span>
+                  );
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <Input
+            className="bg-blancofondo"
+            placeholder="Ingresar contraseña (opcional)"
           />
         </Form.Item>
 

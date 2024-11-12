@@ -53,7 +53,7 @@ describe("LobbyPage", () => {
   });
 
   it("should render the title 'LobbyPage'", () => {
-    const title = screen.getByText(/LobbyPage/i);
+    const title = screen.getByText(/Lobby/i);
     expect(title).toBeInTheDocument();
   });
 
