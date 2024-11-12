@@ -22,10 +22,8 @@
 	C120.5,125,125.9,119.6,132.5,119.6z"/>
 <path id="XMLID_31_" class="st3" d="M182.1,119.6h18.5c6.6,0,12,5.4,12,12v18.5c0,6.6-5.4,12-12,12h-18.5c-6.6,0-12-5.4-12-12v-18.5
 	C170.1,125,175.5,119.6,182.1,119.6z"/>
-<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-	<rect x="65" y="65" width="150" height="150" stroke="black" fill="none" stroke-width="5"/>
-	<image href="perfilRamos.jpeg" x="65" y="65" width="150" height="150" />
-</svg>
+<rect x="65" y="65" width="150" height="150" stroke="black" fill="none" stroke-width="5"/>
+<image href="perfilRamos.jpeg" x="65" y="65" width="150" height="150" />
 <path id="XMLID_1_" class="st5" d="M20.2,31.4V251c0,6.2,5,11.3,11.3,11.3h219.6c6.2,0,11.3-5,11.3-11.3V31.4
 	c0-6.2-5-11.3-11.3-11.3H31.4C25.2,20.1,20.2,25.2,20.2,31.4z"/>
 
