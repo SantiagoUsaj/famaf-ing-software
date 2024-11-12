@@ -72,3 +72,12 @@ lib64/
 .Python
 *.wsgi
 env/
+
+# Ignorar archivos de cobertura de pruebas
+.coverage
+
+# Ignorar bases de datos de pruebas
+test/database/test.db
+
+# Ignorar todo el directorio 'database/' (si aún no lo has hecho)
+database/
