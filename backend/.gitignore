@@ -1,0 +1,83 @@
+# Ignorar todos los directorios __pycache__ en cualquier lugar del proyecto
+**/__pycache__/
+
+# Ignorar todos los archivos .pyc en cualquier lugar del proyecto
+**/*.pyc
+
+# Ignorar la base de datos en el directorio database
+database/*.db
+
+# Archivos de entorno
+.env
+
+# Entornos virtuales
+/venv/
+/venc/
+/env/
+/env.bak/
+/venv.bak/
+.venv/
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
+
+# Archivos de compilación
+*.pyo
+*.pyd
+
+# Archivos de logs
+*.log
+
+# Archivos de base de datos
+*.sqlite3
+
+# Archivos de paquetes
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.Python
+*.wsgi
+
+# Ignorar archivos específicos en src/
+src/__pycache__/
+src/**/*.pyc
+
+# Ignorar archivos específicos en la raíz del proyecto
+__pycache__/
+models/__pycache__/
+routes/__pycache__/
+# Archivos de paquetes
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.Python
+*.wsgi
+env/
+
+# Ignorar archivos de cobertura de pruebas
+.coverage
+
+# Ignorar bases de datos de pruebas
+test/database/test.db
+
+# Ignorar todo el directorio 'database/' (si aún no lo has hecho)
+database/
